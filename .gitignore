@@ -1,0 +1,8 @@
+*~
+node_modules/**
+settings.js
+tls/**
+data/**
+client/settings.js
+client/tls/**
+client/data/**

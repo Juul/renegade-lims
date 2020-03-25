@@ -1,0 +1,15 @@
+'use strict';
+
+var fs = require('fs');
+
+module.exports = {
+  host: 'localhost',
+  port: 4444,
+  dataPath: './data',
+  staticFilePath: './static',
+  
+  tlsKey: fs.readFileSync('tls/client-key.pem'),
+  tlsCert: fs.readFileSync('tls/client-cert.pem'),
+  serverTLSCert: fs.readFileSync('tls/server-cert.pem')
+
+};

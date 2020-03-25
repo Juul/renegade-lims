@@ -1,0 +1,18 @@
+'use strict';
+
+var fs = require('fs');
+
+const settings = {
+  host: 'localhost',
+  port: 4444,
+  dataPath: './data',
+  staticFilePath: './static',
+  
+  tlsKey: fs.readFileSync('tls/server-key.pem'),
+  tlsCert: fs.readFileSync('tls/server-cert.pem'),
+  tlsClientCerts: [
+    fs.readFileSync('tls/clients/swabber.localhost.pem')
+  ]
+};
+
+module.exports = settings;

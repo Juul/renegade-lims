@@ -1,0 +1,19 @@
+{
+  "name": "renegade-lims",
+  "version": "0.0.1",
+  "dependencies": {
+    "ecstatic": "^4.1.2",
+    "fs-extra": "^9.0.0",
+    "hypercore": "^8.11.1",
+    "multifeed": "^5.2.1",
+    "routes": "^2.1.0"
+  },
+  "author": {
+    "name": "Marc Juul",
+    "email": "npm@juul.io",
+    "url": "https://github.com/juul"
+  },
+  "devDependencies": {},
+  "scripts": {},
+  "license": "AGPL-3.0"
+}
