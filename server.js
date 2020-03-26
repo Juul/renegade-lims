@@ -34,26 +34,41 @@ const allClientCerts = settings.tlsClientCerts.map((o) => {
 // remove comments and whitespace from certificate data
 function certClean(rawCert) {
   rawCert = rawCert.toString('utf8');
-  rawCert = rawCert.replace('-----BEGIN CERTIFICATE-----', '');
-  rawCert = rawCert.replace('-----END CERTIFICATE-----', '');
+  rawCert = rawCert.replace(/[-]+BEGIN\s+CERTIFICATE[-]+/, '');
+  rawCert = rawCert.replace(/[-]+END\s+CERTIFICATE[-]+/, '');
   rawCert = rawCert.replace(/[\s]+/g, '');
   return Buffer.from(rawCert);
 }
 
-const fieldClientCertHashes = [];
-for(let o of settings.tlsClientCerts) {
-  if(o.type === 'field') {
-    fieldClientCertHashes.push(sha256(certClean(o.cert)));
+function certHashesForType(type) {
+  var hashes = [];
+  for(let o of settings.tlsClientCerts) {
+    if(o.type === type) {
+      hashes.push(sha256(certClean(o.cert)));
+    }
   }
+  return hashes;
 }
 
-// Is this one of the certs for a field client
-function isFieldClientCert(cert) {
+const certHashes = {
+  lab: certHashesForType('lab'),
+  field: certHashesForType('field')
+};
+
+
+function getClientCertType(cert) {
   const hash = sha256(cert.raw.toString('base64'));
-  for(let h of fieldClientCertHashes) {
-    if(h === hash) return true;
+  const types = Object.keys(certHashes);
+  
+  var type, hashes, h;
+  for(type of types) {
+    console.log('type:', type);
+    hashes = certHashes[type];
+    for(h of hashes) {
+      if(h === hash) return type;
+    }
   }
-  return false;
+  return null;
 }
 
 async function init() {
@@ -105,33 +120,41 @@ async function init() {
     }, function(socket) {
       console.log("got connection");
       const mux = multiplex();
+
+      const clientType = getClientCertType(socket.getPeerCertificate());
+      var fullWritePermission = false;
       
-      if(isFieldClientCert(socket.getPeerCertificate())) {
+      if(clientType === 'field') {
         console.log("  field client!");
-        const toServer = mux.createSharedStream('toServer');
-        const duplex = mux.createSharedStream('fromServer');
 
-        socket.pipe(mux).pipe(socket);
+      } else if(clientType === 'lab') {
+        console.log("  lab client!");
 
-        toServer.pipe(multi.replicate(false, {
-          download: true,
-          upload: false,
-          live: true
-        })).pipe(toServer);
-        
-        duplex.pipe(multiPub.replicate(false, {
-          download: true,
-          upload: true,
-          live: true
-        })).pipe(duplex);
-        
+        fullWritePermission = true;
         
       } else { // not a recognized certificate for any type of device
         console.log("Connection from unknown client type with a valid certificate");
-        socket.close();
+        socket.destroy();
         return;
       }
-     
+
+      const toServer = mux.createSharedStream('toServer');
+      const duplex = mux.createSharedStream('fromServer');
+
+      socket.pipe(mux).pipe(socket);
+
+      toServer.pipe(multi.replicate(false, {
+        download: true,
+        upload: fullWritePermission,
+        live: true
+      })).pipe(toServer);
+      
+      duplex.pipe(multiPub.replicate(false, {
+        download: true,
+        upload: true,
+        live: true
+      })).pipe(duplex);
+      
     })
     
     server.listen({

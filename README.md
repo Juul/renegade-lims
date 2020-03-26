@@ -71,16 +71,12 @@ cd client/
 ## Lab client
 
 * Two way sync of Physicals
-* Two way sync of Users
 
 ## Field client
 
 * Push sync of Swabs
-* Two way sync of Users (ideally only field users)
 
 ## Future
-
-Multiplex stream using rpc-multistream or multiplex, then create another replication synchronizing new users.
 
 Admins sign new users. When new users are pulled in, verify that they are signed by a known admin, or signed by an admin who was signed by a known admin, etc.
 
