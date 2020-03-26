@@ -11,7 +11,11 @@ const settings = {
   tlsKey: fs.readFileSync('tls/server-key.pem'),
   tlsCert: fs.readFileSync('tls/server-cert.pem'),
   tlsClientCerts: [
-    fs.readFileSync('tls/clients/swabber.localhost.pem')
+    {
+      type: 'field',
+      description: "juul's laptop",
+      cert: fs.readFileSync('tls/clients/swabber.localhost.pem')
+    }
   ]
 };
 

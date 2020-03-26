@@ -18,7 +18,7 @@ module.exports = function(db) {
         if(!validateSwab(entry)) return;
         
         // If the message is from <<THE FUTURE>>, index it at _now_.
-        var ts = entry.value.timestamp;
+        var ts = entry.value.createdAt;
         if(isFutureMonotonicTimestamp(ts)) ts = timestamp();
 
         var key = charwise.encode(ts);

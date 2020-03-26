@@ -11,6 +11,7 @@
     "level": "^6.0.1",
     "monotonic-timestamp": "0.0.9",
     "multifeed": "^5.2.1",
+    "multiplex": "^6.7.0",
     "read-only-stream": "^2.0.0",
     "routes": "^2.1.0",
     "subleveldown": "^4.1.4",

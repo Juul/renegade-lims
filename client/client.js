@@ -7,6 +7,7 @@ const path = require('path');
 const tls = require('tls');
 const net = require('net');
 const http = require('http');
+const multiplex = require('multiplex');
 const multifeed = require('multifeed');
 const timestamp = require('monotonic-timestamp');
 const router = require('routes')(); // server side router
@@ -16,6 +17,9 @@ const settings = require('./settings.js');
 
 const multifeedPath = path.join(settings.dataPath, 'clientfeed');
 const multi = multifeed(multifeedPath, {valueEncoding: 'json'})
+
+const multifeedPubPath = path.join(settings.dataPath, 'pubfeed');
+const multiPub = multifeed(multifeedPubPath, {valueEncoding: 'json'})
 
 multi.ready(function() {
 
@@ -32,20 +36,39 @@ multi.ready(function() {
   socket.on('secureConnect', function() {
     console.log("connected");
 
-    socket.pipe(multi.replicate(true, {
+    const mux = multiplex();
+    const toServer = mux.createSharedStream('toServer');
+    const duplex = mux.createSharedStream('fromServer');
+    
+    socket.pipe(mux).pipe(socket);
+
+    toServer.pipe(multi.replicate(true, {
       download: false,
       upload: true,
       live: true
-    })).pipe(socket);
+    })).pipe(toServer);
 
-    multi.writer('swabber', function(err, w) {
+    duplex.pipe(multiPub.replicate(true, {
+      download: true,
+      upload: true,
+      live: true
+    })).pipe(duplex);
+
+    for(let feed of multiPub.feeds()) {
+      feed.get(0, function(_, data) {
+        console.log("feed:", feed);
+        console.log("  data 0:", data);
+      })
+    }
+
+    multi.writer('swabber', function(err, feed) {
       console.log("opened feed");
       
-      w.append({
+      feed.append({
         type: 'swab',
-        uuid: uuid(),
-        timestamp: timestamp(),
-        username: 'juul',
+        id: uuid(),
+        createdAt: timestamp(),
+        createdBy: 'juul',
         isExternal: false,
         isPriority: false
         

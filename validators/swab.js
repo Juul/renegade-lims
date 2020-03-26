@@ -16,8 +16,8 @@ function validateTimestamp(stamp) {
 module.exports = function(swab) {
   const val = swab.value;
   if(val.type !== 'swab') return false;
-  if(!validateUUID(val.uuid)) return false;
-  if(!validateTimestamp(val.timestamp)) return false;
+  if(!validateUUID(val.id)) return false;
+  if(!validateTimestamp(val.createdAt)) return false;
   
   return true;
 }
