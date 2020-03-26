@@ -1,20 +1,21 @@
 #!/usr/bin/env node
 'use strict';
 
-var fs = require('fs');
-var path = require('path');
-var tls = require('tls');
-var multifeed = require('multifeed');
+const uuid = require('uuid').v4;
+const fs = require('fs');
+const path = require('path');
+const tls = require('tls');
+const net = require('net');
+const http = require('http');
+const multifeed = require('multifeed');
+const timestamp = require('monotonic-timestamp');
+const router = require('routes')(); // server side router
+const ecstatic = require('ecstatic');
 
-var net = require('net');
-var http = require('http');
-var router = require('routes')(); // server side router
-var ecstatic = require('ecstatic');
-
-var settings = require('./settings.js');
+const settings = require('./settings.js');
 
 const multifeedPath = path.join(settings.dataPath, 'clientfeed');
-var multi = multifeed(multifeedPath, {valueEncoding: 'json'})
+const multi = multifeed(multifeedPath, {valueEncoding: 'json'})
 
 multi.ready(function() {
 
@@ -41,7 +42,13 @@ multi.ready(function() {
       console.log("opened feed");
       
       w.append({
-        foo: 'bar'
+        type: 'swab',
+        uuid: uuid(),
+        timestamp: timestamp(),
+        username: 'juul',
+        isExternal: false,
+        isPriority: false
+        
       }, function() {
         console.log("appended");
 

@@ -2,11 +2,20 @@
   "name": "renegade-lims",
   "version": "0.0.1",
   "dependencies": {
+    "charwise": "^3.0.1",
     "ecstatic": "^4.1.2",
     "fs-extra": "^9.0.0",
     "hypercore": "^8.11.1",
+    "kappa-core": "^6.0.0",
+    "kappa-view": "^3.1.0",
+    "level": "^6.0.1",
+    "monotonic-timestamp": "0.0.9",
     "multifeed": "^5.2.1",
-    "routes": "^2.1.0"
+    "read-only-stream": "^2.0.0",
+    "routes": "^2.1.0",
+    "subleveldown": "^4.1.4",
+    "through2": "^3.0.1",
+    "uuid": "^7.0.2"
   },
   "author": {
     "name": "Marc Juul",

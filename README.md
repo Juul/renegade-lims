@@ -64,6 +64,15 @@ cd client/
 
 # ToDo
 
+* Client auto-reconnect with exponential back-off
+* Client log-in system
+
+## Lab client
+
+
+## Field client
+
+
 
 # Copyright and license
 

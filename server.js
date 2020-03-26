@@ -1,12 +1,23 @@
 #!/usr/bin/env node
 'use strict';
 
-var path = require('path');
-var tls = require('tls');
+const path = require('path');
+const tls = require('tls');
 const fs = require('fs-extra');
-var multifeed = require('multifeed');
+const multifeed = require('multifeed');
+const kappa = require('kappa-core');
+const view = require('kappa-view');
+const level = require('level');
+const sublevel = require('subleveldown');
+const through = require('through2');
 
-var settings = require('./settings.js');
+const json = require('./jsonEncoding.js');
+const swabsByTimeView = require('./views/swabsByTimestamp.js');
+const swabsByUserView = require('./views/swabsByUsername.js');
+const settings = require('./settings.js');
+
+const SWABS_BY_TIME = 'st';
+const SWABS_BY_USER = 'su';
 
 async function init() {
 
@@ -15,13 +26,22 @@ async function init() {
   });
 
   const multifeedPath = path.join(settings.dataPath, 'serverfeed');
-  var multi = multifeed(multifeedPath, {valueEncoding: 'json'})
+  const multi = multifeed(multifeedPath, {valueEncoding: json})
+  const core = kappa(null, {multifeed: multi});
 
+  const db = level(path.join(settings.dataPath, 'db'), {valueEncoding: 'json'});
+  
+  core.use('swabsByTime', 1, view(sublevel(db, SWABS_BY_TIME, {valueEncoding: 'json'}), swabsByTimeView));
+  core.use('swabsByUser', 1, view(sublevel(db, SWABS_BY_USER, {valueEncoding: 'json'} ), swabsByUserView));
+  
   multi.ready(function() {
 
-    multi.feeds()[0].get(5, function (_, data) {
-      console.log("DATA:", data);
-    })
+    // Show all swabs by time
+    core.api.swabsByTime.read().pipe(through.obj(function(swab, enc, next) {
+      console.log("swab:", enc, typeof swab, swab);
+
+      next();
+    }));
     
     multi.on('feed', function(feed, name) {
       console.log("feed:", name);
