@@ -2,12 +2,14 @@
 #my-plate {
   width: 600px;
   height: 300px;
+
 }
   
 .plate-96 {
   display: grid;
   grid-template-rows: 0.5fr repeat(8, 1fr);
   grid-row-gap: 10px;
+  background-color: #AAAAAA;
 }
 
 .plate-96 .row, .plate-96 .hrow {
@@ -25,17 +27,38 @@
     display: grid;
     align-items: center;
     text-align: center;
-    background-color: green;
+    background-color: #33BB88;
     margin: 0;
     padding: 0;
 }
 
+/*
 .plate-96 .row .col:before {
   content: ' \25CF';
-  font-size: 40px;
+  font-size: 100%;
+}
+*/
+
+.col .dot {
+    width: 60%;
+    margin-left: auto;
+    margin-right: auto;
+    border-radius: 50%;
+    background-color: #444444;
+}
+
+.col .dot:after {
+  content: "";
+  display: block;
+  padding-bottom: 100%;
 }
 
 .plate-96 .row .hcol {
     display: grid;
     align-items: center;
+}
+
+
+.plate-96 .row-b .col-4 {
+    color: blue;
 }
