@@ -21,6 +21,9 @@ module.exports = function(db) {
         var ts = entry.value.createdAt;
         if(isFutureMonotonicTimestamp(ts)) ts = timestamp();
 
+        // When was this data received by the server?
+        entry.value.synchronizedAt = timestamp();
+        
         var key = charwise.encode(ts);
         
         batch.push({

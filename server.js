@@ -27,7 +27,7 @@ function sha256(data) {
   return hash.digest('hex');
 }
 
-const allClientCerts = settings.tlsClientCerts.map((o) => {
+const allClientCerts = settings.tlsClients.map((o) => {
   return o.cert;
 });
 
@@ -40,32 +40,23 @@ function certClean(rawCert) {
   return Buffer.from(rawCert);
 }
 
-function certHashesForType(type) {
-  var hashes = [];
-  for(let o of settings.tlsClientCerts) {
-    if(o.type === type) {
-      hashes.push(sha256(certClean(o.cert)));
-    }
+// takes in settings.tlsClientCerts
+function computeCertHashes(tlsClients) {
+  for(let o of tlsClients) {
+    o.hash = sha256(certClean(o.cert));
   }
-  return hashes;
 }
 
-const certHashes = {
-  lab: certHashesForType('lab'),
-  field: certHashesForType('field')
-};
+computeCertHashes(settings.tlsClients);
 
-
-function getClientCertType(cert) {
+// takes in settings.tlsClientCerts
+function getClientCertEntry(tlsClients, cert) {
   const hash = sha256(cert.raw.toString('base64'));
-  const types = Object.keys(certHashes);
   
-  var type, hashes, h;
-  for(type of types) {
-    console.log('type:', type);
-    hashes = certHashes[type];
-    for(h of hashes) {
-      if(h === hash) return type;
+  var entry;
+  for(entry of tlsClients) {
+    if(entry.hash === hash) {
+      return entry
     }
   }
   return null;
@@ -90,13 +81,12 @@ async function init() {
   
   multi.ready(function() {
 
+    // TODO remove debug code
     multiPub.writer('users', function(err, feed) {
-
       feed.append({
         type: 'user',
         name: 'cookie cat'
       });
-      
     });
     
     // Show all swabs by time
@@ -121,16 +111,24 @@ async function init() {
       console.log("got connection");
       const mux = multiplex();
 
-      const clientType = getClientCertType(socket.getPeerCertificate());
-      var fullWritePermission = false;
+      const client = getClientCertEntry(settings.tlsClients, socket.getPeerCertificate());
+      if(!client) {
+        console.log("Unknown client with valid certificate connected");
+        socket.destroy();
+        return;
+      }
+      console.log("New connection from", socket.remoteAddress+':'+socket.remotePort
+      console.log("A", client.type, "client connected:", client.description);
       
-      if(clientType === 'field') {
-        console.log("  field client!");
+      var fullReadPermission;
+      
+      if(client.type === 'field') {
 
-      } else if(clientType === 'lab') {
-        console.log("  lab client!");
+        fullReadPermission = false;
+        
+      } else if(client.type === 'lab') {
 
-        fullWritePermission = true;
+        fullReadPermission = true;
         
       } else { // not a recognized certificate for any type of device
         console.log("Connection from unknown client type with a valid certificate");
@@ -139,19 +137,19 @@ async function init() {
       }
 
       const toServer = mux.createSharedStream('toServer');
-      const duplex = mux.createSharedStream('fromServer');
+      const duplex = mux.createSharedStream('duplex');
 
       socket.pipe(mux).pipe(socket);
 
       toServer.pipe(multi.replicate(false, {
         download: true,
-        upload: fullWritePermission,
+        upload: false,
         live: true
       })).pipe(toServer);
       
       duplex.pipe(multiPub.replicate(false, {
         download: true,
-        upload: true,
+        upload: fullReadPermission,
         live: true
       })).pipe(duplex);
       

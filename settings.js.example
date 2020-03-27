@@ -6,11 +6,16 @@ const settings = {
   host: 'localhost',
   port: 4444,
   dataPath: './data',
-  staticFilePath: './static',
-  
+
+  // initial credentials for admin user
+  admin: {
+    username: "admin",
+    password: "admin"
+  },
+
   tlsKey: fs.readFileSync('tls/server-key.pem'),
   tlsCert: fs.readFileSync('tls/server-cert.pem'),
-  tlsClientCerts: [
+  tlsClients: [
     {
       type: 'field', // field clients can't change lab inventory
       description: "juul's laptop",
@@ -22,6 +27,7 @@ const settings = {
       cert: fs.readFileSync('tls/clients/swabber.localhost.pem')
     }
   ]
+
 };
 
 module.exports = settings;

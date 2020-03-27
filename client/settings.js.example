@@ -3,13 +3,26 @@
 var fs = require('fs');
 
 module.exports = {
+
+  // Replication server
   host: 'localhost',
   port: 4444,
+
+  // HTTP server socket
+  webHost: 'localhost',
+  webPort: 8000,
+
   dataPath: './data',
-  staticFilePath: './static',
+  staticPath: './static',
+  staticUserPath: './user-static',
   
   tlsKey: fs.readFileSync('tls/client-key.pem'),
   tlsCert: fs.readFileSync('tls/client-cert.pem'),
-  serverTLSCert: fs.readFileSync('tls/server-cert.pem')
+  serverTLSCert: fs.readFileSync('tls/server-cert.pem'),
+
+  loginToken: {
+    secret: "MY UNIQUE SECRET", // must be a unique secret
+    expiration: 14 // login token expiration in days
+  }
 
 };

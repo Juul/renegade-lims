@@ -14,9 +14,12 @@
     "multiplex": "^6.7.0",
     "read-only-stream": "^2.0.0",
     "routes": "^2.1.0",
+    "rpc-multiauth": "0.0.3",
+    "rpc-multistream": "^0.9.7",
     "subleveldown": "^4.1.4",
     "through2": "^3.0.1",
-    "uuid": "^7.0.2"
+    "uuid": "^7.0.2",
+    "websocket-stream": "^5.5.2"
   },
   "author": {
     "name": "Marc Juul",

@@ -7,6 +7,9 @@ const path = require('path');
 const tls = require('tls');
 const net = require('net');
 const http = require('http');
+const websocket = require('websocket-stream');
+const rpc = require('rpc-multistream'); // rpc and stream multiplexing
+const auth = require('rpc-multiauth'); // authentication
 const multiplex = require('multiplex');
 const multifeed = require('multifeed');
 const timestamp = require('monotonic-timestamp');
@@ -38,7 +41,7 @@ multi.ready(function() {
 
     const mux = multiplex();
     const toServer = mux.createSharedStream('toServer');
-    const duplex = mux.createSharedStream('fromServer');
+    const duplex = mux.createSharedStream('duplex');
     
     socket.pipe(mux).pipe(socket);
 
@@ -61,6 +64,7 @@ multi.ready(function() {
       })
     }
 
+    // TODO remove debug code
     multi.writer('swabber', function(err, feed) {
       console.log("opened feed");
       
@@ -85,17 +89,73 @@ multi.ready(function() {
   
 });
 
+function login(data, cb) {
+  
+  // TODO implement
 
-// serve up user-uploaded static files
-var userStatic = ecstatic({
-  root: settings.staticFilePath,
+  const uuid = "should be an actual uuid";
+  
+  cb(null, uuid, {
+    id: uuid,
+    username: "juul"
+  });
+  
+}
+
+var rpcMethods = {
+  
+  foo: function (curUser, cb) {
+    cb(null, "bar");
+  },
+
+  // methods only available to logged-in users in the 'user' group
+  user: {
+
+
+  }
+}
+
+var rpcMethodsAuth = auth({
+  userDataAsFirstArgument: true, 
+  secret: settings.loginToken.secret,
+  login: login
+}, rpcMethods, function(userdata, namespace, functionName, cb) {
+  if(!userdata.groups || userdata.groups.indexOf(namespace) < 0) {
+    return cb(new Error("User tried to access function in the '"+namespace+"' namespace but is not in the '"+namespace+"' group"));
+  }
+  cb();
+});
+
+var userCookieAuth = auth({
+  secret: settings.loginToken.secret,
+  cookie: {
+    setCookie: true
+  }
+});
+
+router.addRoute('/*', function(req, res, match) {
+  var rs = fs.createReadStream(path.join(settings.staticPath, 'index.html'));
+  rs.pipe(res);
+});
+
+const publicStatic = ecstatic({
+  root: settings.staticPath,
   baseDir: 'static',
   gzip: true,
   cache: 0
 });
 
+router.addRoute('/static/*', publicStatic);
+
+var userStatic = ecstatic({
+  root: settings.staticUserPath,
+  baseDir: 'static-user',
+  gzip: true,
+  cache: 0
+});
+
 // Static files that require user login
-router.addRoute('/static/*', function(req, res, match) {
+router.addRoute('/static-user/*', function(req, res, match) {
 
   userCookieAuth(req, function(err, tokenData) {
     if(err) {
@@ -136,4 +196,50 @@ server.on('clientError', function(err) {
 // start the webserver
 console.log("Starting http server on " + (settings.hostname || '*') + " port " + settings.port);
 
-server.listen(8000, 'localhost')
+
+// initialize the websocket server on top of the webserver
+var ws = websocket.createServer({server: server}, function(stream) {
+
+  stream.on('error', function(err) {
+    console.error("WebSocket stream error:", err);
+  });
+
+  stream.on('end', function() {
+
+  });
+
+  // initialize the rpc server on top of the websocket stream
+  var rpcServer = rpc(rpcMethodsAuth, {
+    objectMode: true, // default to object mode streams
+    debug: false
+  });
+
+  rpcServer.on('error', function(err) {
+    console.error("Connection error (client disconnect?):", err);
+  });
+
+
+  // when we receive a methods list from the other endpoint
+  rpcServer.on('methods', function(remote) {
+    console.log("got methods");
+  });
+
+  
+  rpcServer.pipe(stream).pipe(rpcServer);
+});
+
+
+ws.on('connection', function (socket) {
+  socket.on('error', function(err) {
+    console.error("WebSocket client error:", err);
+  });
+});
+
+ws.on('error', function(err) {
+  if(err) console.error("WebSocket server error:", err);
+});
+
+console.log("Web server listening on", settings.webHost+':'+settings.webPort);
+server.listen(settings.webPort, settings.webHost)
+
+
