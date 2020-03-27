@@ -133,11 +133,6 @@ var userCookieAuth = auth({
   }
 });
 
-router.addRoute('/*', function(req, res, match) {
-  var rs = fs.createReadStream(path.join(settings.staticPath, 'index.html'));
-  rs.pipe(res);
-});
-
 const publicStatic = ecstatic({
   root: settings.staticPath,
   baseDir: 'static',
@@ -165,6 +160,11 @@ router.addRoute('/static-user/*', function(req, res, match) {
     }
     return userStatic(req, res);
   });
+});
+
+router.addRoute('/*', function(req, res, match) {
+  var rs = fs.createReadStream(path.join(settings.staticPath, 'index.html'));
+  rs.pipe(res);
 });
 
 var server = http.createServer(function(req, res) {

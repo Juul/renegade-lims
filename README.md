@@ -47,6 +47,21 @@ cp settings.js.example settings.js
 
 Then edit both to your liking.
 
+# Install dependencies
+
+```
+npm install
+```
+
+# Building
+
+Client needs to be built:
+
+```
+cd client/
+npm run build
+```
+
 # Running
 
 ## Server
@@ -62,8 +77,18 @@ cd client/
 ./client.js
 ```
 
+# Developing
+
+For live re-building of client:
+
+```
+cd client/
+npm run dev
+```
+
 # ToDo
 
+* Move to something other than ecstatic for static file serving
 * Client auto-reconnect with exponential back-off
 * Client log-in system
    * password.json with username and salted SHA-256 hash for each user
