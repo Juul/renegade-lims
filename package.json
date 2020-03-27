@@ -9,6 +9,7 @@
     "kappa-core": "^6.0.0",
     "kappa-view": "^3.1.0",
     "level": "^6.0.1",
+    "minimist": "^1.2.5",
     "monotonic-timestamp": "0.0.9",
     "multifeed": "^5.2.1",
     "multiplex": "^6.7.0",
@@ -26,7 +27,21 @@
     "email": "npm@juul.io",
     "url": "https://github.com/juul"
   },
-  "devDependencies": {},
+  "devDependencies": {
+    "@babel/core": "^7.8.6",
+    "@babel/preset-env": "^7.8.6",
+    "babel-plugin-transform-react-jsx": "^6.24.1",
+    "babelify": "^10.0.0",
+    "browserify": "^16.5.0",
+    "byline": "^5.0.0",
+    "colors": "^1.4.0",
+    "gulp": "^4.0.2",
+    "gulp-cssimport": "^7.0.0",
+    "gulp-inline-source": "^4.0.0",
+    "gulp-sass": "^4.0.2",
+    "preact": "^10.3.4",
+    "watchify": "^3.11.1"
+  },
   "scripts": {},
   "license": "AGPL-3.0"
 }

@@ -224,7 +224,6 @@ var ws = websocket.createServer({server: server}, function(stream) {
     console.log("got methods");
   });
 
-  
   rpcServer.pipe(stream).pipe(rpcServer);
 });
 
