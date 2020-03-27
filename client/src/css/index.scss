@@ -1,0 +1,27 @@
+
+#my-plate {
+  width: 600px;
+  height: 300px;
+}
+  
+.plate-96 {
+  display: grid;
+  grid-template-rows: repeat(8, 1fr);
+  grid-row-gap: 10px;
+}
+
+.plate-96 .row {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    grid-column-gap: 10px;
+}
+
+.plate-96 .row .col {
+    background-color: green;
+    text-align: center;
+}
+
+.plate-96 .row .col:before {
+  content: ' \25CF';
+  font-size: 40px;
+}

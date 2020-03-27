@@ -5,6 +5,7 @@ import { h, Component } from 'preact';
 import { view } from 'z-preact-easy-state';
 
 var Main = require('./main.js')
+var Plate = require('./plate.js')
 
 class Root extends Component {
 
@@ -13,6 +14,7 @@ class Root extends Component {
     return (
         <Router>
           <Main path="/" />
+          <Plate path="/plate" />
         </Router>
     );
   }
