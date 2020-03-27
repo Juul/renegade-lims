@@ -1,11 +1,20 @@
 'use strict';
-import {h, render, createElement, Component as PreactComponent} from 'preact'
+import {h, render} from 'preact';
+import { store as createStore, view } from 'z-preact-easy-state';
 
 var app = {};
 window.app = app;
 app.rpc = require('./rpc.js');
 
-var Root = require('./components/root.js')
+app.state = createStore({
+
+  count: 0
+
+});
+
+app.actions = require('./actions')(app.state);
+
+var Root = require('./components/root.js');
 
 function renderAll() {
   var container = document.getElementById('container');

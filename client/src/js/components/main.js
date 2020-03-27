@@ -1,6 +1,7 @@
 'use strict';
 
 import { h, Component } from 'preact';
+import { view } from 'z-preact-easy-state';
 
 class Main extends Component {
 
@@ -9,12 +10,13 @@ class Main extends Component {
     return (
       <div>
         <h3>Main</h3>
+          <button onClick={app.actions.increase}>{app.state.count}</button>        
       </div>
     );
   }
 }
 
 
-module.exports = Main;
+module.exports = view(Main);
   
 
