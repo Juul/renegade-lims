@@ -1,13 +1,22 @@
 'use strict';
+import {h, render, createElement, Component as PreactComponent} from 'preact'
 
 var app = {};
 window.app = app;
 app.rpc = require('./rpc.js');
 
-console.log("init");
+var Root = require('./components/root.js')
+
+function renderAll() {
+  var container = document.getElementById('container');
+
+  render(<Root/>, container);
+}
 
 function init() {
-
+  
+  renderAll();
+  
   // connect to the server and attempt to log in
   app.rpc.connect(function(err, remote, user) {
     if(err) {
