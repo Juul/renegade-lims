@@ -11,7 +11,8 @@ module.exports = {
   // HTTP server socket
   webHost: 'localhost',
   webPort: 8000,
-
+  baseURL: 'http://localhost', // where this web app is accessed
+  
   dataPath: './data',
   staticPath: './static',
   staticUserPath: './user-static',

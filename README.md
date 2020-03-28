@@ -43,6 +43,7 @@ cp settings.js.example settings.js
 
 cd client/
 cp settings.js.example settings.js
+cp settings.web.js.example settings.web.js
 ```
 
 Then edit both to your liking.

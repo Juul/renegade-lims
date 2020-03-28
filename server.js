@@ -13,6 +13,7 @@ const level = require('level');
 const sublevel = require('subleveldown');
 const through = require('through2');
 
+const ntpTester = require('./lib/ntp_tester.js');
 const swabsByTimeView = require('./views/swabsByTimestamp.js');
 const swabsByUserView = require('./views/swabsByUsername.js');
 const settings = require('./settings.js');
@@ -62,11 +63,27 @@ function getClientCertEntry(tlsClients, cert) {
   return null;
 }
 
-async function init() {
+function startPeriodicTimeCheck() {
+  ntpTester.startPeriodicTimeCheck(settings.ntpServers, settings.checkTimeEvery * 1000, function(err, isTimeAccurate) {
+    if(err) {
+      // TODO notify sysadmin if this goes on for a long time
+      console.error("Warning: Failed to reach an NTP server. Time may be inaccurate.");
+      return;
+    }
+    if(!isTimeAccurate) {
+      // TODO notify sysadmin
+      console.error("WARNING: Time is unreasonably inaccurate. You are at greater than usual risk of merge errors.");
+    }
+  });
+}
 
+async function init() {
+  
   await fs.ensureDir(settings.dataPath, {
     mode: 0o2750
   });
+
+  startPeriodicTimeCheck();
 
   const multifeedPath = path.join(settings.dataPath, 'multifeed');
   const multi = multifeed(multifeedPath, {valueEncoding: 'json'})
@@ -117,7 +134,7 @@ async function init() {
         socket.destroy();
         return;
       }
-      console.log("New connection from", socket.remoteAddress+':'+socket.remotePort
+      console.log("New connection from", socket.remoteAddress+':'+socket.remotePort);
       console.log("A", client.type, "client connected:", client.description);
       
       var fullReadPermission;

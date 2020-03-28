@@ -6,4 +6,5 @@ data/**
 client/settings.js
 client/tls/**
 client/data/**
-static/build/**
+client/static/build/**
+client/settings.web.js

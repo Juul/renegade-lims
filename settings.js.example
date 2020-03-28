@@ -26,8 +26,16 @@ const settings = {
       description: "some computer",
       cert: fs.readFileSync('tls/clients/swabber.localhost.pem')
     }
-  ]
+  ],
 
+  checkTimeEvery: 60 * 60, // how often to check time accuracy (in seconds)
+  ntpServers: [
+    {host: '0.pool.ntp.org', port: 123},
+    {host: '1.pool.ntp.org', port: 123},
+    {host: '2.pool.ntp.org', port: 123},
+    {host: '3.pool.ntp.org', port: 123}
+  ]
+  
 };
 
 module.exports = settings;
