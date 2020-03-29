@@ -12,7 +12,9 @@ class EditPlate extends Component {
     super(props);
     
     this.setState({
+      id: props.id,
       plate: undefined,
+      wells: undefined,
       error: undefined
     });
   }
@@ -37,6 +39,40 @@ class EditPlate extends Component {
     });
     
   }
+
+  wellsToClass(wells, className) {
+    var wellsCopy = {};
+    for(let well in wells) {
+      if(wells[well]) {
+        wellsCopy[well] = className;
+      }
+    }
+    return wellsCopy;
+  }
+
+  
+  
+  componentDidMount() {
+    app.whenConnected(() => {
+      if(this.state.id) {
+        app.remote.getPlate(this.state.id, (err, plate) => {
+          if(err) {
+            console.log(err);
+            this.error("Plate not found");
+            return;
+          }
+          if(!plate) return;
+
+          const wells = this.wellsToClass(plate.wells, 'green');
+          
+          this.setState({
+            plate: plate,
+            wells: wells
+          });
+        })
+      }
+    });
+  }
   
   render(props) {
 
@@ -51,16 +87,22 @@ class EditPlate extends Component {
     }
     
     var main;
-    if(!this.state.plate) {
+    if(!this.state.id) {
       main = (
         <div>
         <p>Scan plate QR code to begin</p>
         <Scan onScan={this.plateScanned.bind(this)} />
         </div>  
       );
+    } else if(!this.state.plate) {
+      main = (
+        <div>
+          Loading plate {this.id}
+        </div>
+      )
     } else {
       main = (
-          <Plate data={this.state.plate} />
+          <Plate occupied={this.state.wells} selectnext="orange" />
       )
     }
     

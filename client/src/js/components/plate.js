@@ -8,6 +8,18 @@ for(let i=65; i <= 90; i++) {
   rowNames.push(String.fromCharCode(i));
 }
 
+function findNextFreeWell(rows, cols, occupied) {
+  var r, c, key;
+
+  for(r=1; r <= rows; r++) {
+    for(c=1; c <= cols; c++) {
+      key = rowNames[r-1]+c.toString();
+      if(!occupied[key]) return key;
+    }
+  }
+  return null;
+}
+
 class Plate extends Component {
 
   constructor(props) {
@@ -15,15 +27,22 @@ class Plate extends Component {
 
     // props.selected format:
     // {
-    //   A3: 'red',
-    //   B5: 'green
+    //   A3: <id>,
+    //   B5: <id>
     // }
+
+    const firstState = {
+      occupied: props.occupied || {},
+      rows: props.rows || 8,
+      cols: props.cols || 12
+    };
+
+    const nextFreeWell = findNextFreeWell(firstState.rows, firstState.cols, firstState.occupied);
+    if(nextFreeWell) {
+      firstState.selected = nextFreeWell;
+    }
     
-    this.setState({
-      selected: props.selected,
-      rows: 8,
-      cols: 12
-    });
+    this.setState(firstState);
   }
   
   makeRow(l, inner) {
@@ -55,17 +74,21 @@ class Plate extends Component {
       }
     } else {
       if(!col) {
-        console.log("RO", row);
         return (
             <div class="hcol">{rowName}</div>
         )
       }
       var dotClass = 'dot';
-      var selected;
+      var occupied;
       if(rowName) {
-        selected = this.state.selected[rowName+col.toString()];
-        if(selected) {
-          dotClass += ' ' + selected;
+        const key = rowName+col.toString()
+        if(this.state.selected === key) {
+            dotClass += ' selected';          
+        } else {
+          occupied = this.state.occupied[key];
+          if(occupied) {
+            dotClass += ' occupied';
+          }
         }
       }
       inner = (

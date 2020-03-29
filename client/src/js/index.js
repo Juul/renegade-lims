@@ -6,6 +6,13 @@ var app = {};
 window.app = app;
 app.rpc = require('./rpc.js');
 
+var whenConnectedCallbacks = [];
+app.whenConnected = function(cb) {
+  if(app.remote) return cb();
+    
+  whenConnectedCallbacks.push(cb);
+};
+
 app.state = createStore({
 
   count: 0
@@ -34,6 +41,11 @@ function init() {
     }
 
     console.log("Connected!");
+
+    for(let i=0; i < whenConnectedCallbacks.length; i++) {
+      whenConnectedCallbacks[i]();
+    }
+    whenConnectedCallbacks = [];
 
     if(user) {
       console.log("Logged in as: ", user);

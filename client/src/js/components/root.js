@@ -17,7 +17,7 @@ class Root extends Component {
     return (
         <Router>
         <Main path="/" />
-        <EditPlate path="/plate" />
+        <EditPlate path="/plate/:id" />
           <Plate path="/plate-test" />
           <Scan path="/scan" />
         </Router>

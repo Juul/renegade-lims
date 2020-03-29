@@ -107,10 +107,49 @@ function login(data, cb) {
 
 var rpcMethods = {
   
-  foo: function (curUser, cb) {
+  foo: function(curUser, cb) {
     cb(null, "bar");
   },
 
+  // TODO move all of the below to the 'user' namespace
+  
+  getOrCreatePlateByBarcode: function(userData, barcode, cb) {
+    // TODO implement
+    console.log("get/create plate by barcode");
+    cb(null, {
+      id: uuid(),
+      createdBy: 'juul',
+      createdAt: new Date(),
+      updatedBy: 'juul', 
+      updatedAt: new Date(),
+      wells: {
+        A1: uuid(),
+        A2: uuid()
+      }
+    });
+  },
+
+  getPlate: function(userData, id, cb) {
+    // TODO implement
+    console.log("get plate:", id);
+    cb(null, {
+      id: uuid(),
+      createdBy: 'juul',
+      createdAt: new Date(),
+      updatedBy: 'juul', 
+      updatedAt: new Date(),
+      wells: {
+        A1: uuid(),
+        A2: uuid()
+      }
+    });
+  },
+  
+  updatePlate: function(userData, plate, cb) {
+    // TODO implement
+    cb();
+  },
+  
   // methods only available to logged-in users in the 'user' group
   user: {
 
@@ -123,6 +162,7 @@ var rpcMethodsAuth = auth({
   secret: settings.loginToken.secret,
   login: login
 }, rpcMethods, function(userdata, namespace, functionName, cb) {
+  if(!userdata && !namespace) return cb();
   if(!userdata.groups || userdata.groups.indexOf(namespace) < 0) {
     return cb(new Error("User tried to access function in the '"+namespace+"' namespace but is not in the '"+namespace+"' group"));
   }
