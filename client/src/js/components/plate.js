@@ -62,10 +62,26 @@ class Plate extends Component {
       );
     }
   }
+
+  selectWell(event) {
+    var el = event.target;
+    if(!el) return;
+    while(!el.classList.contains('col')) {
+      if(!el.parentNode) return;
+      el = el.parentNode;
+    }
+    const well = el.getAttribute('data-well');
+    if(!well.match(/^[A-Z]\d\d?$/)) return;
+    if(this.state.occupied[well]) return;
+    this.setState({
+      selected: well
+    });
+  }
   
   makeColumn(col, row) {
     var inner;
     const rowName = rowNames[row-1];
+    const well = (rowName || '')+col.toString()
     if(!row) {
       if(!col) {
         inner = '';
@@ -81,11 +97,10 @@ class Plate extends Component {
       var dotClass = 'dot';
       var occupied;
       if(rowName) {
-        const key = rowName+col.toString()
-        if(this.state.selected === key) {
+        if(this.state.selected === well) {
             dotClass += ' selected';          
         } else {
-          occupied = this.state.occupied[key];
+          occupied = this.state.occupied[well];
           if(occupied) {
             dotClass += ' occupied';
           }
@@ -98,7 +113,7 @@ class Plate extends Component {
     var className = 'col col-'+col;
 
     return (
-        <div class={className}>{inner}</div>
+        <div class={className} data-well={well} onClick={this.selectWell.bind(this)}>{inner}</div>
     );
   }
   
