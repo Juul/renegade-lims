@@ -96,12 +96,10 @@ module.exports = class Print extends Component {
 
     submitForm(e) {
       e.preventDefault()
-
       if(!this.modalCallback) return;
-      console.log('print label submit')
-      if(err) return modalCallback(err);
+      console.log('print label submit');
       var imageData = this.labelMaker.getDataURL();
-      this.modalCallback(null, imageData, this.state);
+      this.modalCallback(null, this.state, imageData);
         // TODO fixme
 //        app.actions.prompt.reset()
     }

@@ -4,14 +4,12 @@ import Router from 'preact-router';
 import { h, Component } from 'preact';
 import { view } from 'z-preact-easy-state';
 
-var Main = require('./main.js')
-var Plate = require('./plate.js')
-var EditPlate = require('./edit_plate.js')
-var Scan = require('./scan.js')
-var Print = require('./print.js')
+const Main = require('./main.js')
+const Plate = require('./plate.js')
+const EditPlate = require('./edit_plate.js')
+const Scan = require('./scan.js')
+const PrintTest = require('./print_test.js')
 
-
-var testLabel = {};
 
 class Root extends Component {
 
@@ -23,7 +21,7 @@ class Root extends Component {
         <EditPlate path="/plate/:id" />
           <Plate path="/plate-test" />
         <Scan path="/scan" />
-        <Print path="/print" item={testLabel} />
+        <PrintTest path="/print-test" />
         </Router>
     );
   }

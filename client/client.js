@@ -126,8 +126,35 @@ var rpcMethods = {
 
   // TODO move all of the below to the 'user' namespace
 
-  printLabel: function() {
-    labDeviceServer.printLabel('qlPrinter', 'examples/label.png');
+  saveLabel: function(userData, labelData, imageData, doPrint, cb) {
+
+    // TODO validate data
+    
+    const id = labelData.id;
+
+    // TODO actually save in database
+    
+    var mtch;
+    if(imageData && (mtch = imageData.match(/^data:image\/png;base64,(.*)/))) {
+
+      var imageBuffer = new Buffer(mtch[1], 'base64');
+      // TODO size check
+      var imagePath = path.join(settings.labDevice.labelImageFilePath, labelData.id+'.png')
+      fs.writeFile(imagePath, imageBuffer, function(err) {
+        if(err) return cb(err);
+
+        if(doPrint) {
+          labDeviceServer.printLabel('qlPrinter', 'examples/label.png', cb);
+        } else {
+          cb(null, id, imagePath);
+        }
+        
+      });
+    } else{
+      cb(null, id);
+    }
+    
+
   },
   
   getPhysical: function(userData, code, cb) {

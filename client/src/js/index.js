@@ -6,7 +6,7 @@ var app = {};
 window.app = app;
 app.rpc = require('./rpc.js');
 
-// TODO make a non-terrible user notice/error display
+// TODO use app.actions.notify
 app.error = function(err) {
   alert(err);
 }
