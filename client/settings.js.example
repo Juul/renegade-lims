@@ -24,6 +24,14 @@ module.exports = {
   loginToken: {
     secret: "MY UNIQUE SECRET", // must be a unique secret
     expiration: 14 // login token expiration in days
-  }
+  },
+
+  checkTimeEvery: 60 * 60, // how often to check time accuracy (in seconds)
+  ntpServers: [
+    {host: '0.pool.ntp.org', port: 123},
+    {host: '1.pool.ntp.org', port: 123},
+    {host: '2.pool.ntp.org', port: 123},
+    {host: '3.pool.ntp.org', port: 123}
+  ]
 
 };

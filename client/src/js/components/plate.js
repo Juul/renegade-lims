@@ -3,149 +3,100 @@
 import { h, Component } from 'preact';
 import { view } from 'z-preact-easy-state';
 
+const rowNames = []; // populated with 'A', 'B', 'C' ...
+for(let i=65; i <= 90; i++) {
+  rowNames.push(String.fromCharCode(i));
+}
+
 class Plate extends Component {
 
-  render() {
+  constructor(props) {
+    super(props);
+
+    // props.selected format:
+    // {
+    //   A3: 'red',
+    //   B5: 'green
+    // }
     
-    return (
-      <div>
-        <div id="my-plate" class="plate-96">
+    this.setState({
+      selected: props.selected,
+      rows: 8,
+      cols: 12
+    });
+  }
+  
+  makeRow(l, inner) {
+    inner = inner || '';
+    if(!l) {
+      return (
         <div class="hrow header">
-        <div class="hcol"></div>
-        <div class="col col-1">1</div>
-        <div class="col col-2">2</div>
-        <div class="col col-3">3</div>
-        <div class="col col-4">4</div>
-        <div class="col col-5">5</div>
-        <div class="col col-6">6</div>
-        <div class="col col-7">7</div>
-        <div class="col col-8">8</div>
-        <div class="col col-9">9</div>
-        <div class="col col-10">10</div>
-        <div class="col col-11">11</div>
-        <div class="col col-12">12</div>
+            {inner}
         </div>
-        <div class="row row-a">
-        <div class="hcol">A</div>
-        <div class="col col-1"><div class="dot"></div></div>
-        <div class="col col-2"><div class="dot"></div></div>
-        <div class="col col-3"><div class="dot"></div></div>
-        <div class="col col-4"><div class="dot"></div></div>
-        <div class="col col-5"><div class="dot"></div></div>
-        <div class="col col-6"><div class="dot"></div></div>
-        <div class="col col-7"><div class="dot"></div></div>
-        <div class="col col-8"><div class="dot"></div></div>
-        <div class="col col-9"><div class="dot"></div></div>
-        <div class="col col-10"><div class="dot"></div></div>
-        <div class="col col-11"><div class="dot"></div></div>
-        <div class="col col-12"><div class="dot"></div></div>
+      );
+    } else {
+      const className = 'row row-'+l;
+      return (
+          <div class={className}>
+          {inner}
         </div>
-        <div class="row row-b">
-        <div class="hcol">B</div>
-        <div class="col col-1"><div class="dot"></div></div>
-        <div class="col col-2"><div class="dot"></div></div>
-        <div class="col col-3"><div class="dot"></div></div>
-        <div class="col col-4"><div class="dot"></div></div>
-        <div class="col col-5"><div class="dot"></div></div>
-        <div class="col col-6"><div class="dot"></div></div>
-        <div class="col col-7"><div class="dot"></div></div>
-        <div class="col col-8"><div class="dot"></div></div>
-        <div class="col col-9"><div class="dot"></div></div>
-        <div class="col col-10"><div class="dot"></div></div>
-        <div class="col col-11"><div class="dot"></div></div>
-        <div class="col col-12"><div class="dot"></div></div>
-        </div>
-        <div class="row row-c">
-        <div class="hcol">C</div>
-        <div class="col col-1"><div class="dot"></div></div>
-        <div class="col col-2"><div class="dot"></div></div>
-        <div class="col col-3"><div class="dot"></div></div>
-        <div class="col col-4"><div class="dot"></div></div>
-        <div class="col col-5"><div class="dot"></div></div>
-        <div class="col col-6"><div class="dot"></div></div>
-        <div class="col col-7"><div class="dot"></div></div>
-        <div class="col col-8"><div class="dot"></div></div>
-        <div class="col col-9"><div class="dot"></div></div>
-        <div class="col col-10"><div class="dot"></div></div>
-        <div class="col col-11"><div class="dot"></div></div>
-        <div class="col col-12"><div class="dot"></div></div>
-        </div>
-        <div class="row row-d">
-        <div class="hcol">D</div>
-        <div class="col col-1"><div class="dot"></div></div>
-        <div class="col col-2"><div class="dot"></div></div>
-        <div class="col col-3"><div class="dot"></div></div>
-        <div class="col col-4"><div class="dot"></div></div>
-        <div class="col col-5"><div class="dot"></div></div>
-        <div class="col col-6"><div class="dot"></div></div>
-        <div class="col col-7"><div class="dot"></div></div>
-        <div class="col col-8"><div class="dot"></div></div>
-        <div class="col col-9"><div class="dot"></div></div>
-        <div class="col col-10"><div class="dot"></div></div>
-        <div class="col col-11"><div class="dot"></div></div>
-        <div class="col col-12"><div class="dot"></div></div>
-        </div>
-        <div class="row row-e">
-        <div class="hcol">E</div>
-        <div class="col col-1"><div class="dot"></div></div>
-        <div class="col col-2"><div class="dot"></div></div>
-        <div class="col col-3"><div class="dot"></div></div>
-        <div class="col col-4"><div class="dot"></div></div>
-        <div class="col col-5"><div class="dot"></div></div>
-        <div class="col col-6"><div class="dot"></div></div>
-        <div class="col col-7"><div class="dot"></div></div>
-        <div class="col col-8"><div class="dot"></div></div>
-        <div class="col col-9"><div class="dot"></div></div>
-        <div class="col col-10"><div class="dot"></div></div>
-        <div class="col col-11"><div class="dot"></div></div>
-        <div class="col col-12"><div class="dot"></div></div>
-        </div>
-        <div class="row row-f">
-        <div class="hcol">F</div>
-        <div class="col col-1"><div class="dot"></div></div>
-        <div class="col col-2"><div class="dot"></div></div>
-        <div class="col col-3"><div class="dot"></div></div>
-        <div class="col col-4"><div class="dot"></div></div>
-        <div class="col col-5"><div class="dot"></div></div>
-        <div class="col col-6"><div class="dot"></div></div>
-        <div class="col col-7"><div class="dot"></div></div>
-        <div class="col col-8"><div class="dot"></div></div>
-        <div class="col col-9"><div class="dot"></div></div>
-        <div class="col col-10"><div class="dot"></div></div>
-        <div class="col col-11"><div class="dot"></div></div>
-        <div class="col col-12"><div class="dot"></div></div>
-        </div>
-        <div class="row row-g">
-        <div class="hcol">G</div>
-        <div class="col col-1"><div class="dot"></div></div>
-        <div class="col col-2"><div class="dot"></div></div>
-        <div class="col col-3"><div class="dot"></div></div>
-        <div class="col col-4"><div class="dot"></div></div>
-        <div class="col col-5"><div class="dot"></div></div>
-        <div class="col col-6"><div class="dot"></div></div>
-        <div class="col col-7"><div class="dot"></div></div>
-        <div class="col col-8"><div class="dot"></div></div>
-        <div class="col col-9"><div class="dot"></div></div>
-        <div class="col col-10"><div class="dot"></div></div>
-        <div class="col col-11"><div class="dot"></div></div>
-        <div class="col col-12"><div class="dot"></div></div>
-        </div>
-        <div class="row row-h">
-        <div class="hcol">H</div>
-        <div class="col col-1"><div class="dot"></div></div>
-        <div class="col col-2"><div class="dot"></div></div>
-        <div class="col col-3"><div class="dot"></div></div>
-        <div class="col col-4"><div class="dot"></div></div>
-        <div class="col col-5"><div class="dot"></div></div>
-        <div class="col col-6"><div class="dot"></div></div>
-        <div class="col col-7"><div class="dot"></div></div>
-        <div class="col col-8"><div class="dot"></div></div>
-        <div class="col col-9"><div class="dot"></div></div>
-        <div class="col col-10"><div class="dot"></div></div>
-        <div class="col col-11"><div class="dot"></div></div>
-        <div class="col col-12"><div class="dot"></div></div>
-        </div>
-        </div>
+      );
+    }
+  }
+  
+  makeColumn(col, row) {
+    var inner;
+    const rowName = rowNames[row-1];
+    if(!row) {
+      if(!col) {
+        inner = '';
+      } else {
+        inner = col.toString();
+      }
+    } else {
+      if(!col) {
+        console.log("RO", row);
+        return (
+            <div class="hcol">{rowName}</div>
+        )
+      }
+      var dotClass = 'dot';
+      var selected;
+      if(rowName) {
+        selected = this.state.selected[rowName+col.toString()];
+        if(selected) {
+          dotClass += ' ' + selected;
+        }
+      }
+      inner = (
+          <div class={dotClass}></div>
+      )
+    }
+    var className = 'col col-'+col;
+
+    return (
+        <div class={className}>{inner}</div>
+    );
+  }
+  
+  render() {
+
+    var rows = [];
+    var cols;
+    var r, c;
+    for(r=0; r <= this.state.rows; r++) {
+      cols = []
+      for(c=0; c <= this.state.cols; c++) {
+        cols.push(
+          this.makeColumn(c, r)
+        );
+      }
+      rows.push(this.makeRow(r, cols));
+    }
+
+    return (
+      <div id="my-plate" class="plate">
+        {rows}
       </div>
     );
   }

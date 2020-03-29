@@ -11,7 +11,7 @@ class Scan extends Component {
   
   constructor(props) {
     super(props);
-    
+
     this.setState({
       code: '',
       scanAccess: false
@@ -25,9 +25,10 @@ class Scan extends Component {
       scanAccess: false
     });
     this.stopCameraStream();
+    this.stopKeyboardCapture();
   }
 
-  componentDidMount() {
+  async componentDidMount() {
 
     this.modalCallback = this.props.cb;
     this.qr = new QrCode();
@@ -35,59 +36,66 @@ class Scan extends Component {
 
     this.initKeyboardCapture();
 
-    getUserMedia({
-      video: true,
-      audio: false
-    }, function(err, stream) {
-
-      if(err) {
-        if (err.name === 'DevicesNotFoundError' || err.name === 'NotFoundError') {
-          this.setState({
-            error: (
-                <span>
-                Hmm, looks like your device does not have a camera.
-                <br/>
-                You can still use the hand-held USB scanner.</span>
-            ),
-            scanAccess: false
-          });
-        } else if (err.name === 'InternalError') {
-          this.setState({
-            error: "Could not access your camera. Is another application using it?",
-            scanAccess: false
-          });
-        } else {
-          this.setState({
-            error: "Unknown camera access error: " + err.msg || err,
-            scanAccess: false
-          });
-          console.error("Camera access error:", err);
-        }
-        return;
-      }
-      
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: true,
+        audio: false
+      });
       this.setState({
         scanAccess: true
       });
+      
       this.cameraStream = stream;
-      var scanVideo = document.getElementById('scanVideo');
+      const scanVideo = document.getElementById('scanVideo');
 
       if(scanVideo) {
-        // we have to save a reference due to this issue:
-        // https://github.com/developit/preact/issues/732
         scanVideo.style.visibility = 'visible';
-        scanVideo.src = window.URL.createObjectURL(stream);
+        scanVideo.srcObject = stream;
         scanVideo.play().catch(function(err) {
           if(err) {
-            app.actions.notify("Camera access failed", 'error', 0);
             console.error(err);
+            this.setState({
+              error: (
+                  <span>
+                    Unable to show camera video stream.
+                  </span>
+              ),
+              scanAccess: false
+            });
             return;
           }
         });
 
         setTimeout(this.scan.bind(this), 500);
       }
-    }.bind(this));
+      
+    } catch (err) {
+      console.error(err);
+      if (err.name === 'DevicesNotFoundError' || err.name === 'NotFoundError') {
+        this.setState({
+          error: (
+              <span>
+              Hmm, looks like your device does not have a camera.
+              <br/>
+              You can still use a hand-held USB-connected barcode scanner.</span>
+          ),
+          scanAccess: false
+        });
+      } else if (err.name === 'InternalError') {
+        this.setState({
+          error: "Could not access your camera. Is another application using it?",
+          scanAccess: false
+        });
+      } else {
+        this.setState({
+          error: "Unknown camera access error: " + err.msg || err,
+          scanAccess: false
+        });
+        console.error("Camera access error:", err);
+      }
+      return;
+    }
+
   }
 
   // check if something is a v4 uuid
@@ -96,7 +104,6 @@ class Scan extends Component {
   }
 
   getIDFromURL(url) {
-    console.log("URL:", url)
     var m = url.match(new RegExp('^' + settings.baseURL + '/o/(\\d+)'));
     if (!m || (m.length < 2)) return null;
     return parseInt(m[1]);
@@ -112,26 +119,12 @@ class Scan extends Component {
   }
 
 
-  debug(str) {
-    //      str = $('#debug').html() + "<br/>\n" + str;
-    //      $('#debug').html(str);
-  }
-
   scanSuccess(code) {
+    console.log("Successfully scanned:", code);
 
-    app.remote.getBy('barcode', code, function(err, m) {
-      if(err || !m) {
-        app.remote.getByHumanID(code, function(err, m) {
-          if(err || !m) {
-            this.runCallback(null, null, code)
-            return;
-          }
-          this.runCallback(null, m)
-        }.bind(this))
-        return;
-      }
-      this.runCallback(null, m, code)
-    }.bind(this));
+    if(this.props.onScan) {
+      this.props.onScan(code);
+    }
   }
 
   scan(delay) {
@@ -162,10 +155,9 @@ class Scan extends Component {
       if(!id) return setTimeout(this.scan.bind(this), delay);
 
       // TODO visual indication of scan success
-      this.scanSuccess(id);
+      this.scanSuccess.bind(this)(id);
     }.bind(this));
   }
-
 
   keyboardScan(code) {
 
@@ -196,10 +188,6 @@ class Scan extends Component {
     if(this.keydownListener) {
       document.removeEventListener('keydown', this.keydownListener);
     }
-  }
-
-  componentWillUnmount() {
-    this.stopKeyboardCapture();
   }
 
   keydown(e) {
@@ -249,25 +237,7 @@ class Scan extends Component {
     }
   }
   
-  runCallback(err, m, barcode) {
-    if(this.modalCallback) {
-      if(this.modalCallback(err, m, barcode)) {
-        // only stop scanning if callback returns true (success)
-        this.stopCameraStream();
-      }
-      return;
-    }
-    
-    if(!m) {
-      app.actions.notify("The scanned item is not associated with this bionet node", 'warning');
-      return;
-    }
-
-    app.actions.route('/inventory/' + m.id);
-  }
-
 	render() {
-
     var scanVideo = '';
     if(!this.state.error) {
       scanVideo = (<video id="scanVideo" class="scanVideo" width="440" height="330"></video>);

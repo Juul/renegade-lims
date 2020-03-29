@@ -17,15 +17,15 @@ const settings = {
   tlsCert: fs.readFileSync('tls/server-cert.pem'),
   tlsClients: [
     {
-      type: 'field', // field clients can't change lab inventory
-      description: "juul's laptop",
-      cert: fs.readFileSync('tls/clients/swabber.localhost.pem')
-    },
-    {
       type: 'lab', // lab clients have full access to db
       description: "some computer",
       cert: fs.readFileSync('tls/clients/swabber.localhost.pem')
-    }
+    },
+    {
+      type: 'field', // field clients can't access lab inventory
+      description: "juul's laptop",
+      cert: fs.readFileSync('tls/clients/swabber.localhost.pem')
+    },
   ],
 
   checkTimeEvery: 60 * 60, // how often to check time accuracy (in seconds)

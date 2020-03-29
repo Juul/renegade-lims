@@ -16,6 +16,7 @@ const timestamp = require('monotonic-timestamp');
 const router = require('routes')(); // server side router
 const ecstatic = require('ecstatic');
 
+const ntpTester = require('../lib/ntp_tester.js');
 const settings = require('./settings.js');
 
 const multifeedPath = path.join(settings.dataPath, 'clientfeed');
@@ -26,6 +27,8 @@ const multiPub = multifeed(multifeedPubPath, {valueEncoding: 'json'})
 
 multi.ready(function() {
 
+  startPeriodicTimeCheck();
+  
   var socket = tls.connect(settings.port, settings.host, {
     ca: settings.serverTLSCert, // only trust this cert
     key: settings.tlsKey,
@@ -242,3 +245,17 @@ console.log("Web server listening on", settings.webHost+':'+settings.webPort);
 server.listen(settings.webPort, settings.webHost)
 
 
+
+function startPeriodicTimeCheck() {
+  ntpTester.startPeriodicTimeCheck(settings.ntpServers, settings.checkTimeEvery * 1000, function(err, isTimeAccurate) {
+    if(err) {
+      // TODO notify sysadmin if this goes on for a long time
+      console.error("Warning: Failed to reach an NTP server. Time may be inaccurate.");
+      return;
+    }
+    if(!isTimeAccurate) {
+      // TODO notify sysadmin
+      console.error("WARNING: Time is unreasonably inaccurate. You are at greater than usual risk of merge errors.");
+    }
+  });
+}
