@@ -36,8 +36,11 @@ class EditPlate extends Component {
         plate: plate,
         error: undefined
       });
-    });
-    
+    });  
+  }
+
+  saveSampleToSelectedWell() {
+
   }
 
   wellsToClass(wells, className) {
@@ -50,7 +53,15 @@ class EditPlate extends Component {
     return wellsCopy;
   }
 
+  onWellSelect(well) {
+    this.setState({
+      selectedWell: well
+    });
+  }
   
+  showWellInfo(well) {
+ //   console.log("Hovered well:", well);
+  }
   
   componentDidMount() {
     app.whenConnected(() => {
@@ -102,7 +113,12 @@ class EditPlate extends Component {
       )
     } else {
       main = (
-          <Plate occupied={this.state.wells} selectnext="orange" />
+        <div>
+          <Plate occupied={this.state.wells} selectnext="orange" onselect={this.onWellSelect.bind(this)} onhover={this.showWellInfo.bind(this)} />
+          <div>
+            Well: {this.state.selectedWell || ''}
+          </div>
+        </div>
       )
     }
     

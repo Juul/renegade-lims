@@ -1,3 +1,4 @@
+'use strict';
 
 import { h, Component } from 'preact';
 import { view } from 'z-preact-easy-state';
@@ -30,6 +31,16 @@ class Scan extends Component {
 
   async componentDidMount() {
 
+    app.whenConnected(() => {
+      app.remote.claimDataMatrixScanner((err, code) => {
+        if(err) return console.error("DataMatrix scan error:", err);
+        if(this.isCryo(code)) {
+          this.scanSuccess(code, 'cryotube');
+        }
+      })
+    })
+
+    
     this.modalCallback = this.props.cb;
     this.qr = new QrCode();
     this.scanCtx = document.getElementById('scanCanvas').getContext("2d");
@@ -73,23 +84,21 @@ class Scan extends Component {
       console.error(err);
       if (err.name === 'DevicesNotFoundError' || err.name === 'NotFoundError') {
         this.setState({
-          error: (
-              <span>
-              Hmm, looks like your device does not have a camera.
-              <br/>
-              You can still use a hand-held USB-connected barcode scanner.</span>
-          ),
-          scanAccess: false
+          error: "Looks like your device does not have a webcam.",
+          scanAccess: false,
+          cameraFailed: true
         });
-      } else if (err.name === 'InternalError') {
+      } else if (err.name === 'InternalError' || err.name === 'NotReadableError') {
         this.setState({
           error: "Could not access your camera. Is another application using it?",
-          scanAccess: false
+          scanAccess: false,
+          cameraFailed: true
         });
       } else {
         this.setState({
-          error: "Unknown camera access error: " + err.msg || err,
-          scanAccess: false
+          error: "Unknown camera access error.",
+          scanAccess: false,
+          cameraFailed: true
         });
         console.error("Camera access error:", err);
       }
@@ -98,15 +107,14 @@ class Scan extends Component {
 
   }
 
+  // is this a cryoking tube? (10-digit numeric code)
+  isCryo(code) {
+    return !!(code.match(/^[\d]{10}$/));
+  }
+  
   // check if something is a v4 uuid
   isUUID(id) {
     return !!(id.match(/[\da-f]{8}-[\da-f]{4}-[\da-f]{4}-[\da-f]{4}-[\da-f]{12}/i))
-  }
-
-  getIDFromURL(url) {
-    var m = url.match(new RegExp('^' + settings.baseURL + '/o/(\\d+)'));
-    if (!m || (m.length < 2)) return null;
-    return parseInt(m[1]);
   }
 
   decodeQrCode(self, cb) {
@@ -119,17 +127,24 @@ class Scan extends Component {
   }
 
 
-  scanSuccess(code) {
-    console.log("Successfully scanned:", code);
+  scanSuccess(code, type) {
+    console.log("Successfully scanned", type, ':', code);
 
     if(this.props.onScan) {
-      this.props.onScan(code);
+      this.props.onScan(code, type);
+      return;
+    }
+
+    if(type === 'uuid') {
+      app.actions.gotoPhysical(code);
+    } else {
+      app.actions.gotoPhysicalByBarcode(code);
     }
   }
 
   scan(delay) {
     if(!this.state.scanAccess) return;
-    delay = delay || 500; // delay between frames in ms
+    delay = delay || 250; // delay between frames in ms
     
     var scanVideo = document.getElementById('scanVideo');
     try {
@@ -138,38 +153,46 @@ class Scan extends Component {
       
     }
 
-    this.decodeQrCode(this, function(err, data) {
+    this.decodeQrCode(this, (err, data) => {
       if(err || !data || !data.result) {
         if(!this.enableDM) {
           setTimeout(this.scan.bind(this), delay);
         } else {
           console.error("DataMatrix scanning not currently supported");
-          //            decodeDMCode(function(data) {
-          //              if (!data) return setTimeout(scan.bind(this), delay);
-          //              // TODO decode then call scanSuccess
-          //            });
         }
         return
       }
-      var id = this.getIDFromURL(data.result);
-      if(!id) return setTimeout(this.scan.bind(this), delay);
+      const id = data.result.toLowerCase();
+      if(!this.isUUID(id)) {
+        return setTimeout(this.scan.bind(this), delay);
+      }
 
       // TODO visual indication of scan success
-      this.scanSuccess.bind(this)(id);
-    }.bind(this));
+      
+      this.scanSuccess(id, 'uuid');
+    });
   }
 
   keyboardScan(code) {
 
-    var code = code.replace(/[^\d]+/g, '');
+    var code = code.toLowerCase();
     console.log("code:", code);
 
-    if(code.length <= 0) {
-      // TODO better error handling
-      app.actions.notify("Invalid barcode...", 'warning', 1500);
+    if(code.length <= 0){
       return;
     }
-    this.scanSuccess(code);
+
+    if(this.isUUID(code)) {
+      this.scanSuccess(code, 'uuid');
+      return;
+    }
+
+    if(this.isCryo(code)) {
+      this.scanSuccess(code, 'cryotube');
+      return;      
+    }
+
+    return;   
   }
 
   // prevent text input field from loosing focus
@@ -246,26 +269,38 @@ class Scan extends Component {
     var cameraAccessMsg = '';
     
     if(!this.state.scanAccess) {
-        cameraAccessMsg = (
-            <div id="cameraAccessMsg">
-              <div class="spinner">
-                <div class="cssload-whirlpool"></div>
-              </div>
-              <h5 style="color:green">Waiting for browser camera access</h5>
-              <p>Without camera access you will only be able to scan using an attached USB barcode scanner</p>
-            </div>
+      let statusMsg = '';
+      if(!this.state.cameraFailed) {
+        statusMsg = (
+            <h5 style="color:green">Waiting for browser webcam access</h5>
+        )
+      } else {
+        statusMsg = (
+            <div id="scanError" class="error">{this.state.error}, but you can still:</div>
         );
+      }
+      cameraAccessMsg = (
+          <div id="cameraAccessMsg">
+            <div class="spinner">
+              <div class="cssload-whirlpool"></div>
+            </div>
+            {statusMsg}
+          </div>
+      );
+    } else {
+      cameraAccessMsg = (
+        <p>Scan QR codes by showing them to the webcam.</p>
+      );
     }
 
     return (
 
         <div id="scan-wrapper" class="scan">
           <div class="row">
-            <div class="col s1 m1 l1"></div>
-            
+            <div class="col s1 m1 l1"></div>            
             <div class="col s6 m6 l6">
-              <div id="scanError" class="error">{this.state.error}</div>
               {cameraAccessMsg}
+              <p>Scan cryotubes using the tabletop or hand-held DataMatrix scanners.<br/>Scan 1D barcodes using hand-held 1D barcode scanner,<br/>or use the keyboard to manually enter any barcode, then hit enter.</p>
               <canvas id="scanCanvas" class="scanCanvas" width="560" height="560"></canvas>
               {scanVideo}
 

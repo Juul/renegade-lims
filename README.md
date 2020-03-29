@@ -54,6 +54,20 @@ Then edit both to your liking.
 npm install
 ```
 
+## Client only
+
+If you want to enable webcam-based DataMatrix scanning:
+
+```
+sudo apt install streamer dmtx-utils v4l-utils
+```
+
+Then make sure you set `dataMatrixScanner` in `client/settings.js` e.g:
+
+```
+dataMatrixScanner: "/dev/video0"
+```
+
 # Building
 
 Client needs to be built:

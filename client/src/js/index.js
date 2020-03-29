@@ -6,6 +6,11 @@ var app = {};
 window.app = app;
 app.rpc = require('./rpc.js');
 
+// TODO make a non-terrible user notice/error display
+app.error = function(err) {
+  alert(err);
+}
+
 var whenConnectedCallbacks = [];
 app.whenConnected = function(cb) {
   if(app.remote) return cb();
@@ -14,9 +19,7 @@ app.whenConnected = function(cb) {
 };
 
 app.state = createStore({
-
   count: 0
-
 });
 
 app.actions = require('./actions')(app.state);

@@ -20,6 +20,24 @@ function findNextFreeWell(rows, cols, occupied) {
   return null;
 }
 
+function wellElementFromEvent(event) {
+  var el = event.target;
+  if(!el) return;
+  while(!el.classList.contains('col')) {
+    if(!el.parentNode) return null;
+    el = el.parentNode;
+  }
+  return el;
+}
+
+function wellFromEvent(event) {
+  const el = wellElementFromEvent(event);
+  if(!el) return null;
+  const well = el.getAttribute('data-well');
+  if(!well.match(/^[A-Z]\d\d?$/)) return null;
+  return well;
+}
+
 class Plate extends Component {
 
   constructor(props) {
@@ -40,6 +58,9 @@ class Plate extends Component {
     const nextFreeWell = findNextFreeWell(firstState.rows, firstState.cols, firstState.occupied);
     if(nextFreeWell) {
       firstState.selected = nextFreeWell;
+      if(props.onselect) {
+        props.onselect(nextFreeWell);
+      }
     }
     
     this.setState(firstState);
@@ -63,19 +84,29 @@ class Plate extends Component {
     }
   }
 
-  selectWell(event) {
-    var el = event.target;
-    if(!el) return;
-    while(!el.classList.contains('col')) {
-      if(!el.parentNode) return;
-      el = el.parentNode;
+  selectWell(well) {
+    if(this.props.onselect) {
+      this.props.onselect(well);
     }
-    const well = el.getAttribute('data-well');
-    if(!well.match(/^[A-Z]\d\d?$/)) return;
+  }
+  
+  selectWellClick(event) {
+    const well = wellFromEvent(event);
+    if(!well) return;
     if(this.state.occupied[well]) return;
     this.setState({
       selected: well
     });
+    this.selectWell(well);
+  }
+
+  hoverWell(event) {
+    const well = wellFromEvent(event);
+    if(!well) return;
+
+    if(this.props.onhover) {
+      this.props.onhover(well);
+    }
   }
   
   makeColumn(col, row) {
@@ -113,7 +144,7 @@ class Plate extends Component {
     var className = 'col col-'+col;
 
     return (
-        <div class={className} data-well={well} onClick={this.selectWell.bind(this)}>{inner}</div>
+        <div class={className} data-well={well} onClick={this.selectWellClick.bind(this)} onMouseOver={this.hoverWell.bind(this)}>{inner}</div>
     );
   }
   

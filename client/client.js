@@ -17,6 +17,7 @@ const router = require('routes')(); // server side router
 const ecstatic = require('ecstatic');
 
 const ntpTester = require('../lib/ntp_tester.js');
+const DataMatrixScanner = require('./lib/datamatrix_scanner.js');
 const settings = require('./settings.js');
 
 const multifeedPath = path.join(settings.dataPath, 'clientfeed');
@@ -25,8 +26,10 @@ const multi = multifeed(multifeedPath, {valueEncoding: 'json'})
 const multifeedPubPath = path.join(settings.dataPath, 'pubfeed');
 const multiPub = multifeed(multifeedPubPath, {valueEncoding: 'json'})
 
-multi.ready(function() {
+const dmScanner = startDataMatrixScanner();
 
+multi.ready(function() {
+  
   startPeriodicTimeCheck();
   
   var socket = tls.connect(settings.port, settings.host, {
@@ -107,11 +110,26 @@ function login(data, cb) {
 
 var rpcMethods = {
   
-  foo: function(curUser, cb) {
+  foo: function(userData, cb) {
     cb(null, "bar");
   },
 
   // TODO move all of the below to the 'user' namespace
+
+  getPhysical: function(userData, code, cb) {
+
+  },
+
+  getPhysicalByBarcode: function(userData, code, cb) {
+
+  },
+  
+  claimDataMatrixScanner: function(userData, cb) {
+    if(!dmScanner) return cb(new Error("No Data Matrix scanner configured"));
+
+    // TODO we should unregister when this web client disconnects
+    dmScanner.registerCallback(cb);
+  },
   
   getOrCreatePlateByBarcode: function(userData, barcode, cb) {
     // TODO implement
@@ -285,6 +303,20 @@ console.log("Web server listening on", settings.webHost+':'+settings.webPort);
 server.listen(settings.webPort, settings.webHost)
 
 
+function startDataMatrixScanner() {
+  var dataMatrixScanner;
+  
+  if(settings.dataMatrixScanner) {
+    dataMatrixScanner = new DataMatrixScanner(settings.dataMatrixScanner);
+    dataMatrixScanner.scan(true, function(err, code) {
+      if(err) return console.error(err);
+
+      console.log("GOT CODE:", code);
+    });
+    return dataMatrixScanner;
+  }
+  return null;
+}
 
 function startPeriodicTimeCheck() {
   ntpTester.startPeriodicTimeCheck(settings.ntpServers, settings.checkTimeEvery * 1000, function(err, isTimeAccurate) {

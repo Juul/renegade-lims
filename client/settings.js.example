@@ -32,6 +32,10 @@ module.exports = {
     {host: '1.pool.ntp.org', port: 123},
     {host: '2.pool.ntp.org', port: 123},
     {host: '3.pool.ntp.org', port: 123}
-  ]
+  ],
+
+  // Device to use for webcam-based DataMatrix scanning
+  // Comment out if you don't have such a device
+  dataMatrixScanner: "/dev/video0"
 
 };
