@@ -8,7 +8,10 @@ var Main = require('./main.js')
 var Plate = require('./plate.js')
 var EditPlate = require('./edit_plate.js')
 var Scan = require('./scan.js')
+var Print = require('./print.js')
 
+
+var testLabel = {};
 
 class Root extends Component {
 
@@ -19,7 +22,8 @@ class Root extends Component {
         <Main path="/" />
         <EditPlate path="/plate/:id" />
           <Plate path="/plate-test" />
-          <Scan path="/scan" />
+        <Scan path="/scan" />
+        <Print path="/print" item={testLabel} />
         </Router>
     );
   }

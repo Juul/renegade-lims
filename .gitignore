@@ -9,3 +9,4 @@ client/data/**
 client/static/build/**
 client/settings.web.js
 client/node_modules/**
+client/labdevice/**

@@ -11,6 +11,8 @@
     "dev": "bin/dev.js"
   },
   "dependencies": {
+    "async": "^3.2.0",
+    "buffer-equal-constant-time": "^1.0.1",
     "ecstatic": "^4.1.2",
     "fs-extra": "^9.0.0",
     "hypercore": "^8.11.1",
@@ -24,6 +26,7 @@
     "routes": "^2.1.0",
     "rpc-multiauth": "0.0.3",
     "rpc-multistream": "^0.9.7",
+    "ssh2": "^0.8.9",
     "subleveldown": "^4.1.4",
     "through2": "^3.0.1",
     "uuid": "^7.0.2",
@@ -37,6 +40,7 @@
   "devDependencies": {
     "@babel/core": "^7.8.6",
     "@babel/preset-env": "^7.8.6",
+    "FontLoader": "0.0.2",
     "babel-plugin-transform-react-jsx": "^6.24.1",
     "babelify": "^10.0.0",
     "browserify": "^16.5.0",
@@ -49,6 +53,7 @@
     "gulp-sass": "^4.0.2",
     "preact": "^10.3.4",
     "preact-router": "^3.2.1",
+    "qrcode-generator": "^1.4.4",
     "qrcode-reader": "^1.0.4",
     "watchify": "^3.11.1",
     "z-preact-easy-state": "^6.0.12"

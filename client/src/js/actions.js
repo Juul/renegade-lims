@@ -14,6 +14,15 @@ function navigateToPhysical(item) {
 module.exports = function(state) {
   return {
 
+    // TODO implement a proper notify
+    notify: function(msg, level) {
+      if(level === 'error') {
+        alert(msg);
+      } else {
+        console.log("[notify]", msg);
+      }
+    },
+    
     // Find and show a physical by uuid
     gotoPhysical: function(id) {
       app.remote.getPhysical(id, function(err, item) {

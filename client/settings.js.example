@@ -1,5 +1,6 @@
 'use strict';
 
+var path = require('path');
 var fs = require('fs');
 
 module.exports = {
@@ -36,6 +37,27 @@ module.exports = {
 
   // Device to use for webcam-based DataMatrix scanning
   // Comment out if you don't have such a device
-  dataMatrixScanner: "/dev/video0"
+  dataMatrixScanner: "/dev/video0",
+
+  // Settings related to label printing
+  labDevice: {
+
+    // Where label image files are stored.
+    // Relative to userFilePath
+    labelImageFilePath: 'labels',
+
+    // hostname where we should listen for printer client connections
+    // (this is optional: falls back to settings.hostname if not specified)
+    // serverHost: "localhost",
+
+    // port where we should listen for printer client connections
+    serverPort: 4200,
+
+    // path to the host ssh private key
+    hostKey: path.join(__dirname, 'labdevice', 'hostkey'),
+
+    // path to directory containing the public keys of authorized labdevice clients
+    clientKeys: path.join(__dirname, 'labdevice', 'client_keys')
+  }
 
 };

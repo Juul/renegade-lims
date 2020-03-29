@@ -36,7 +36,7 @@ cd clients/
 cp ../../client/tls/client-cert.pem ./swabber.localhost.pem
 ```
 
-# Settings
+# Setup
 
 ```
 cp settings.js.example settings.js
@@ -47,6 +47,23 @@ cp settings.web.js.example settings.web.js
 ```
 
 Then edit both to your liking.
+
+## Generate key pair for labdevice (labelprinter) server
+
+```
+mkdir -p client/labdevice/client_keys
+cd client/labdevice/
+ssh-keygen -t rsa -f hostkey -N ""
+cd ../../
+```
+
+and copy the ssh public key for each labdevice client to the `client/labdevice/client_keys/` directory to authorize the client.
+
+Create `labels/` directory:
+
+```
+mkdir client/labels
+```
 
 # Install dependencies
 

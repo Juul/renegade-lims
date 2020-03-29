@@ -17,8 +17,11 @@ const router = require('routes')(); // server side router
 const ecstatic = require('ecstatic');
 
 const ntpTester = require('../lib/ntp_tester.js');
+const labDeviceServer = require('./lib/lab_device_server.js');
 const DataMatrixScanner = require('./lib/datamatrix_scanner.js');
 const settings = require('./settings.js');
+
+// ------------------
 
 const multifeedPath = path.join(settings.dataPath, 'clientfeed');
 const multi = multifeed(multifeedPath, {valueEncoding: 'json'})
@@ -27,6 +30,13 @@ const multifeedPubPath = path.join(settings.dataPath, 'pubfeed');
 const multiPub = multifeed(multifeedPubPath, {valueEncoding: 'json'})
 
 const dmScanner = startDataMatrixScanner();
+
+
+labDeviceServer.start(settings, function(err) {
+  if(err) return console.error(err);
+  
+  console.log("Lab device server started");
+});
 
 multi.ready(function() {
   
@@ -116,6 +126,10 @@ var rpcMethods = {
 
   // TODO move all of the below to the 'user' namespace
 
+  printLabel: function() {
+    labDeviceServer.printLabel('qlPrinter', 'examples/label.png');
+  },
+  
   getPhysical: function(userData, code, cb) {
 
   },

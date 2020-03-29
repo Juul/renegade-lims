@@ -4,4 +4,8 @@ module.exports = {
 
   baseURL: 'http://localhost', // where this web app is accessed
 
+  // the relative URL at which symbol files 
+  // for the label generator are available
+  symbolPath: '/static/symbols'
+  
 };

@@ -1,4 +1,37 @@
 
+/* -- PRINT -- */
+
+@font-face {
+  font-family: 'FiraSans-Regular';
+  src: url('/static/fonts/label_printer/FiraSans-Regular.otf');
+}
+
+@font-face {
+  font-family: 'FiraSans-Bold';
+  src: url('/static/fonts/label_printer/FiraSans-Bold.otf');
+}
+
+@font-face {
+  font-family: 'FiraSans-Italic';
+  src: url('/static/fonts/label_printer/FiraSans-Italic.otf');
+}
+
+.print {
+  margin-top: 30px;
+}
+
+.print form {
+  margin-top: 25px;
+}
+
+.print .labelPreview {
+  display: block;
+  border: 1px solid black;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+
 /* -- SCAN -- */
 
 .scanCanvas {
