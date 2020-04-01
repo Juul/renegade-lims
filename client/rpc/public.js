@@ -42,43 +42,19 @@ module.exports = function(labDeviceServer, dmScanner, labCore) {
       // TODO we should unregister when this web client disconnects
       dmScanner.registerCallback(cb);
     },
-    
-    getOrCreatePlateByBarcode: function(userData, barcode, cb) {
+
+    getPlateByBarcode: function(id, cb) {
       // TODO implement
-      /*
-      console.log("get/create plate by barcode");
-      cb(null, {
-        id: uuid(),
-        createdBy: 'juul',
-        createdAt: new Date(),
-        updatedBy: 'juul', 
-        updatedAt: new Date(),
-        wells: {
-          A1: uuid(),
-          A2: uuid()
-        }
-      });
-      */
+      throw new Error("Not implemented");
+    },
+    
+    getObject: function(userData, id, cb) {
+
+      console.log("getPlate:", id);
+      labCore.api.objectsByGUID.get(id, cb);
+      
     },
 
-    getPlate: function(userData, id, cb) {
-      // TODO implement
-      /*
-      console.log("get plate:", id);
-      cb(null, {
-        id: uuid(),
-        createdBy: 'juul',
-        createdAt: new Date(),
-        updatedBy: 'juul', 
-        updatedAt: new Date(),
-        wells: {
-          A1: uuid(),
-          A2: uuid()
-        }
-      });
-      */
-    },
-    
     updatePlate: function(userData, plate, cb) {
       // TODO implement
       cb();

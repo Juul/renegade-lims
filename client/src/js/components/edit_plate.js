@@ -29,7 +29,7 @@ class EditPlate extends Component {
   }
   
   plateScanned(code) {
-    app.remote.getOrCreatePlateByBarcode(code, (err, plate) => {
+    app.remote.getPlateByBarcode(id, (err, plate) => {
       if(err) return this.error(err);
 
       this.setState({
@@ -66,13 +66,13 @@ class EditPlate extends Component {
   componentDidMount() {
     app.whenConnected(() => {
       if(this.state.id) {
-        app.remote.getPlate(this.state.id, (err, plate) => {
+        app.remote.getObject(this.state.id, (err, plate) => {
           if(err) {
             console.log(err);
             this.error("Plate not found");
             return;
           }
-          if(!plate) return;
+          if(!plate || !plate.type === 'plate') return;
 
           const wells = this.wellsToClass(plate.wells, 'green');
           
