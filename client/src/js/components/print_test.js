@@ -18,11 +18,14 @@ class PrintTest extends Component {
 
     const doPrint = true;
     
-    app.remote.saveLabel(labelData, imageData, doPrint, function(err, id, filePath) {
-      if(err) console.error(err);
+    app.remote.savePhysical(labelData, imageData, doPrint, function(err, obj, filePath) {
+      if(err) {
+        app.actions.notify(err, 'error');
+        return;
+      }
 
-      console.log("Saved label with id", id, "filepath", filePath);
-//      route('/static/labels/');
+      console.log("Saved label with id", obj.id, "filepath", obj.labelPath);
+      route('/static/labels/');
     });
     
   }

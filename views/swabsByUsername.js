@@ -1,10 +1,10 @@
 'use strict';
 
 const through = require('through2');
-const timestamp = require('monotonic-timestamp');
 const charwise = require('charwise');
 const readonly = require('read-only-stream');
 
+const nicify = require('./common/nicify.js');
 const validateSwab = require('../validators/swab.js');
 
 module.exports = function(db) {
@@ -17,14 +17,8 @@ module.exports = function(db) {
       entries.forEach(function(entry) {
         if(!validateSwab(entry)) return;
         
-        // If the message is from <<THE FUTURE>>, index it at _now_.
-        var ts = entry.value.createdAt;
-        if(isFutureMonotonicTimestamp(ts)) ts = timestamp();
-
-        var key = entry.value.username + '!' + charwise.encode(ts);
-
-        // When was this data received by the server?
-        entry.value.synchronizedAt = timestamp();
+        const ts = nicify(entry);        
+        var key = charwise.encode(ts);
         
         batch.push({
           type: 'put',
@@ -72,19 +66,3 @@ module.exports = function(db) {
     }
   }
 };
-
-// from https://github.com/cabal-club/cabal-core/blob/master/views/messages.js
-function monotonicTimestampToTimestamp (timestamp) {
-  if (/^[0-9]+\.[0-9]+$/.test(String(timestamp))) {
-    return Number(String(timestamp).split('.')[0])
-  } else {
-    return timestamp
-  }
-}
-
-// from https://github.com/cabal-club/cabal-core/blob/master/views/messages.js
-function isFutureMonotonicTimestamp (ts) {
-  var timestamp = monotonicTimestampToTimestamp(ts)
-  var now = new Date().getTime()
-  return timestamp > now
-}

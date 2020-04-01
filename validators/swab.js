@@ -1,23 +1,13 @@
 'use strict';
 
-
-function validateUUID(uuid) {
-  // TODO implement
-  if(!uuid) return false
-  return true
-}
-
-function validateTimestamp(stamp) {
-  // TODO implement
-  if(!stamp) return false
-  return true
-}
+var validateObject = require('./object.js');
 
 module.exports = function(swab) {
+  if(!validateObject(swab)) return false
   const val = swab.value;
   if(val.type !== 'swab') return false;
-  if(!validateUUID(val.id)) return false;
-  if(!validateTimestamp(val.createdAt)) return false;
+
+  // TODO complete this
   
   return true;
 }

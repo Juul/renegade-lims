@@ -5,7 +5,7 @@ const charwise = require('charwise');
 const readonly = require('read-only-stream');
 
 const nicify = require('./common/nicify.js');
-const validateSwab = require('../validators/swab.js');
+const validatePlate = require('../validators/plate.js');
 
 module.exports = function(db) {
   return {
@@ -15,7 +15,7 @@ module.exports = function(db) {
       
       const batch = [];
       entries.forEach(function(entry) {
-        if(!validateSwab(entry)) return;
+        if(!validatePlate(entry)) return;
         
         const ts = nicify(entry);        
         var key = charwise.encode(ts);
@@ -65,4 +65,5 @@ module.exports = function(db) {
     }
   }
 };
+
 

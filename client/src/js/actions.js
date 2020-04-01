@@ -3,9 +3,9 @@
 import { route } from 'preact-router';
 
 
-function navigateToPhysical(item) {
+function navigateToObject(item) {
   if(item.type === 'plate') {
-    route('/plate/'+item.id);
+    route('/plate/'+encodeURIComponent(item.id));
   } else{
     console.log("TODO no view for item type:", item.type);
   }

@@ -13,117 +13,124 @@ var LabelMaker = require('../labelmaker.js');
 var settings = require('../../../settings.web.js');
 
 module.exports = class Print extends Component {
-   
-    constructor(props) {
-      super(props);
-      
-      this.modalCallback = props.callback;
-      this.submitForm = this.submitForm.bind(this)
+  
+  constructor(props) {
+    super(props);
+    
+    this.modalCallback = props.callback;
+    this.submitForm = this.submitForm.bind(this)
 
-      this.state = Object.assign({
-        id: props.item.id || uuid(),
-        title: undefined,
-        text: undefined,
-        bsl: 1,
-        temperature: undefined
-      }, props.item.label || {
-        title: props.item.name,
-        text: props.item.description
-      })
+    this.state = Object.assign({
+      id: props.item.id || uuid(),
+      title: undefined,
+      text: undefined,
+      bsl: 1,
+      temperature: undefined
+    }, props.item.label || {
+      title: props.item.name,
+      text: props.item.description
+    })
 
-      this.keepScanning = true;
-      this.enableDM = false;
+    this.keepScanning = true;
+    this.enableDM = false;
 
-      this.labelMaker = new LabelMaker({
-        symbolPath: settings.symbolPath,
-        lineMargins: {
-          2: 15
+    this.labelMaker = new LabelMaker({
+      symbolPath: settings.symbolPath,
+      lineMargins: {
+        2: 15
+      }
+    });
+
+    var fontLoader = new FontLoader(["FiraSans-Regular", "FiraSans-Bold", "FiraSans-Italic"], {
+      complete: function(err) {
+        if(err) {
+          app.actions.notify("Some required fonts failed to load", 'error', 0);
+          console.error("Font load failure:", err);
+          return;
         }
-      });
+        // for some reason we need to wait for next tick
+        // otherwise the fonts aren't actually available yet
+        setTimeout(function() {
+          this.setState({
+            fontsLoaded: true
+          });
+        }.bind(this), 1);
+      }.bind(this)
+    }, 3000);
+    fontLoader.loadFonts();
+  }
+  
+  componentWillReceiveProps(nextProps) {
 
-      var fontLoader = new FontLoader(["FiraSans-Regular", "FiraSans-Bold", "FiraSans-Italic"], {
-        complete: function(err) {
-          if(err) {
-            app.actions.notify("Some required fonts failed to load", 'error', 0);
-            console.error("Font load failure:", err);
-            return;
-          }
-          // for some reason we need to wait for next tick
-          // otherwise the fonts aren't actually available yet
-          setTimeout(function() {
-            this.setState({
-              fontsLoaded: true
-            });
-          }.bind(this), 1);
-        }.bind(this)
-      }, 3000);
-      fontLoader.loadFonts();
-    }
-      
-    componentWillReceiveProps(nextProps) {
-
-      if(nextProps.item) {
-        this.setState(nextProps.item.label || {
-          title: nextProps.item.name,
-          text: nextProps.item.description
-        });
-      }
-
-    }
-
-    updateLabel(cb) {
-      cb = cb || function() {}
-
-      var pre = ""
-      pre += (this.state.id || '?') + "\n";
-      pre += (this.state.title || '') + "\n";
-      
-      var txt = this.state.text || '';
-      var temperature = this.state.temperature || '';
-      
-      var o = {
-        temperature: temperature,
-        bsl: this.state.bsl || 1
-      };
-      
-      if (o.bsl > 1) {
-        o.biohazard = true;
-      }
-      
-      this.labelMaker.drawLabel('labelPreview', this.state.id, pre + txt, o, cb);
-    }
-
-
-    submitForm(e) {
-      e.preventDefault()
-      if(!this.modalCallback) return;
-      console.log('print label submit');
-      var imageData = this.labelMaker.getDataURL();
-      this.modalCallback(null, this.state, imageData);
-        // TODO fixme
-//        app.actions.prompt.reset()
-    }
-      
-    close(e) {
-      if (this.props.onClose) this.props.onClose(false)
-      // TODO fixme
-//        app.actions.prompt.reset()
-    }
-
-
-    componentDidMount() {
-      this.componentDidUpdate();
-    }
-
-
-    componentDidUpdate() {
-      if(!this.state.fontsLoaded) return;
-      this.updateLabel(function(err) {
-        if(err) app.actions.notify(err, 'error');
+    if(nextProps.item) {
+      this.setState(nextProps.item.label || {
+        title: nextProps.item.name,
+        text: nextProps.item.description
       });
     }
 
-	  render() {
+  }
+
+  updateLabel(cb) {
+    cb = cb || function() {}
+
+    var pre = ""
+    pre += (this.state.id || '?') + "\n";
+    pre += (this.state.title || '') + "\n";
+    
+    var txt = this.state.text || '';
+    var temperature = this.state.temperature || '';
+    
+    var o = {
+      temperature: temperature,
+      bsl: this.state.bsl || 1
+    };
+    
+    if (o.bsl > 1) {
+      o.biohazard = true;
+    }
+    
+    this.labelMaker.drawLabel('labelPreview', this.state.id, pre + txt, o, cb);
+  }
+
+
+  saveNoPrint(e) {
+    e.preventDefault()
+    if(!this.modalCallback) return;
+    this.modalCallback(null, this.state);
+    // TODO fixme
+    //  app.actions.prompt.reset()
+  }
+  
+  submitForm(e) {
+    e.preventDefault()
+    if(!this.modalCallback) return;
+    var imageData = this.labelMaker.getDataURL();
+    this.modalCallback(null, this.state, imageData);
+    // TODO fixme
+    //  app.actions.prompt.reset()
+  }
+  
+  close(e) {
+    if (this.props.onClose) this.props.onClose(false)
+    // TODO fixme
+    //        app.actions.prompt.reset()
+  }
+
+
+  componentDidMount() {
+    this.componentDidUpdate();
+  }
+
+
+  componentDidUpdate() {
+    if(!this.state.fontsLoaded) return;
+    this.updateLabel(function(err) {
+      if(err) app.actions.notify(err, 'error');
+    });
+  }
+
+	render() {
 
         const linkFormData = function(component, fid, valuePath) {
           return event => {
@@ -168,7 +175,8 @@ module.exports = class Print extends Component {
                         <input type="submit" style="visibility:hidden;height:0" />
                         <div class="field">
                             <div class="control">
-                                <input type="submit" class="button is-link" value="Save & print" />
+                            <input type="submit" class="button is-link" value="Save & print" />
+                            <input type="button" class="button is-link" value="Save" onclick={this.saveNoPrint.bind(this)} />
                                 <span style="margin-right:20px;">&nbsp;</span>
                                 <input type="button" class="button is-link" value="Cancel" onclick={this.close.bind(this)} />
                             </div>

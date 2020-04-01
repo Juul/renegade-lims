@@ -21,16 +21,39 @@ const settings = require('./settings.js');
 const SWABS_BY_TIME = 'st';
 const SWABS_BY_USER = 'su';
 
+fs.ensureDirSync(settings.dataPath, {
+  mode: 0o2750
+});
+
+const multifeedPath = path.join(settings.dataPath, 'labfeed');
+const labMulti = multifeed(multifeedPath, {valueEncoding: 'json'})
+const multifeedAdminPath = path.join(settings.dataPath, 'adminfeed');
+const adminMulti = multifeed(multifeedAdminPath, {valueEncoding: 'json'})
+const labCore = kappa(null, {multifeed: labMulti});
+
+const db = level(path.join(settings.dataPath, 'db'), {valueEncoding: 'json'});
+
+labCore.use('swabsByTime', 1, view(sublevel(db, SWABS_BY_TIME, {valueEncoding: 'json'}), swabsByTimeView));
+labCore.use('swabsByUser', 1, view(sublevel(db, SWABS_BY_USER, {valueEncoding: 'json'} ), swabsByUserView));
+
+var allClientCerts;
+
+function init() {
+  
+  allClientCerts = settings.tlsClients.map((o) => {
+    return o.cert;
+  });
+  computeCertHashes(settings.tlsClients);
+  
+  startPeriodicTimeCheck();
+  initReplication();
+}
 
 function sha256(data) {
   const hash = crypto.createHash('sha256');
   hash.update(data);
   return hash.digest('hex');
 }
-
-const allClientCerts = settings.tlsClients.map((o) => {
-  return o.cert;
-});
 
 // remove comments and whitespace from certificate data
 function certClean(rawCert) {
@@ -47,8 +70,6 @@ function computeCertHashes(tlsClients) {
     o.hash = sha256(certClean(o.cert));
   }
 }
-
-computeCertHashes(settings.tlsClients);
 
 // takes in settings.tlsClientCerts
 function getClientCertEntry(tlsClients, cert) {
@@ -77,109 +98,88 @@ function startPeriodicTimeCheck() {
   });
 }
 
-async function init() {
-  
-  await fs.ensureDir(settings.dataPath, {
-    mode: 0o2750
+function initReplication() {
+
+  // TODO remove debug code
+  adminMulti.writer('users', function(err, feed) {
+    feed.append({
+      type: 'user',
+      name: 'cookie cat'
+    });
   });
-
-  startPeriodicTimeCheck();
-
-  const multifeedPath = path.join(settings.dataPath, 'multifeed');
-  const multi = multifeed(multifeedPath, {valueEncoding: 'json'})
-  const multifeedPubPath = path.join(settings.dataPath, 'pubfeed');
-  const multiPub = multifeed(multifeedPubPath, {valueEncoding: 'json'})
-  const core = kappa(null, {multifeed: multi});
-
-  const db = level(path.join(settings.dataPath, 'db'), {valueEncoding: 'json'});
   
-  core.use('swabsByTime', 1, view(sublevel(db, SWABS_BY_TIME, {valueEncoding: 'json'}), swabsByTimeView));
-  core.use('swabsByUser', 1, view(sublevel(db, SWABS_BY_USER, {valueEncoding: 'json'} ), swabsByUserView));
+  // Show all swabs by time
+  labCore.api.swabsByTime.read().pipe(through.obj(function(swab, enc, next) {
+    console.log("swab:", enc, typeof swab, swab);
+
+    next();
+  }));
   
-  multi.ready(function() {
-
-    // TODO remove debug code
-    multiPub.writer('users', function(err, feed) {
-      feed.append({
-        type: 'user',
-        name: 'cookie cat'
-      });
-    });
-    
-    // Show all swabs by time
-    core.api.swabsByTime.read().pipe(through.obj(function(swab, enc, next) {
-      console.log("swab:", enc, typeof swab, swab);
-
-      next();
-    }));
-    
-    multi.on('feed', function(feed, name) {
-      console.log("feed:", name);
-    });
-    
-    var server = tls.createServer({
-      ca: allClientCerts,
-      key: settings.tlsKey,
-      cert: settings.tlsCert,
-      requestCert: true,
-      rejectUnauthorized: true
-      
-    }, function(socket) {
-      console.log("got connection");
-      const mux = multiplex();
-
-      const client = getClientCertEntry(settings.tlsClients, socket.getPeerCertificate());
-      if(!client) {
-        console.log("Unknown client with valid certificate connected");
-        socket.destroy();
-        return;
-      }
-      console.log("New connection from", socket.remoteAddress+':'+socket.remotePort);
-      console.log("A", client.type, "client connected:", client.description);
-      
-      var fullReadPermission;
-      
-      if(client.type === 'field') {
-
-        fullReadPermission = false;
-        
-      } else if(client.type === 'lab') {
-
-        fullReadPermission = true;
-        
-      } else { // not a recognized certificate for any type of device
-        console.log("Connection from unknown client type with a valid certificate");
-        socket.destroy();
-        return;
-      }
-
-      const toServer = mux.createSharedStream('toServer');
-      const duplex = mux.createSharedStream('duplex');
-
-      socket.pipe(mux).pipe(socket);
-
-      toServer.pipe(multi.replicate(false, {
-        download: true,
-        upload: false,
-        live: true
-      })).pipe(toServer);
-      
-      duplex.pipe(multiPub.replicate(false, {
-        download: true,
-        upload: fullReadPermission,
-        live: true
-      })).pipe(duplex);
-      
-    })
-    
-    server.listen({
-      host: settings.host,
-      port: settings.port
-    });
-    
-    console.log('listening on', settings.host+':'+settings.port);
+  labMulti.on('feed', function(feed, name) {
+    console.log("feed:", name);
   });
+  
+  var server = tls.createServer({
+    ca: allClientCerts,
+    key: settings.tlsKey,
+    cert: settings.tlsCert,
+    requestCert: true,
+    rejectUnauthorized: true
+    
+  }, function(socket) {
+    console.log("got connection");
+    const mux = multiplex();
 
-}
+    const client = getClientCertEntry(settings.tlsClients, socket.getPeerCertificate());
+    if(!client) {
+      console.log("Unknown client with valid certificate connected");
+      socket.destroy();
+      return;
+    }
+    console.log("New connection from", socket.remoteAddress+':'+socket.remotePort);
+    console.log("A", client.type, "client connected:", client.description);
+    
+    var labReadAllowed;
+    
+    if(client.type === 'field') {
+
+      labReadAllowed = false;
+      
+    } else if(client.type === 'lab') {
+
+      labReadAllowed = true;
+      
+    } else { // not a recognized certificate for any type of device
+      console.log("Connection from unknown client type with a valid certificate");
+      socket.destroy();
+      return;
+    }
+
+    const labStream = mux.createSharedStream('labStream');
+    const adminStream = mux.createSharedStream('adminStream');
+
+    socket.pipe(mux).pipe(socket);
+
+    labStream.pipe(labMulti.replicate(false, {
+      download: true,
+      upload: labReadAllowed,
+      live: true
+    })).pipe(labStream);
+    
+    adminStream.pipe(adminMulti.replicate(false, {
+      download: false,
+      upload: true,
+      live: true
+    })).pipe(adminStream);
+    
+  })
+  
+  server.listen({
+    host: settings.host,
+    port: settings.port
+  });
+  
+  console.log('listening on', settings.host+':'+settings.port);
+};
 
 init();
