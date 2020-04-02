@@ -74,7 +74,7 @@ function LabelMaker(opts) {
         this.clear();
         ctx.fillStyle = "#000";
 
-        ctx.mozImageSmoothingEnabled = false;
+//        ctx.mozImageSmoothingEnabled = false;
         ctx.webkitImageSmoothingEnabled = false;
         ctx.msImageSmoothingEnabled = false;
         ctx.imageSmoothingEnabled = false;

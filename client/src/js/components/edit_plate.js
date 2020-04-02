@@ -3,8 +3,10 @@
 import { h, Component } from 'preact';
 import { view } from 'z-preact-easy-state';
 
-var Scan = require('./scan.js');
-var Plate = require('./plate.js');
+const PlatePhysical = require('../physicals/plate.js');
+
+const Scan = require('./scan.js');
+const Plate = require('./plate.js');
 
 class EditPlate extends Component {
   
@@ -14,7 +16,8 @@ class EditPlate extends Component {
     this.setState({
       id: props.id,
       plate: undefined,
-      wells: undefined,
+      selectedWell: undefined,
+      sample: undefined,
       error: undefined
     });
   }
@@ -29,28 +32,11 @@ class EditPlate extends Component {
   }
   
   plateScanned(code) {
-    app.remote.getPlateByBarcode(id, (err, plate) => {
-      if(err) return this.error(err);
-
-      this.setState({
-        plate: plate,
-        error: undefined
-      });
-    });  
+    app.remote.getPlateByBarcode(id, this.gotPlate);
   }
 
   saveSampleToSelectedWell() {
 
-  }
-
-  wellsToClass(wells, className) {
-    var wellsCopy = {};
-    for(let well in wells) {
-      if(wells[well]) {
-        wellsCopy[well] = className;
-      }
-    }
-    return wellsCopy;
   }
 
   onWellSelect(well) {
@@ -62,25 +48,27 @@ class EditPlate extends Component {
   showWellInfo(well) {
  //   console.log("Hovered well:", well);
   }
+
+  gotPlate(err, plate) {
+    if(err) {
+      console.log(err);
+    }
+    if(!plate || !plate.type === 'plate') {
+      app.actions.notify("Plate not found", 'error');
+      return;
+    }
+
+    
+    this.setState({
+      id: plate.id,
+      plate: plate
+    });
+  }
   
   componentDidMount() {
     app.whenConnected(() => {
       if(this.state.id) {
-        app.remote.getObject(this.state.id, (err, plate) => {
-          if(err) {
-            console.log(err);
-            this.error("Plate not found");
-            return;
-          }
-          if(!plate || !plate.type === 'plate') return;
-
-          const wells = this.wellsToClass(plate.wells, 'green');
-          
-          this.setState({
-            plate: plate,
-            wells: wells
-          });
-        })
+        app.remote.getObject(this.state.id, this.gotPlate.bind(this))
       }
     });
   }
@@ -95,6 +83,15 @@ class EditPlate extends Component {
           <span>{this.state.error}</span>
           </p>
       )
+    }
+
+    var sampleHtml = '';
+    if(this.sample) {
+      sampleHtml = (
+          <div>
+          <button>Save sample to well {this.state.selectedWell || ''}</button>
+          </div>
+      );
     }
     
     var main;
@@ -114,10 +111,18 @@ class EditPlate extends Component {
     } else {
       main = (
         <div>
-          <Plate occupied={this.state.wells} selectnext="orange" onselect={this.onWellSelect.bind(this)} onhover={this.showWellInfo.bind(this)} />
+          <h3>Plate: {this.state.id}</h3>
+          <p>
+          Label created at: {this.state.plate.createdAt}
+          <br/>
+          Label created by: {this.state.plate.createdBy || "Unknown"}
+          </p>
+          <Plate occupied={this.state.plate.wells} selectfree={!!this.state.sample} allowselectempty={!!this.state.sample} onselect={this.onWellSelect.bind(this)} onhover={this.showWellInfo.bind(this)} />
           <div>
-            Well: {this.state.selectedWell || ''}
+          Scan a cryotube to begin plating, or manually enter a cryotube ID with the keyboard and press enter.
           </div>
+          <Scan onScan={this.plateScanned.bind(this)} disableWebcam hideText />
+          {sampleHtml}
         </div>
       )
     }
@@ -125,6 +130,7 @@ class EditPlate extends Component {
     return (
       <div>
         {error}
+
         {main}
       </div>
     );

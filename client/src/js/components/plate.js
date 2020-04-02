@@ -38,6 +38,16 @@ function wellFromEvent(event) {
   return well;
 }
 
+function wellsToClass(wells, className) {
+  var wellsCopy = {};
+  for(let well in wells) {
+    if(wells[well]) {
+      wellsCopy[well] = className;
+    }
+  }
+  return wellsCopy;
+}
+
 class Plate extends Component {
 
   constructor(props) {
@@ -49,17 +59,24 @@ class Plate extends Component {
     //   B5: <id>
     // }
 
+    const occupied = (props.occupied) ? wellsToClass(props.occupied, 'green') : {};
+
+    console.log("OCCUPIED:", occupied);
+    
     const firstState = {
-      occupied: props.occupied || {},
+      allowSelectEmpty: props.allowselectempty,
+      occupied: occupied,
       rows: props.rows || 8,
       cols: props.cols || 12
     };
 
-    const nextFreeWell = findNextFreeWell(firstState.rows, firstState.cols, firstState.occupied);
-    if(nextFreeWell) {
-      firstState.selected = nextFreeWell;
-      if(props.onselect) {
-        props.onselect(nextFreeWell);
+    if(props.selectfree) {
+      const nextFreeWell = findNextFreeWell(firstState.rows, firstState.cols, firstState.occupied);
+      if(nextFreeWell) {
+        firstState.selected = nextFreeWell;
+        if(props.onselect) {
+          props.onselect(nextFreeWell);
+        }
       }
     }
     
@@ -91,6 +108,7 @@ class Plate extends Component {
   }
   
   selectWellClick(event) {
+    if(!this.state.allowSelectEmpty) return;
     const well = wellFromEvent(event);
     if(!well) return;
     if(this.state.occupied[well]) return;

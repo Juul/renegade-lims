@@ -1,9 +1,13 @@
 `use strict`;
 
-const uuid = require('uuid').v4;
 const fs = require('fs');
+const path = require('path');
 
-module.exports = function(labDeviceServer, dmScanner, labCore) {
+const timestamp = require('monotonic-timestamp');
+const uuid = require('uuid').v4;
+
+
+module.exports = function(settings, labDeviceServer, dmScanner, labCore) {
   return {
     
     foo: function(userData, cb) {
@@ -15,12 +19,13 @@ module.exports = function(labDeviceServer, dmScanner, labCore) {
     savePhysical: function(userData, obj, imageData, doPrint, cb) {
 
       if(imageData) {
-        obj.labelPath = idToLabelPath(obj.id);
+        obj.labelPath = idToLabelPath(settings, obj.id);
       }
-      if(err) return cb(err);
+
       savePhysical(labCore, obj, function(err, obj) {
         if(!imageData || err) return cb(err, obj);
-        saveLabel(labDeviceServer, obj, imageData, doPrint, function(err) {
+
+        saveLabel(settings, labDeviceServer, obj, imageData, doPrint, function(err) {
           if(err) return cb(err);
           
           cb(null, obj);
@@ -49,10 +54,7 @@ module.exports = function(labDeviceServer, dmScanner, labCore) {
     },
     
     getObject: function(userData, id, cb) {
-
-      console.log("getPlate:", id);
       labCore.api.objectsByGUID.get(id, cb);
-      
     },
 
     updatePlate: function(userData, plate, cb) {
@@ -80,7 +82,7 @@ function savePhysical(labCore, obj, cb) {
   });
 }
 
-function idToLabelPath(id) {
+function idToLabelPath(settings, id) {
   return path.join(settings.labDevice.labelImageFilePath, id+'.png')
 }
 
@@ -88,7 +90,7 @@ function printLabel(labDeviceServer, imagePath, cb) {
   labDeviceServer.printLabel('qlPrinter', imagePath, cb);
 }
 
-function saveLabel(labDeviceServer, labelData, imageData, doPrint, cb) {
+function saveLabel(settings, labDeviceServer, labelData, imageData, doPrint, cb) {
   // TODO validate data
   
   const id = labelData.id;
@@ -99,12 +101,12 @@ function saveLabel(labDeviceServer, labelData, imageData, doPrint, cb) {
     var imageBuffer = new Buffer(mtch[1], 'base64');
     
     // TODO size check
-    var imagePath = idToLabelPath(id);
+    var imagePath = idToLabelPath(settings, id);
     fs.writeFile(imagePath, imageBuffer, function(err) {
       if(err) return cb(err);
 
       if(doPrint) {
-        printLabel(imagePath, function(err) {
+        printLabel(labDeviceServer, imagePath, function(err) {
           if(err) return cb(err);
           cb(null, id, imagePath);
         });

@@ -15,6 +15,10 @@ class Scan extends Component {
 
     this.setState({
       code: '',
+      disableWebcam: props.disableWebcam,
+      disableDataMatrixScanner: props.disableDataMatrixScanner,
+      disableKeyboard: props.disableKeyboard,
+      hideText: props.hideText,
       scanAccess: false
     });
 
@@ -31,22 +35,28 @@ class Scan extends Component {
 
   async componentDidMount() {
 
-    app.whenConnected(() => {
-      app.remote.claimDataMatrixScanner((err, code) => {
-        if(err) return console.error("DataMatrix scan error:", err);
-        if(this.isCryo(code)) {
-          this.scanSuccess(code, 'cryotube');
-        }
+    if(!this.state.disableDataMatrixScanner) {
+      app.whenConnected(() => {
+        app.remote.claimDataMatrixScanner((err, code) => {
+          if(err) return console.error("DataMatrix scan error:", err);
+          if(this.isCryo(code)) {
+            this.scanSuccess(code, 'cryotube');
+          }
+        })
       })
-    })
-
+    }
     
     this.modalCallback = this.props.cb;
+
+    if(!this.state.disableKeyboard) {
+      this.initKeyboardCapture();
+    }
+
+    if(this.state.disableWebcam) return;
+    
     this.qr = new QrCode();
     this.scanCtx = document.getElementById('scanCanvas').getContext("2d");
-
-    this.initKeyboardCapture();
-
+    
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: true,
@@ -84,7 +94,7 @@ class Scan extends Component {
       console.error(err);
       if (err.name === 'DevicesNotFoundError' || err.name === 'NotFoundError') {
         this.setState({
-          error: "Looks like your device does not have a webcam.",
+          error: "Looks like your device does not have a webcam",
           scanAccess: false,
           cameraFailed: true
         });
@@ -261,38 +271,72 @@ class Scan extends Component {
   }
   
 	render() {
+    var helpMessage = [];
+    var scanCanvas = '';
     var scanVideo = '';
-    if(!this.state.error) {
-      scanVideo = (<video id="scanVideo" class="scanVideo" width="440" height="330"></video>);
+    var cameraAccessMsg = '';
+
+    helpMessage.push("Scan cryotubes using");
+    if(!this.state.disableDataMatrixScanner) {
+      helpMessage.push("the tabletop or hand-held DataMatrix scanners.");
+    }
+    if(!this.state.disableKeyboard) {
+      helpMessage.push("Scan 1D barcodes using hand-held 1D barcode scanner");
+      helpMessage.push("or use the keyboard to manually enter any barcode number or ID, then hit enter");
     }
     
-    var cameraAccessMsg = '';
-    
-    if(!this.state.scanAccess) {
-      let statusMsg = '';
-      if(!this.state.cameraFailed) {
-        statusMsg = (
-            <h5 style="color:green">Waiting for browser webcam access</h5>
-        )
-      } else {
-        statusMsg = (
-            <div id="scanError" class="error">{this.state.error}, but you can still:</div>
-        );
+    if(!this.state.disableWebcam) {
+      scanCanvas = (
+          <canvas id="scanCanvas" class="scanCanvas" width="560" height="560"></canvas>
+      );
+      
+      if(!this.state.error) {
+        scanVideo = (<video id="scanVideo" class="scanVideo" width="440" height="330"></video>);
       }
-      cameraAccessMsg = (
-          <div id="cameraAccessMsg">
+      
+      if(!this.state.scanAccess) {
+        let statusMsg = '';
+        if(!this.state.cameraFailed) {
+          statusMsg = (
+              <h5 style="color:green">Waiting for browser webcam access</h5>
+          )
+        } else {
+          statusMsg = (
+              <div id="scanError" class="error">{this.state.error}, but you can still:</div>
+          );
+        }
+        cameraAccessMsg = (
+            <div id="cameraAccessMsg">
             <div class="spinner">
-              <div class="cssload-whirlpool"></div>
+            <div class="cssload-whirlpool"></div>
             </div>
             {statusMsg}
           </div>
-      );
-    } else {
-      cameraAccessMsg = (
-        <p>Scan QR codes by showing them to the webcam.</p>
+        );
+      } else {
+        cameraAccessMsg = (
+            <p>Scan QR codes by showing them to the webcam.</p>
+        );
+      }
+    }
+
+    if(this.state.hideText) {
+      helpMessage = '';
+    } else if(helpMessage.length) {
+      helpMessage = (
+          <p>
+          {helpMessage.join(" ")+'.'}
+        </p>
       );
     }
 
+    var keyboardCode = '';
+    if(this.state.code) {
+      keyboardCode = (
+          <div><span><b>Manually entered code: </b></span><span>{this.state.code}</span></div>
+      )
+    }
+    
     return (
 
         <div id="scan-wrapper" class="scan">
@@ -300,10 +344,10 @@ class Scan extends Component {
             <div class="col s1 m1 l1"></div>            
             <div class="col s6 m6 l6">
               {cameraAccessMsg}
-              <p>Scan cryotubes using the tabletop or hand-held DataMatrix scanners.<br/>Scan 1D barcodes using hand-held 1D barcode scanner,<br/>or use the keyboard to manually enter any barcode, then hit enter.</p>
-              <canvas id="scanCanvas" class="scanCanvas" width="560" height="560"></canvas>
+              {helpMessage}
+              {scanCanvas}
               {scanVideo}
-
+              {keyboardCode}
               <div id="debug"></div>
               <div class="canvas-layers"></div>
               <div class="canvas-box"></div>

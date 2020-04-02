@@ -32,13 +32,13 @@ module.exports = function(db) {
     },
     
     api: {
-      get: function(key, cb) {
-        this.ready(function() { // wait for all views to catch up
+      get: function(core, key, cb) {
+        core.ready(function() { // wait for all views to catch up
           db.get(key, cb)
         })
       },
       
-      read: function(username, opts) {
+      read: function(core, username, opts) {
         opts = opts || {};
 
         var t = through.obj();
@@ -55,7 +55,7 @@ module.exports = function(db) {
           opts.lt = username + '~';
         }
 
-        this.ready(function() {
+        core.ready(function() {
           var v = db.createValueStream(Object.assign({reverse: true}, opts))
           v.pipe(t)
         })

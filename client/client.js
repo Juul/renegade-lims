@@ -16,7 +16,6 @@ const kappa = require('kappa-core');
 const view = require('kappa-view');
 const level = require('level');
 const sublevel = require('subleveldown');
-const timestamp = require('monotonic-timestamp');
 const router = require('routes')(); // server side router
 const ecstatic = require('ecstatic');
 
@@ -65,7 +64,7 @@ function initWebClient() {
 
   const dmScanner = startDataMatrixScanner();
   
-  var rpcMethods = require('./rpc/public.js')(labDeviceServer, dmScanner, );
+  var rpcMethods = require('./rpc/public.js')(settings, labDeviceServer, dmScanner, labCore);
   
   // methods only available to logged-in users in the 'user' group
   rpcMethods.user = {
@@ -242,6 +241,7 @@ function initReplication() {
     }
 
     // TODO remove debug code
+    /*
     labMulti.writer('inventory', function(err, feed) {
       console.log("opened feed");
       
@@ -258,6 +258,7 @@ function initReplication() {
 
       })
     });
+    */
   });
 
   socket.on('close', function() {

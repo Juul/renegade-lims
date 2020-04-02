@@ -1,13 +1,6 @@
 'use strict';
 import { h, Component } from 'preact';
 import { view } from 'z-preact-easy-state';
-const uuid = require('uuid').v4;
-
-// TODO maybe switch from FontLoader to the new CSS font loader api?
-// though probably the browser suport is worse
-//  https://developer.mozilla.org/en-US/docs/Web/API/CSS_Font_Loading_API
-// Maybe use this: https://github.com/bramstein/fontfaceobserver
-import FontLoader from 'FontLoader';
 
 var LabelMaker = require('../labelmaker.js');
 var settings = require('../../../settings.web.js');
@@ -21,11 +14,11 @@ module.exports = class Print extends Component {
     this.submitForm = this.submitForm.bind(this)
 
     this.state = Object.assign({
-      id: props.item.id || uuid(),
+      id: props.item.id || '',
       title: undefined,
       text: undefined,
-      bsl: 1,
-      temperature: undefined
+      bsl: props.item.bsl || 2,
+      temperature: (typeof props.item.temperature === 'number') ? props.item.temperature : undefined
     }, props.item.label || {
       title: props.item.name,
       text: props.item.description
@@ -41,23 +34,25 @@ module.exports = class Print extends Component {
       }
     });
 
-    var fontLoader = new FontLoader(["FiraSans-Regular", "FiraSans-Bold", "FiraSans-Italic"], {
-      complete: function(err) {
-        if(err) {
-          app.actions.notify("Some required fonts failed to load", 'error', 0);
-          console.error("Font load failure:", err);
-          return;
-        }
-        // for some reason we need to wait for next tick
-        // otherwise the fonts aren't actually available yet
-        setTimeout(function() {
-          this.setState({
-            fontsLoaded: true
-          });
-        }.bind(this), 1);
-      }.bind(this)
-    }, 3000);
-    fontLoader.loadFonts();
+    this.loadFonts(["FiraSans-Regular", "FiraSans-Bold", "FiraSans-Italic"]);
+  }
+
+  async loadFont(fontFamily) {
+    return document.fonts.load('12px '+fontFamily);
+  }
+
+  async loadFonts(fontFamilies) {
+    try {
+      for(let fontFam of fontFamilies) {
+        await this.loadFont(fontFam);
+      }
+      this.setState({
+        fontsLoaded: true
+      });
+    } catch(err) {
+      app.actions.notify("Some required fonts failed to load", 'error', 0);
+      console.error("Font load failure:", err);
+    }
   }
   
   componentWillReceiveProps(nextProps) {
@@ -97,7 +92,8 @@ module.exports = class Print extends Component {
   saveNoPrint(e) {
     e.preventDefault()
     if(!this.modalCallback) return;
-    this.modalCallback(null, this.state);
+    var imageData = this.labelMaker.getDataURL();
+    this.modalCallback(null, this.state, imageData, false);
     // TODO fixme
     //  app.actions.prompt.reset()
   }
@@ -106,7 +102,7 @@ module.exports = class Print extends Component {
     e.preventDefault()
     if(!this.modalCallback) return;
     var imageData = this.labelMaker.getDataURL();
-    this.modalCallback(null, this.state, imageData);
+    this.modalCallback(null, this.state, imageData, true);
     // TODO fixme
     //  app.actions.prompt.reset()
   }

@@ -2,6 +2,7 @@
   "name": "renegade-lims-server",
   "version": "0.0.1",
   "dependencies": {
+    "async": "^3.2.0",
     "charwise": "^3.0.1",
     "ecstatic": "^4.1.2",
     "fs-extra": "^9.0.0",
