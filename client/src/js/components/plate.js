@@ -60,8 +60,6 @@ class Plate extends Component {
     // }
 
     const occupied = (props.occupied) ? wellsToClass(props.occupied, 'green') : {};
-
-    console.log("OCCUPIED:", occupied);
     
     const firstState = {
       allowSelectEmpty: props.allowselectempty,

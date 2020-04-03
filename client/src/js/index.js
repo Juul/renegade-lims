@@ -19,10 +19,11 @@ app.whenConnected = function(cb) {
 };
 
 app.state = createStore({
-  count: 0
+  connected: false,
+  user: null
 });
 
-app.actions = require('./actions')(app.state);
+app.actions = require('./actions')();
 
 var Root = require('./components/root.js');
 

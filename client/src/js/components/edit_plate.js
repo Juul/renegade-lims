@@ -98,8 +98,8 @@ class EditPlate extends Component {
     if(!this.state.id) {
       main = (
         <div>
-        <p>Scan plate QR code to begin</p>
-        <Scan onScan={this.plateScanned.bind(this)} />
+        <p>Scan plate QR code to begin.</p>
+        <Scan onScan={this.plateScanned.bind(this)} disableKeyboard disableDataMatrixScanner />
         </div>  
       );
     } else if(!this.state.plate) {

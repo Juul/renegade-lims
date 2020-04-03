@@ -52,6 +52,7 @@
     "gulp-cssimport": "^7.0.0",
     "gulp-inline-source": "^4.0.0",
     "gulp-sass": "^4.0.2",
+    "linkstate": "^1.1.1",
     "preact": "^10.3.4",
     "preact-router": "^3.2.1",
     "qrcode-generator": "^1.4.4",

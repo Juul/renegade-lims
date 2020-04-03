@@ -18,7 +18,7 @@ module.exports = function(db) {
         if(!validateSwab(entry)) return;
         
         const ts = nicify(entry);        
-        var key = charwise.encode(ts);
+        var key = username + '!' + charwise.encode(ts);
         
         batch.push({
           type: 'put',

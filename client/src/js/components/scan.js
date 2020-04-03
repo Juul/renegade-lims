@@ -276,7 +276,6 @@ class Scan extends Component {
     var scanVideo = '';
     var cameraAccessMsg = '';
 
-    helpMessage.push("Scan cryotubes using");
     if(!this.state.disableDataMatrixScanner) {
       helpMessage.push("the tabletop or hand-held DataMatrix scanners.");
     }
@@ -284,6 +283,17 @@ class Scan extends Component {
       helpMessage.push("Scan 1D barcodes using hand-held 1D barcode scanner");
       helpMessage.push("or use the keyboard to manually enter any barcode number or ID, then hit enter");
     }
+
+    if(!helpMessage.length || this.state.hideText) {
+      helpMessage = '';
+    } else {
+      helpMessage.push("Scan cryotubes using");
+      helpMessage = (
+          <p>
+          {helpMessage.join(" ")+'.'}
+        </p>
+      );
+    } 
     
     if(!this.state.disableWebcam) {
       scanCanvas = (
@@ -302,7 +312,7 @@ class Scan extends Component {
           )
         } else {
           statusMsg = (
-              <div id="scanError" class="error">{this.state.error}, but you can still:</div>
+              <div id="scanError" class="error">{this.state.error}{(helpMessage) ? ", but you can still:" : '.'}</div>
           );
         }
         cameraAccessMsg = (
@@ -318,16 +328,6 @@ class Scan extends Component {
             <p>Scan QR codes by showing them to the webcam.</p>
         );
       }
-    }
-
-    if(this.state.hideText) {
-      helpMessage = '';
-    } else if(helpMessage.length) {
-      helpMessage = (
-          <p>
-          {helpMessage.join(" ")+'.'}
-        </p>
-      );
     }
 
     var keyboardCode = '';

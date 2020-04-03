@@ -17,7 +17,7 @@ module.exports = function(db) {
       entries.forEach(function(entry) {
         if(!validatePlate(entry)) return;
         
-        const ts = nicify(entry);        
+        const ts = nicify(entry);
         var key = charwise.encode(ts);
         
         batch.push({

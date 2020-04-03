@@ -8,6 +8,17 @@ var reconnectDelay = 2;
 var reconnectAttempts = 0;
 var reconnectAttemptsMax = 10;
 
+function setConnectState(isConnected, msg, delay) {
+  app.state.connected = isConnected;
+  if(msg) {
+    app.actions.connectMessage(isConnected, msg, delay);
+  }
+}
+
+function setLoginState(user, token) {
+  app.state.user = user;
+}
+
 function reconnect(cb) {
   if (reconnectAttempts > reconnectAttemptsMax) {
     console.log("Disconnected from server. Gave up trying to reconnect after " + reconnectAttemptsMax + " attempts.", {
@@ -86,15 +97,15 @@ function connector(cb) {
   rpcClient.on('methods', function (remote) {
 
     // automatically try to authenticate when connecting
-    // TODO rpc-multiauth's .athenticate function should pass back the token
+    // TODO rpc-multiauth's .authenticate function should pass back the token
     auth.authenticate(remote, {
       setCookie: true
-    }, function (err, userData) {
-
+    }, function (err, user) {
       if(err) {
         cb(null, remote);
       } else {
-        cb(null, remote, userData.user);
+
+        cb(null, remote, user);
       }
     });
 
@@ -103,7 +114,7 @@ function connector(cb) {
 
 function connect(cb) {
   console.log("attempting to connect");
-  connector(function (err, remote, user) {
+  connector(function(err, remote, user) {
     if(err) {
       setConnectState(false, "Failed to connect");
       reconnect(cb);
@@ -124,39 +135,27 @@ function connect(cb) {
     }
 
     reconnectAttempts = 0;
-
     cb(null, remote, user);
   })
 }
 
-function setConnectState(isConnected, msg, delay) {
-  // TODO implement
-  console.log("setConnectState", isConnected, msg);
-}
 
-function setLoginState(user, token) {
-  // TODO implement
-  console.log("setLoginState", user, token);
-}
-
-function login(email, password, cb) {
+function login(username, password, cb) {
   if(!app.remote) return cb(new Error("Not connected"))
 
-  console.log("login initiated:", email, password);
-
   auth.login(app.remote, {
-    email: email,
+    username: username,
     password: password
   }, {
     setCookie: true
-  }, function (err, token, userData) {
+  }, function (err, token, user) {
     if(err) return cb(err);
 
-    setLoginState(userData.user, token);
+    setLoginState(user, token);
 
-    console.log("login successful! token: " + token + " userData: " + JSON.stringify(userData));
+    console.log("login successful! token: " + token + " user: " + JSON.stringify(user));
 
-    cb(null, userData.user);
+    cb(null, user);
 
   });
 };

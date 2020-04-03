@@ -23,8 +23,16 @@ module.exports = {
   serverTLSCert: fs.readFileSync('tls/server-cert.pem'),
 
   loginToken: {
-    secret: "MY UNIQUE SECRET", // must be a unique secret
+    secret: "MY UNIQUE SECRET", // must be a server-unique secret
     expiration: 14 // login token expiration in days
+  },
+
+  // If a user with this name doesn't exist
+  // then this user will be created as an admin
+  initialUser: {
+    name: "admin",
+    email: "admin@example.org",
+    password: "dontpanic"
   },
 
   checkTimeEvery: 60 * 60, // how often to check time accuracy (in seconds)

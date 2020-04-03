@@ -23,7 +23,11 @@ const objectsByGUIDView = require('../views/objectsByGUID.js');
 const swabsByTimeView = require('../views/swabsByTimestamp.js');
 const swabsByUserView = require('../views/swabsByUsername.js');
 const platesByTimeView = require('../views/platesByTimestamp.js');
+const usersByGUIDView = require('../views/usersByGUID.js');
+const usersByNameView = require('../views/usersByName.js');
 
+const writer = require('./lib/writer.js');
+const userUtils = require('./lib/user.js');
 const ntpTester = require('../lib/ntp_tester.js');
 const labDeviceServer = require('./lib/lab_device_server.js');
 const DataMatrixScanner = require('./lib/datamatrix_scanner.js');
@@ -34,25 +38,35 @@ const SWABS_BY_TIME = 'st';
 const SWABS_BY_USER = 'su';
 const PLATES_BY_TIME = 'pt';
 
+const USERS_BY_GUID = 'ug';
+const USERS_BY_NAME = 'un';
+
 // ------------------
 
 fs.ensureDirSync(settings.dataPath, {
   mode: 0o2750
 });
 
-const multifeedPath = path.join(settings.dataPath, 'labfeed');
+const multifeedPath = path.join(settings.dataPath, 'lab_feed');
 const labMulti = multifeed(multifeedPath, {valueEncoding: 'json'})
 const labCore = kappa(null, {multifeed: labMulti});
 
-const multifeedAdminPath = path.join(settings.dataPath, 'adminfeed');
+const multifeedAdminPath = path.join(settings.dataPath, 'admin_feed');
 const adminMulti = multifeed(multifeedAdminPath, {valueEncoding: 'json'})
+const adminCore = kappa(null, {multifeed: adminMulti});
 
 const db = level(path.join(settings.dataPath, 'db'), {valueEncoding: 'json'});
+const labDB = sublevel(db, 'l', {valueEncoding: 'json'});
+const adminDB = sublevel(db, 'a', {valueEncoding: 'json'});
 
-labCore.use('objectsByGUID', 1, view(sublevel(db, OBJECTS_BY_GUID, {valueEncoding: 'json'}), objectsByGUIDView));
-labCore.use('swabsByTime', 1, view(sublevel(db, SWABS_BY_TIME, {valueEncoding: 'json'}), swabsByTimeView));
-labCore.use('swabsByUser', 1, view(sublevel(db, SWABS_BY_USER, {valueEncoding: 'json'} ), swabsByUserView));
-labCore.use('platesByTime', 1, view(sublevel(db, SWABS_BY_TIME, {valueEncoding: 'json'} ), platesByTimeView));
+labCore.use('objectsByGUID', 1, view(sublevel(labDB, OBJECTS_BY_GUID, {valueEncoding: 'json'}), objectsByGUIDView));
+labCore.use('swabsByTime', 1, view(sublevel(labDB, SWABS_BY_TIME, {valueEncoding: 'json'}), swabsByTimeView));
+labCore.use('swabsByUser', 1, view(sublevel(labDB, SWABS_BY_USER, {valueEncoding: 'json'} ), swabsByUserView));
+labCore.use('platesByTime', 1, view(sublevel(labDB, SWABS_BY_TIME, {valueEncoding: 'json'} ), platesByTimeView));
+
+adminCore.use('usersByGUID', 1, view(sublevel(adminDB, USERS_BY_GUID, {valueEncoding: 'json'} ), usersByGUIDView));
+adminCore.use('usersByName', 1, view(sublevel(adminDB, USERS_BY_NAME, {valueEncoding: 'json'} ), usersByNameView));
+
 
 // Wait for multifeeds to be ready
 // before proceeding with initialization
@@ -60,17 +74,44 @@ labMulti.ready(function() {
   adminMulti.ready(init);
 });
 
+function ensureInitialUser(settings, adminCore, cb) {
+  cb = cb || function() {};
+  if(!settings.initialUser) return cb();
+  const user = settings.initialUser;
+  if(!user.name || !user.password) return cb();
+
+  adminCore.api.usersByName.get(user.name, function(err, users) {
+    if(!err && users && users.length) return cb();
+    
+    writer.saveUser(adminCore, {
+      name: user.name,
+      groups: ['admin']
+    }, user.password, function(err, user) {
+      if(err) {
+        console.error("Failed to create initial user:", err);
+        return;
+      }
+      console.log("Created initial user:", user);
+      cb(null, user);
+    });
+  });
+    
+}
+
+
 function initWebClient() {
 
   const dmScanner = startDataMatrixScanner();
   
-  var rpcMethods = require('./rpc/public.js')(settings, labDeviceServer, dmScanner, labCore);
+  var rpcMethods = require('./rpc/public.js')(settings, labDeviceServer, dmScanner, labCore, adminCore);
   
   // methods only available to logged-in users in the 'user' group
   rpcMethods.user = {
     // TODO nothing here yet
   }
 
+  ensureInitialUser(settings, adminCore);
+  
   var rpcMethodsAuth = auth({
     userDataAsFirstArgument: true, 
     secret: settings.loginToken.secret,
@@ -273,7 +314,7 @@ async function init() {
   // since we may rely on timestamps for merging data when the same data
   // has been edited by two different users while one or both were offline
   // Ideally we'll use CRDTs in the future but time is of the essence (heh)
-  await startPeriodicTimeCheck();
+  startPeriodicTimeCheck();
 
   // Start the server where a raspi
   // with a scanner and/or printer attached will connect
@@ -288,15 +329,33 @@ async function init() {
   
 }
 
+
 function login(data, cb) {
   
-  // TODO implement
+  console.log("Login attempt:", data.username);
 
-  const uuid = "should be an actual uuid";
-  
-  cb(null, uuid, {
-    id: uuid,
-    username: "juul"
+  adminCore.api.usersByName.get(data.username, function(err, users) {
+    if(err) return cb(err);
+
+    if(!users.length) {
+      return cb(new Error("No user with that username exists"))
+    }
+    
+    var user;
+    try {
+      user = userUtils.verifyAll(users, data.password);
+    } catch(err) {
+      return cb(err);
+    }
+
+    if(!user) {
+      return cb(new Error("Incorrect password"));
+    }
+
+    console.log("Logged in:", user.name);
+
+    delete user.password;
+    cb(null, user.id, user);
   });
   
 }
@@ -306,11 +365,10 @@ function startDataMatrixScanner() {
   
   if(settings.dataMatrixScanner) {
     dataMatrixScanner = new DataMatrixScanner(settings.dataMatrixScanner);
-    dataMatrixScanner.scan(true, function(err, code) {
-      if(err) return console.error(err);
-
-      console.log("GOT CODE:", code);
-    });
+//    dataMatrixScanner.scan(true, function(err, code) {
+//      if(err) return console.error(err)
+//      console.log("GOT CODE:", code);
+//    });
     return dataMatrixScanner;
   }
   return null;

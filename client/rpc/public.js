@@ -5,9 +5,10 @@ const path = require('path');
 
 const timestamp = require('monotonic-timestamp');
 const uuid = require('uuid').v4;
+const userUtils = require('../lib/user.js');
+const writer = require('../lib/writer.js');
 
-
-module.exports = function(settings, labDeviceServer, dmScanner, labCore) {
+module.exports = function(settings, labDeviceServer, dmScanner, labCore, adminCore) {
   return {
     
     foo: function(userData, cb) {
@@ -46,6 +47,17 @@ module.exports = function(settings, labDeviceServer, dmScanner, labCore) {
 
       // TODO we should unregister when this web client disconnects
       dmScanner.registerCallback(cb);
+    },
+
+    saveUser: function(user, password, cb) {
+      // TODO check that currently logged in user id matches this user id
+      // or that user is in admin group
+      // TODO require original password or reset token if changing password
+      if(typeof password === 'function') {
+        cb = password;
+        password = null;
+      }
+      writer.saveUser(adminCore, user, password, cb);
     },
 
     getPlateByBarcode: function(id, cb) {

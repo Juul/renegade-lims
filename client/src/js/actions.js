@@ -1,5 +1,6 @@
 'use strict';
 
+import auth from 'rpc-multiauth';
 import { route } from 'preact-router';
 
 
@@ -11,7 +12,7 @@ function navigateToObject(item) {
   }
 }
 
-module.exports = function(state) {
+module.exports = function() {
   return {
 
     // TODO implement a proper notify
@@ -44,9 +45,23 @@ module.exports = function(state) {
       });
     },
 
+    login: function(username, password, cb) {
+      app.rpc.login(username, password, cb);
+    },
+
+    logout: function(cb) {
+      app.rpc.logout(cb);
+    },
+
+    connectMessage(isConnected, msg, delay) {
+      // TODO implement
+      console.log("Connect message:", isConnected, msg, delay);
+    },
+
+
     // TODO remove debug function
     increase: function() {
-      state.count++;
+      app.state.count++;
     }
   }
 }
