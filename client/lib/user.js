@@ -59,7 +59,7 @@ const userUtils = {
       throw new Error("Hash is missing");
     }
 
-    if(hash !== userUtils.hash(salt, Buffer.from(password))) {
+    if(hash !== userUtils.hash(salt, password))) {
       return false;
     }
     

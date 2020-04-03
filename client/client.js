@@ -85,7 +85,7 @@ function ensureInitialUser(settings, adminCore, cb) {
     
     writer.saveUser(adminCore, {
       name: user.name,
-      groups: ['admin']
+      groups: ['admin', 'user']
     }, user.password, function(err, user) {
       if(err) {
         console.error("Failed to create initial user:", err);
@@ -106,9 +106,7 @@ function initWebClient() {
   var rpcMethods = require('./rpc/public.js')(settings, labDeviceServer, dmScanner, labCore, adminCore);
   
   // methods only available to logged-in users in the 'user' group
-  rpcMethods.user = {
-    // TODO nothing here yet
-  }
+  rpcMethods.user = require('./rpc/user.js')(settings, labDeviceServer, dmScanner, labCore, adminCore);
 
   ensureInitialUser(settings, adminCore);
   
