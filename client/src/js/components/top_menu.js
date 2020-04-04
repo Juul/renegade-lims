@@ -30,11 +30,21 @@ class TopMenu extends Component {
   
   render() {
 
+    var connectMsg = '';
+    if(!app.state.connected) {
+      connectMsg = (
+        <div>
+          Disconnected from server. {(app.state.reconnectDelay) ? "Attempting to reconnect in " + app.state.reconnectDelay + " seconds." : ''}
+        </div>
+      );
+    }
+    
     var logInOut = ''
     if(app.state.user) {
       logInOut = (
         <div>
           Logged in as <b>{app.state.user.name}</b> <a href="#" onClick={this.logout.bind(this)}>Log out</a>
+          {connectMsg}
         </div>
       );
     } else {
