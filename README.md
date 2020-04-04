@@ -193,6 +193,7 @@ Shows an existing label where the user can edit the text and re-print the label.
 # Copyright and license
 
 * Copyright 2020 Marc Juul Christoffersen
+* Copyright 2016-2018 BioBricks Foundation
 * License: AGPLv3
 
 See the `LICENSE` file for full license.
