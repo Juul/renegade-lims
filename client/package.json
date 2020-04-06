@@ -45,6 +45,7 @@
     "babel-plugin-transform-react-jsx": "^6.24.1",
     "babelify": "^10.0.0",
     "browserify": "^16.5.0",
+    "bwip-js": "^2.0.6",
     "byline": "^5.0.0",
     "colors": "^1.4.0",
     "getusermedia": "^2.0.1",
