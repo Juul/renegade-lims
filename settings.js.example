@@ -1,32 +1,65 @@
 'use strict';
 
+var path = require('path');
 var fs = require('fs');
 
-const settings = {
+module.exports = {
+
+  // Replication and lab-device server socket
+  // Comment these out to disable replication server
   host: 'localhost',
-  port: 4444,
+  port: 4200,
+  
+  // HTTP server socket
+  // Comment these out to disable webserver
+  webHost: 'localhost',
+  webPort: 8000,
+  
   dataPath: './data',
-
-  // initial credentials for admin user
-  admin: {
-    username: "admin",
-    password: "admin"
-  },
-
-  tlsKey: fs.readFileSync('tls/server-key.pem'),
-  tlsCert: fs.readFileSync('tls/server-cert.pem'),
-  tlsClients: [
+  staticPath: './static',
+  staticUserPath: './user-static',
+  
+  tlsKey: fs.readFileSync('tls/key.pem'),
+  tlsCert: fs.readFileSync('tls/cert.pem'),
+  
+  tlsPeers: [
     {
-      type: 'lab', // lab clients have full access to db
-      description: "some computer",
-      cert: fs.readFileSync('tls/clients/swabber.localhost.pem')
+      type: 'server', // server peers have full access to db
+      connect: {
+        host: 'localhost',
+        port: 4444,
+      },
+      cert: fs.readFileSync('tls/peers/server.localhost.pem')
     },
     {
-      type: 'field', // field clients can't access lab inventory
+      type: 'lab', // lab peers have full access to db
+      description: "some computer",
+      cert: fs.readFileSync('tls/peers/lab.localhost.pem')
+    },
+    {
+      type: 'field', // field peers can't access lab inventory
       description: "juul's laptop",
-      cert: fs.readFileSync('tls/clients/swabber.localhost.pem')
+      cert: fs.readFileSync('tls/peers/field.localhost.pem')
+    },
+    {
+      type: 'lab-device', // lab devices have no database access at all
+      description: "label printer",
+      cert: fs.readFileSync('tls/peers/lab-device.localhost.pem')
     },
   ],
+  
+  loginToken: {
+    secret: "MY UNIQUE SECRET", // must be a server-unique secret
+    expiration: 14 // login token expiration in days
+  },
+
+  // If a user with this name doesn't exist
+  // then this user will be created as an admin
+  initialUser: {
+    name: "admin",
+    email: "admin@example.org",
+    password: "dontpanic"
+  },
 
   checkTimeEvery: 60 * 60, // how often to check time accuracy (in seconds)
   ntpServers: [
@@ -34,8 +67,31 @@ const settings = {
     {host: '1.pool.ntp.org', port: 123},
     {host: '2.pool.ntp.org', port: 123},
     {host: '3.pool.ntp.org', port: 123}
-  ]
+  ],
+
+  // Device to use for webcam-based DataMatrix scanning
+  // Comment out if you don't have such a device
+  dataMatrixScanner: "/dev/video0",
+
+  // Settings related to label printing
+  labDevice: {
+
+    // Where label image files are stored.
+    // Relative to userFilePath
+    labelImageFilePath: path.join(__dirname, 'static', 'labels'),
+
+    // hostname where we should listen for printer client connections
+    // (this is optional: falls back to settings.hostname if not specified)
+    // serverHost: "localhost",
+
+    // port where we should listen for printer client connections
+    serverPort: 4200,
+
+    // path to the host ssh private key
+    hostKey: path.join(__dirname, 'labdevice', 'hostkey'),
+
+    // path to directory containing the public keys of authorized labdevice clients
+    clientKeys: path.join(__dirname, 'labdevice', 'client_keys')
+  }
   
 };
-
-module.exports = settings;

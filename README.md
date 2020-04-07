@@ -4,9 +4,6 @@
 
 ```
 cp settings.js.example settings.js
-
-cd client/
-cp settings.js.example settings.js
 cp settings.web.js.example settings.web.js
 ```
 
@@ -44,26 +41,16 @@ dataMatrixScanner: "/dev/video0"
 
 # Building
 
-Client needs to be built:
+The web app needs to be built:
 
 ```
-cd client/
 npm run build
 ```
 
 # Running
 
-## Server
-
 ```
-./server.js
-```
-
-## Client
-
-```
-cd client/
-./client.js
+./bin/server.js
 ```
 
 # Developing
@@ -71,39 +58,20 @@ cd client/
 For live re-building of client:
 
 ```
-cd client/
 npm run dev
 ```
 
 # ToDo
 
 * Move to something other than ecstatic for static file serving
-* Client auto-reconnect with exponential back-off
-* Client log-in system
-   * password.json with username and salted SHA-256 hash for each user
-
-## Lab client
-
-* Two way sync of Physicals
-
-## Field client
-
-* Push sync of Swabs
-
-## Future
 
 Admins sign new users. When new users are pulled in, verify that they are signed by a known admin, or signed by an admin who was signed by a known admin, etc.
 
-Check with NTP server to ensure system time is sane since this will be used for merging e.g. which samples are in which wells in the future.
-
-
 # Lab client views
 
-* Log in
 * Create/edit rna_plate
 * Create/edit qpcr_plate
 * Create/edit container
-* Edit/print label
 * Search
 * User admin (add/remove/edit user)
 

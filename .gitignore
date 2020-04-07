@@ -3,11 +3,6 @@ node_modules/**
 settings.js
 tls/**
 data/**
-client/settings.js
-client/tls/**
-client/data/**
-client/static/build/**
-client/static/labels/*.png
-client/settings.web.js
-client/node_modules/**
-client/labdevice/**
+static/build/**
+static/labels/*.png
+settings.web.js
