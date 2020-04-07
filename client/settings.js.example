@@ -5,11 +5,10 @@ var fs = require('fs');
 
 module.exports = {
 
-  // Connect to this replication server
+  // Replication and lab-device server socket
   host: 'localhost',
-  port: 4444,
-  serverTLSCert: fs.readFileSync('tls/server-cert.pem'),
-
+  port: 4200,
+  
   // HTTP server socket
   webHost: 'localhost',
   webPort: 8000,
@@ -18,27 +17,33 @@ module.exports = {
   staticPath: './static',
   staticUserPath: './user-static',
   
-  tlsKey: fs.readFileSync('tls/client-key.pem'),
-  tlsCert: fs.readFileSync('tls/client-cert.pem'),
+  tlsKey: fs.readFileSync('tls/key.pem'),
+  tlsCert: fs.readFileSync('tls/cert.pem'),
   
   tlsPeers: [
-  /*
+    {
+      type: 'server', // server peers have full access to db
+      connect: {
+        host: 'localhost',
+        port: 4444,
+      },
+      cert: fs.readFileSync('tls/peers/server.localhost.pem')
+    },
     {
       type: 'lab', // lab peers have full access to db
       description: "some computer",
-      cert: fs.readFileSync('tls/clients/lab.localhost.pem')
+      cert: fs.readFileSync('tls/peers/lab.localhost.pem')
     },
     {
       type: 'field', // field peers can't access lab inventory
       description: "juul's laptop",
-      cert: fs.readFileSync('tls/clients/field.localhost.pem')
+      cert: fs.readFileSync('tls/peers/field.localhost.pem')
     },
     {
       type: 'lab-device', // lab devices have no database access at all
       description: "label printer",
-      cert: fs.readFileSync('tls/clients/lab-device.localhost.pem')
+      cert: fs.readFileSync('tls/peers/lab-device.localhost.pem')
     },
-    */
   ],
   
   loginToken: {
