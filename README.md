@@ -1,4 +1,16 @@
+This is a work-in-progress decentralized offline-capable Laboratory Inventory Management (LIMS) system. This is not ready for use by anyone, come back later.
 
+# Theory of operation
+
+All data is written to append-only logs (hyperlogs) and these logs are replicated between peers over mutually authenticated TLS connections, with different types of peers having access to different groupings of feeds.
+
+This software is meant to run simultaneously on a variety of devices:
+
+* Touch-screen devices in the lab assisting in day-to-day workflow
+* Field devices used to collect sample data outside of the lab
+* Always-online servers acting as replication hubs and off-site backup
+
+This is currently implemented as a node.js server + web app, though work is in progress on a mobile app for field devices.
 
 # Setup
 
@@ -55,7 +67,7 @@ npm run build
 
 # Developing
 
-For live re-building of client:
+For live re-building of client during development:
 
 ```
 npm run dev
@@ -114,6 +126,14 @@ Shows an existing label where the user can edit the text and re-print the label.
 * Drop-down to select type of object
 * Drop-down to select user
 * Date from and to constraints
+
+# Credit
+
+This project builds upon the work of many talented hackers and would not be possible at all without the excellent work of Kira a.k.a [noffle](https://github.com/noffle) on [kappa-core](https://www.npmjs.com/package/kappa-core), [kappa-view](https://www.npmjs.com/package/kappa-view) and [multifeed](https://www.npmjs.com/package/multifeed) developed in part for [Mapeo](https://www.digital-democracy.org/mapeo/). This work in turn builds on [hypercore](https://www.npmjs.com/package/hypercore) developed by Mathias Buus a.k.a [mafintosh](https://github.com/mafintosh/) for the [dat](https://dat.foundation/) project.
+
+Thanks to [Asbjørn Sloth Tønnesen](http://asbjorn.it/) for [reverse-engineering the Brother QL label printer protocol](https://github.com/biobricks/ql-printer-driver).
+
+Also shout out to the [BioBricks Foundation](https://biobricks.org/) for funding previous development of open source LIMS software much of which can be found [here](https://github.com/biobricks/).
 
 # Copyright and license
 
