@@ -1,8 +1,7 @@
 
-//var decamelize = require('decamelize');
 var uuid = require('uuid').v4;
-var u = require('../../../../validators/common/utils.js');
-var validatePhysical = require('../../../../validators/object.js');
+var u = require('../../../validators/common/utils.js');
+var validatePhysical = require('../../../validators/object.js');
 
 class Physical {
 

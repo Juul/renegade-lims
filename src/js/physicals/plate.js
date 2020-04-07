@@ -1,5 +1,5 @@
 
-var validatePlate = require('../../../../validators/plate.js');
+var validatePlate = require('../../../validators/plate.js');
 var Physical = require('./physical.js');
 
 class Plate extends Physical {

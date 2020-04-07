@@ -1,6 +1,6 @@
 {
-  "name": "renegade-lims-client",
-  "version": "0.0.1",
+  "name": "renegade-lims",
+  "version": "0.0.2",
   "scripts": {
     "build-js": "bin/build.js",
     "watch-js": "bin/build.js -d",
@@ -8,12 +8,14 @@
     "watch-css": "gulp watch:css",
     "build": "gulp build",
     "watch": "gulp watch",
-    "dev": "bin/dev.js"
+    "dev": "bin/dev.js",
+    "start": "bin/server.js"
   },
   "dependencies": {
     "async": "^3.2.0",
     "backoff": "^2.5.0",
     "buffer-equal-constant-time": "^1.0.1",
+    "charwise": "^3.0.1",
     "date-and-time": "^0.13.1",
     "ecstatic": "^4.1.2",
     "fs-extra": "^9.0.0",
@@ -25,6 +27,9 @@
     "monotonic-timestamp": "0.0.9",
     "multifeed": "^5.2.1",
     "multiplex": "^6.7.0",
+    "ntp-client": "^0.5.3",
+    "os-timesync": "^1.0.9",
+    "ping": "^0.2.2",
     "routes": "^2.1.0",
     "rpc-multiauth": "0.0.3",
     "rpc-multistream": "^0.9.7",

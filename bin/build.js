@@ -16,7 +16,11 @@ function getTime() {
   return t[0] + ':' + t[1] + '.' + t[2];
 }
 
-function build(opts) {
+function build(opts, cb) {
+  if(typeof opts === 'function') {
+    cb = opts;
+    opts = {};
+  }
   opts = opts || {};
 
   const buildDir = path.join(__dirname, '..', 'static', 'build');
@@ -26,6 +30,7 @@ function build(opts) {
 
   function onBuildEnd(msg) {
     console.log("Completed".green + ((msg) ? (': ' + msg) : ''));
+    if(cb) cb();
   }
 
   function onBuildStart() {
@@ -41,6 +46,10 @@ function build(opts) {
     b.bundle()
 
       .on('error', function(err) {
+        if(cb) {
+          return cb(err);
+        }
+        
         if(err instanceof SyntaxError && err.message.match(/while parsing file/)) {
           // Format syntax error messages nicely
           var re = new RegExp(err.filename+'\:? ?');
@@ -58,7 +67,6 @@ function build(opts) {
         } else {
           console.error(err);
         }
-
       })
     
       .pipe(outStream);

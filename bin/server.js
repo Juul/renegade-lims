@@ -20,20 +20,20 @@ const router = require('routes')(); // server side router
 const backoff = require('backoff');
 const ecstatic = require('ecstatic');
 
-const objectsByGUIDView = require('./views/objectsByGUID.js');
-const swabsByTimeView = require('./views/swabsByTimestamp.js');
-const swabsByUserView = require('./views/swabsByUsername.js');
-const platesByTimeView = require('./views/platesByTimestamp.js');
-const usersByGUIDView = require('./views/usersByGUID.js');
-const usersByNameView = require('./views/usersByName.js');
+const objectsByGUIDView = require('../views/objectsByGUID.js');
+const swabsByTimeView = require('../views/swabsByTimestamp.js');
+const swabsByUserView = require('../views/swabsByUsername.js');
+const platesByTimeView = require('../views/platesByTimestamp.js');
+const usersByGUIDView = require('../views/usersByGUID.js');
+const usersByNameView = require('../views/usersByName.js');
 
-const tlsUtils = require('./lib/tls.js');
-const writer = require('./lib/writer.js');
-const userUtils = require('./lib/user.js');
-const ntpTester = require('./lib/ntp_tester.js');
-const LabDeviceServer = require('./lib/labdevice_server.js');
-const DataMatrixScanner = require('./lib/datamatrix_scanner.js');
-const settings = require('./settings.js');
+const tlsUtils = require('../lib/tls.js');
+const writer = require('../lib/writer.js');
+const userUtils = require('../lib/user.js');
+const ntpTester = require('../lib/ntp_tester.js');
+const LabDeviceServer = require('../lib/labdevice_server.js');
+const DataMatrixScanner = require('../lib/datamatrix_scanner.js');
+const settings = require('../settings.js');
 
 const OBJECTS_BY_GUID = 'og'; // everything by GUID
 const SWABS_BY_TIME = 'st';
@@ -106,10 +106,10 @@ function initWebserver() {
 
   const dmScanner = startDataMatrixScanner();
   
-  var rpcMethods = require('./rpc/public.js')(settings, labDeviceServer, dmScanner, labCore, adminCore);
+  var rpcMethods = require('../rpc/public.js')(settings, labDeviceServer, dmScanner, labCore, adminCore);
   
   // methods only available to logged-in users in the 'user' group
-  rpcMethods.user = require('./rpc/user.js')(settings, labDeviceServer, dmScanner, labCore, adminCore);
+  rpcMethods.user = require('../rpc/user.js')(settings, labDeviceServer, dmScanner, labCore, adminCore);
 
   ensureInitialUser(settings, adminCore);
   
