@@ -252,6 +252,8 @@ function labDeviceConnection(peer, socket, peerDesc) {
     peerDesc.name = clientInfo.name;
 
   });
+  
+  return peerDesc;
 }
 
 function beginReplication(peer, socket) {
@@ -320,7 +322,7 @@ function initInbound() {
 //    enableTrace: true
     
   }, function(socket) {
-    console.log("inbound connected");
+    console.log("Inbound connection");
     
     const peer = tlsUtils.getPeerCertEntry(settings.tlsPeers, socket.getPeerCertificate());
     if(!peer) {
@@ -328,10 +330,13 @@ function initInbound() {
       socket.destroy();
       return;
     }
-    beginReplication(peer, socket);
+    const peerDesc = beginReplication(peer, socket);
+
+    console.log("Peer connected:", peerDesc);
   });
 
   console.log("Replication server listening on", settings.host+':'+settings.port);
+  
   server.listen({
     host: settings.host,
     port: settings.port
@@ -375,27 +380,32 @@ function connectToPeer(peer) {
     maxDelay: 30 * 1000
   });
 
-  connectToPeerOnce(peer, function(disconnected) {
-    if(disconnected) {
-      back.backoff();
-    }
-  });
-  
-  back.on('backoff', function(number, delay) {
-  
+  var count = 0;
+  function tryConnect() {
     connectToPeerOnce(peer, function(disconnected) {
-      if(!disconnected) {
-        back.reset();
+      if(disconnected) {
+        if(count > 0) {
+          back.backoff();
+          return;
+        }
+        process.nextTick(tryConnect);
+        count++;
       } else {
-        console.log("Retrying in", Math.round(delay / 1000), "seconds");
+        count = 0;
+        back.reset();
       }
     });
+  }
   
+  tryConnect();
+  
+  back.on('backoff', function(number, delay) {
+    console.log("Retrying in", Math.round(delay / 1000), "seconds");
   });
 
 
   back.on('ready', function(number, delay) {
-    back.backoff();
+    tryConnect();
   });
   
 }
@@ -422,7 +432,7 @@ async function init() {
   tlsUtils.computeCertHashes(settings.tlsPeers);
   
   initInbound();
-//  initOutbound();
+  initOutbound();
   initWebserver();
   
 }
