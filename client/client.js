@@ -312,7 +312,7 @@ function beginReplication(peer, socket) {
 function initInbound() {
 
   const peerCerts = tlsUtils.getPeerCerts(settings.tlsPeers);
-  
+
   var server = tls.createServer({
     ca: peerCerts,
     key: settings.tlsKey,
@@ -345,7 +345,7 @@ function initInbound() {
 
 function connectToPeerOnce(peer, cb) {
   
-  console.log("Connecting to peer:", peer.connect.host + ':', peer.connect.port);
+  console.log("Connecting to peer:", peer.connect.host + ':' + peer.connect.port);
   const socket = tls.connect(peer.connect.port, peer.connect.host, {
     ca: peer.cert, // only trust this cert
     key: settings.tlsKey,
@@ -354,13 +354,13 @@ function connectToPeerOnce(peer, cb) {
 
   socket.on('secureConnect', function() {
     cb();
-    console.log("Connected to peer:", peer.connect.host + ':', peer.connect.port);
+    console.log("Connected to peer:", peer.connect.host + ':' + peer.connect.port);
 
     beginReplication(peer, socket);
   });
 
   socket.on('close', function() {
-    console.log("Disconnected from peer:", peer.connect.host + ':', peer.connect.port);
+    console.log("Disconnected from peer:", peer.connect.host + ':' + peer.connect.port);
     cb(true);
   });
   
@@ -430,10 +430,16 @@ async function init() {
   startPeriodicTimeCheck();
 
   tlsUtils.computeCertHashes(settings.tlsPeers);
+
+  if(settings.host) {
+    initInbound();
+  }
   
-  initInbound();
   initOutbound();
-  initWebserver();
+  
+  if(settings.webHost) {
+    initWebserver();
+  }
   
 }
 

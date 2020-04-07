@@ -6,10 +6,12 @@ var fs = require('fs');
 module.exports = {
 
   // Replication and lab-device server socket
+  // Comment these out to disable replication server
   host: 'localhost',
   port: 4200,
   
   // HTTP server socket
+  // Comment these out to disable webserver
   webHost: 'localhost',
   webPort: 8000,
   
