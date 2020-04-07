@@ -37,7 +37,7 @@ function PlateLabelMaker(opts) {
   this.drawBarcodes = function(ctx, startNumber) {
 
     var number = startNumber;
-    var y = 0;
+    var y = 10;
     var ret;
     do {
 

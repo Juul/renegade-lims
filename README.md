@@ -1,40 +1,4 @@
 
-# Generate certificates
-
-## Server
-
-```
-mkdir tls
-cd tls/
-openssl genrsa -out server-key.pem 4096
-# Specify server hostname as common name
-openssl req -new -key server-key.pem -out server-csr.pem
-openssl x509 -req -in server-csr.pem -signkey server-key.pem -out server-cert.pem
-```
-
-## Client
-
-```
-cd client/
-mkdir tls
-cd tls/
-openssl genrsa -out client-key.pem 4096
-# Specify Common Name as a unique subdomain, e.g. `swabber.localhost`
-openssl req -new -key client-key.pem -out client-csr.pem
-openssl x509 -req -in client-csr.pem -signkey client-key.pem -out client-cert.pem
-```
-
-## Copy server cert to client and vice-versa:
-
-Starting from inside `client/tls/`:
-
-```
-cp ../../tls/server-cert.pem ./
-cd ../../tls/
-mkdir clients
-cd clients/
-cp ../../client/tls/client-cert.pem ./swabber.localhost.pem
-```
 
 # Setup
 
@@ -48,22 +12,15 @@ cp settings.web.js.example settings.web.js
 
 Then edit both to your liking.
 
-## Generate key pair for labdevice (labelprinter) server
+# Generate certificate
 
 ```
-mkdir -p client/labdevice/client_keys
-cd client/labdevice/
-ssh-keygen -t rsa -f hostkey -N ""
-cd ../../
+./scripts/gen_cert.sh
 ```
 
-and copy the ssh public key for each labdevice client to the `client/labdevice/client_keys/` directory to authorize the client.
+## Copy peer certs
 
-Create `labels/` directory:
-
-```
-mkdir client/labels
-```
+For each peer you listed in `settings.js` copy the correct certificate file to the path indicated by the `.cert` property for that peer.
 
 # Install dependencies
 

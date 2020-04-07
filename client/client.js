@@ -17,6 +17,7 @@ const view = require('kappa-view');
 const level = require('level');
 const sublevel = require('subleveldown');
 const router = require('routes')(); // server side router
+const backoff = require('backoff');
 const ecstatic = require('ecstatic');
 
 const objectsByGUIDView = require('../views/objectsByGUID.js');
@@ -26,10 +27,11 @@ const platesByTimeView = require('../views/platesByTimestamp.js');
 const usersByGUIDView = require('../views/usersByGUID.js');
 const usersByNameView = require('../views/usersByName.js');
 
+const tlsUtils = require('./lib/tls.js');
 const writer = require('./lib/writer.js');
 const userUtils = require('./lib/user.js');
 const ntpTester = require('../lib/ntp_tester.js');
-const labDeviceServer = require('./lib/lab_device_server.js');
+const LabDeviceServer = require('./lib/labdevice_server.js');
 const DataMatrixScanner = require('./lib/datamatrix_scanner.js');
 const settings = require('./settings.js');
 
@@ -42,6 +44,8 @@ const USERS_BY_GUID = 'ug';
 const USERS_BY_NAME = 'un';
 
 // ------------------
+
+const labDeviceServer = new LabDeviceServer();
 
 fs.ensureDirSync(settings.dataPath, {
   mode: 0o2750
@@ -98,8 +102,7 @@ function ensureInitialUser(settings, adminCore, cb) {
     
 }
 
-
-function initWebClient() {
+function initWebserver() {
 
   const dmScanner = startDataMatrixScanner();
   
@@ -239,70 +242,172 @@ function initWebClient() {
 
 }
 
-function initReplication() {
+
+function labDeviceConnection(peer, socket, peerDesc) {
+
+  labDeviceServer.clientConnected(socket, function(err, clientInfo) {
+    if(err) return console.error(err);
+    
+    peerDesc.id = clientInfo.id;
+    peerDesc.name = clientInfo.name;
+
+  });
+}
+
+function beginReplication(peer, socket) {
+
+  const peerDesc = {
+    type: peer.type,
+    host: (peer.connect) ? peer.connect.host : socket.remoteAddress,
+    port: socket.remotePort
+  }
   
-  var socket = tls.connect(settings.port, settings.host, {
-    ca: settings.serverTLSCert, // only trust this cert
+  if(peer.type === 'lab-device') {
+
+    return labDeviceConnection(peer, socket, peerDesc);
+  }
+  
+  var labReadAllowed;
+  var adminWriteAllowed;
+  
+  if(peer.type === 'field') {
+
+    labReadAllowed = false;
+    adminWriteAllowed = false;
+    
+  } else if(peer.type === 'lab' || peer.type === 'server') {
+
+    labReadAllowed = true;
+    adminWriteAllowed = true;
+    
+  } else { // not a recognized certificate for any type of device
+    console.log("Connection from unknown peer type with a valid certificate");
+    socket.destroy();
+    return;
+  }
+
+  const mux = multiplex();
+  const labStream = mux.createSharedStream('labStream');
+  const adminStream = mux.createSharedStream('adminStream');
+
+  socket.pipe(mux).pipe(socket);
+
+  labStream.pipe(labMulti.replicate(false, {
+    download: true,
+    upload: labReadAllowed,
+    live: true
+  })).pipe(labStream);
+  
+  adminStream.pipe(adminMulti.replicate(false, {
+    download: adminWriteAllowed,
+    upload: true,
+    live: true
+  })).pipe(adminStream);
+
+  return peerDesc;
+}
+
+function initInbound() {
+
+  const peerCerts = tlsUtils.getPeerCerts(settings.tlsPeers);
+  
+  var server = tls.createServer({
+    ca: peerCerts,
+    key: settings.tlsKey,
+    cert: settings.tlsCert,
+    requestCert: true,
+    rejectUnauthorized: true
+//    enableTrace: true
+    
+  }, function(socket) {
+    console.log("inbound connected");
+    
+    const peer = tlsUtils.getPeerCertEntry(settings.tlsPeers, socket.getPeerCertificate());
+    if(!peer) {
+      console.log("Unknown peer with valid certificate connected");
+      socket.destroy();
+      return;
+    }
+    beginReplication(peer, socket);
+  });
+
+  console.log("Replication server listening on", settings.host+':'+settings.port);
+  server.listen({
+    host: settings.host,
+    port: settings.port
+  });
+}
+
+function connectToPeerOnce(peer, cb) {
+  
+  console.log("Connecting to peer:", peer.connect.host + ':', peer.connect.port);
+  const socket = tls.connect(peer.connect.port, peer.connect.host, {
+    ca: peer.cert, // only trust this cert
     key: settings.tlsKey,
     cert: settings.tlsCert
   })
 
-  socket.on('error', function(err) {
-    console.error(err);
-  });
-  
   socket.on('secureConnect', function() {
-    console.log("connected");
+    cb();
+    console.log("Connected to peer:", peer.connect.host + ':', peer.connect.port);
 
-    const mux = multiplex();
-      const labStream = mux.createSharedStream('labStream');
-      const adminStream = mux.createSharedStream('adminStream');
-    
-    socket.pipe(mux).pipe(socket);
-
-    labStream.pipe(labMulti.replicate(true, {
-      download: true,
-      upload: true,
-      live: true
-    })).pipe(labStream);
-
-    adminStream.pipe(adminMulti.replicate(true, {
-      download: true,
-      upload: false,
-      live: true
-    })).pipe(adminStream);
-
-    for(let feed of adminMulti.feeds()) {
-      feed.get(0, function(_, data) {
-        console.log("feed:", feed);
-        console.log("  data 0:", data);
-      })
-    }
-
-    // TODO remove debug code
-    /*
-    labMulti.writer('inventory', function(err, feed) {
-      console.log("opened feed");
-      
-      feed.append({
-        type: 'swab',
-        id: uuid(),
-        createdAt: timestamp(),
-        createdBy: 'juul',
-        isExternal: false,
-        isPriority: false
-        
-      }, function() {
-        console.log("appended");
-
-      })
-    });
-    */
+    beginReplication(peer, socket);
   });
 
   socket.on('close', function() {
-    console.log("socket closed");
+    console.log("Disconnected from peer:", peer.connect.host + ':', peer.connect.port);
+    cb(true);
   });
+  
+  socket.on('error', function(err) {
+    console.error(err);
+  });
+}
+
+function connectToPeer(peer) {
+  if(!peer.connect.port || !peer.connect.host) return;
+
+
+  // Retry with increasing back-off 
+  var back = backoff.fibonacci({
+    randomisationFactor: 0,
+    initialDelay: 3 * 1000, // 3 seconds
+    maxDelay: 30 * 1000
+  });
+
+  connectToPeerOnce(peer, function(disconnected) {
+    if(disconnected) {
+      back.backoff();
+    }
+  });
+  
+  back.on('backoff', function(number, delay) {
+  
+    connectToPeerOnce(peer, function(disconnected) {
+      if(!disconnected) {
+        back.reset();
+      } else {
+        console.log("Retrying in", Math.round(delay / 1000), "seconds");
+      }
+    });
+  
+  });
+
+
+  back.on('ready', function(number, delay) {
+    back.backoff();
+  });
+  
+}
+
+function initOutbound() {
+  if(!settings.tlsPeers) return;
+  
+  var peer;
+  for(peer of settings.tlsPeers) {
+    if(!peer.connect) continue;
+    connectToPeer(peer);
+  }
 
 }
 
@@ -314,16 +419,11 @@ async function init() {
   // Ideally we'll use CRDTs in the future but time is of the essence (heh)
   startPeriodicTimeCheck();
 
-  // Start the server where a raspi
-  // with a scanner and/or printer attached will connect
-  labDeviceServer.start(settings, function(err) {
-    if(err) return console.error(err);
-    
-    console.log("Lab device server started");
-  });
-
-  initReplication();
-  initWebClient();
+  tlsUtils.computeCertHashes(settings.tlsPeers);
+  
+  initInbound();
+//  initOutbound();
+  initWebserver();
   
 }
 

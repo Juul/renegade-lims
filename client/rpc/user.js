@@ -95,7 +95,7 @@ function savePhysical(labCore, obj, cb) {
 }
 
 function idToLabelPath(settings, id) {
-  return path.join(settings.labDevice.labelImageFilePath, id+'.png')
+  return path.join(settings.labDeviceServer.labelImageFilePath, id+'.png')
 }
 
 function printLabel(labDeviceServer, imagePath, cb) {

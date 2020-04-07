@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "async": "^3.2.0",
+    "backoff": "^2.5.0",
     "buffer-equal-constant-time": "^1.0.1",
     "date-and-time": "^0.13.1",
     "ecstatic": "^4.1.2",
@@ -27,7 +28,6 @@
     "routes": "^2.1.0",
     "rpc-multiauth": "0.0.3",
     "rpc-multistream": "^0.9.7",
-    "ssh2": "^0.8.9",
     "subleveldown": "^4.1.4",
     "through2": "^3.0.1",
     "uuid": "^7.0.2",

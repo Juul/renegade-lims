@@ -5,14 +5,14 @@ var fs = require('fs');
 
 module.exports = {
 
-  // Replication server
+  // Connect to this replication server
   host: 'localhost',
   port: 4444,
+  serverTLSCert: fs.readFileSync('tls/server-cert.pem'),
 
   // HTTP server socket
   webHost: 'localhost',
   webPort: 8000,
-  baseURL: 'http://localhost', // where this web app is accessed
   
   dataPath: './data',
   staticPath: './static',
@@ -20,8 +20,27 @@ module.exports = {
   
   tlsKey: fs.readFileSync('tls/client-key.pem'),
   tlsCert: fs.readFileSync('tls/client-cert.pem'),
-  serverTLSCert: fs.readFileSync('tls/server-cert.pem'),
-
+  
+  tlsPeers: [
+  /*
+    {
+      type: 'lab', // lab peers have full access to db
+      description: "some computer",
+      cert: fs.readFileSync('tls/clients/lab.localhost.pem')
+    },
+    {
+      type: 'field', // field peers can't access lab inventory
+      description: "juul's laptop",
+      cert: fs.readFileSync('tls/clients/field.localhost.pem')
+    },
+    {
+      type: 'lab-device', // lab devices have no database access at all
+      description: "label printer",
+      cert: fs.readFileSync('tls/clients/lab-device.localhost.pem')
+    },
+    */
+  ],
+  
   loginToken: {
     secret: "MY UNIQUE SECRET", // must be a server-unique secret
     expiration: 14 // login token expiration in days
@@ -52,7 +71,7 @@ module.exports = {
 
     // Where label image files are stored.
     // Relative to userFilePath
-    labelImageFilePath: 'labels',
+    labelImageFilePath: path.join(__dirname, 'static', 'labels'),
 
     // hostname where we should listen for printer client connections
     // (this is optional: falls back to settings.hostname if not specified)
@@ -67,5 +86,5 @@ module.exports = {
     // path to directory containing the public keys of authorized labdevice clients
     clientKeys: path.join(__dirname, 'labdevice', 'client_keys')
   }
-
+  
 };
