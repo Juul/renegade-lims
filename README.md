@@ -21,6 +21,8 @@ cp settings.web.js.example settings.web.js
 
 Then edit both to your liking.
 
+WARNING: It's _really_ important that you ensure each lab has a unique `settings.labBarcodePrefix` or you will end up with barcode collisions between labs.
+
 # Generate certificate
 
 ```

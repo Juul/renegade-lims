@@ -23,6 +23,11 @@ module.exports = function() {
         console.log("[notify]", msg);
       }
     },
+
+    // Get some guaranteed unique non-guid barcodes from the server
+    getBarcodes: function(howMany, cb) {
+      app.remote.getBarcodes(howMany, cb);
+    },
     
     // Find and show a physical by uuid
     gotoPhysical: function(id) {

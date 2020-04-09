@@ -28,6 +28,7 @@ const platesByTimeView = require('../views/platesByTimestamp.js');
 const usersByGUIDView = require('../views/usersByGUID.js');
 const usersByNameView = require('../views/usersByName.js');
 
+const LabLocal = require('../lib/lab_local.js');
 const tlsUtils = require('../lib/tls.js');
 const writer = require('../lib/writer.js');
 const userUtils = require('../lib/user.js');
@@ -73,6 +74,8 @@ const adminCore = kappa(null, {multifeed: adminMulti});
 const db = level(path.join(settings.dataPath, 'db'), {valueEncoding: 'json'});
 const labDB = sublevel(db, 'l', {valueEncoding: 'json'});
 const adminDB = sublevel(db, 'a', {valueEncoding: 'json'});
+const localDB = sublevel(db, 'lo', {valueEncoding: 'json'}); // never replicated
+const labLocal = new LabLocal(localDB, settings.labBarcodePrefix);
 
 labCore.use('objectsByGUID', 1, view(sublevel(labDB, OBJECTS_BY_GUID, {valueEncoding: 'json'}), objectsByGUIDView));
 labCore.use('swabsByTime', 1, view(sublevel(labDB, SWABS_BY_TIME, {valueEncoding: 'json'}), swabsByTimeView));
@@ -120,7 +123,7 @@ function initWebserver() {
   var rpcMethods = require('../rpc/public.js')(settings, labDeviceServer, dmScanner, labCore, adminCore);
   
   // methods only available to logged-in users in the 'user' group
-  rpcMethods.user = require('../rpc/user.js')(settings, labDeviceServer, dmScanner, labCore, adminCore);
+  rpcMethods.user = require('../rpc/user.js')(settings, labDeviceServer, dmScanner, labCore, adminCore, labLocal);
 
   ensureInitialUser(settings, adminCore);
   

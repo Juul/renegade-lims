@@ -69,6 +69,10 @@ module.exports = {
     {host: '3.pool.ntp.org', port: 123}
   ],
 
+  // Prefix added to all non-GUID barcodes in this lab
+  // this must be lab-unique within the constellation of labs that share data
+  labBarcodePrefix: 'A',
+
   // Device to use for webcam-based DataMatrix scanning
   // Comment out if you don't have such a device
   dataMatrixScanner: "/dev/video0",

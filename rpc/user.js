@@ -8,13 +8,17 @@ const uuid = require('uuid').v4;
 const userUtils = require('../lib/user.js');
 const writer = require('../lib/writer.js');
 
-module.exports = function(settings, labDeviceServer, dmScanner, labCore, adminCore) {
+module.exports = function(settings, labDeviceServer, dmScanner, labCore, adminCore, labLocal) {
   return {
     
     foo: function(userData, cb) {
       cb(null, "bar");
     },
 
+    getBarcodes: function(userData, howMany, cb) {
+      labLocal.getBarcodes(howMany, cb);
+    },
+    
     // TODO move all of the below to the 'user' namespace
 
     savePhysical: function(userData, obj, imageData, doPrint, cb) {

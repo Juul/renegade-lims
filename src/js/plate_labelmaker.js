@@ -5,6 +5,8 @@ function PlateLabelMaker(opts) {
   
   opts = opts || {};
 
+  const LABELS_PER_LABEL = 15; // how many label can we fit per label?
+  
   this.labelWidth = opts.labelWidth || 336;
   this.labelHeight = opts.labelHeight || 1083;
 
@@ -43,19 +45,33 @@ function PlateLabelMaker(opts) {
   };
 
 
-  this.drawBarcodes = function(ctx, startNumber) {
+  this.drawBarcodes = function(ctx, startNumber, ofEach, prefix) {
 
+    var numUniqueCodes = Math.floor(LABELS_PER_LABEL / ofEach);
+    var numLabels = Math.floor(LABELS_PER_LABEL / ofEach) * ofEach;
+    var count = 0;
     var number = startNumber;
-    var y = 10;
+    var y = 100;
     var ret;
+    var eachCount = 0;
+    var barcode;
     do {
-
-      ret = this.drawBarcode(ctx, number, y);
-      y += 60;
-      number++;
-    } while(ret);
+      if(prefix) {
+        barcode = prefix+number;
+      } else {
+        barcode = number;
+      }
+      ret = this.drawBarcode(ctx, barcode, y);
+      y += 65;
+      eachCount++;
+      count++;
+      if(eachCount >= ofEach) {
+        eachCount = 0;
+        number++;
+      }
+    } while(ret && count < numLabels);
     
-    
+    return numUniqueCodes;
   }
   
   this.drawBarcode = function(ctx, number, y) {
@@ -71,6 +87,7 @@ function PlateLabelMaker(opts) {
         includetext: true,              // Show human-readable text
         textsize: 8,
         textxalign:  'center',          // Always good to set this
+        textyoffset: 1,
         backgroundcolor: 'ffffff'
       });
 
@@ -88,8 +105,8 @@ function PlateLabelMaker(opts) {
     return true;;
   };
   
-  this.drawLabel = function(canvas, number, cb) {
-
+  this.drawLabel = function(canvas, startNumber, ofEach, prefix, cb) {
+    
     if(typeof canvas === 'string') {
       canvas = document.getElementById(canvas);
     }
@@ -98,7 +115,7 @@ function PlateLabelMaker(opts) {
 
     this.clear();
     ctx.fillStyle = "#000";
-    //        ctx.mozImageSmoothingEnabled = false;
+    // ctx.mozImageSmoothingEnabled = false;
     ctx.webkitImageSmoothingEnabled = false;
     ctx.msImageSmoothingEnabled = false;
     ctx.imageSmoothingEnabled = false;
@@ -108,21 +125,21 @@ function PlateLabelMaker(opts) {
 
 		ctx.save();
 
-    this.drawBarcodes(ctx, 1024);
+    const numUniqueCodes = this.drawBarcodes(ctx, startNumber, ofEach, prefix);
     
-    console.log("GOT HERE");
 		ctx.restore();
     show();
     
-    // TODO unused?
     function show() {
       if(canvas) {
         var showCtx = canvas.getContext('2d');
         showCtx.clearRect(0, 0, canvas.width, canvas.height);
         showCtx.drawImage(ctx.canvas, 0, 0, canvas.width, canvas.height);
       }
-      if(cb) cb();
+      if(cb) cb(null, numUniqueCodes);
     }
+
+    return numUniqueCodes;
 
   };
   
