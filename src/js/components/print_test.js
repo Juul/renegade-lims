@@ -18,7 +18,7 @@ class PrintTest extends Component {
 
     const doPrint = true;
     
-    app.remote.savePhysical(labelData, imageData, doPrint, function(err, obj, filePath) {
+    app.actions.savePhysical(labelData, imageData, doPrint, function(err, obj, filePath) {
       if(err) {
         app.actions.notify(err, 'error');
         return;

@@ -33,13 +33,27 @@ module.exports = function(settings, labDeviceServer, dmScanner, labCore, adminCo
         });
       });
     },
+
+    printLabelAndIncrement: function(userData, imageData, toInc) {
+      // TODO implement
+    },
+    
+    printLabel: function(userData, imageData, cb) {
+      if(!imageData) return cb(new Error("Image data missing"));
+      
+      var mtch = imageData.match(/^data:image\/png;base64,(.*)/)
+      if(!mtch) return cb(new Error("Image data not in data:image/png;base64 format"));
+      
+      var imageBuffer = new Buffer.from(mtch[1], 'base64');
+      return labDeviceServer.printWherever(imageBuffer, cb);
+    },
     
     getPhysical: function(userData, code, cb) {
-      
+      // TODO implement
     },
 
     getPhysicalByBarcode: function(userData, code, cb) {
-
+      // TODO implement
     },
     
     claimDataMatrixScanner: function(userData, cb) {
@@ -98,10 +112,6 @@ function idToLabelPath(settings, id) {
   return path.join(settings.labDeviceServer.labelImageFilePath, id+'.png')
 }
 
-function printLabel(labDeviceServer, imagePath, cb) {
-  labDeviceServer.printLabel('qlPrinter', imagePath, cb);
-}
-
 function saveLabel(settings, labDeviceServer, labelData, imageData, doPrint, cb) {
   // TODO validate data
   
@@ -110,7 +120,7 @@ function saveLabel(settings, labDeviceServer, labelData, imageData, doPrint, cb)
   var mtch;
   if(imageData && (mtch = imageData.match(/^data:image\/png;base64,(.*)/))) {
 
-    var imageBuffer = new Buffer(mtch[1], 'base64');
+    var imageBuffer = new Buffer.from(mtch[1], 'base64');
     
     // TODO size check
     var imagePath = idToLabelPath(settings, id);
@@ -118,7 +128,7 @@ function saveLabel(settings, labDeviceServer, labelData, imageData, doPrint, cb)
       if(err) return cb(err);
 
       if(doPrint) {
-        printLabel(labDeviceServer, imagePath, function(err) {
+        labDeviceServer.printWherever(imagePath, function(err) {
           if(err) return cb(err);
           cb(null, id, imagePath);
         });

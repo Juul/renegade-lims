@@ -24,11 +24,20 @@ function PlateLabelMaker(opts) {
   };
 
   // get a copy of the context
-  this.ctxCopy = function() {
+  this.ctxCopy = function(rotate) {
 	  var c = document.createElement('canvas');
-	  c.width = this.ctx.canvas.width;
-	  c.height = this.ctx.canvas.height;
+    if(rotate) {
+	    c.height = this.ctx.canvas.width;
+	    c.width = this.ctx.canvas.height;
+    } else {
+	    c.width = this.ctx.canvas.width;
+	    c.height = this.ctx.canvas.height;
+    }
     var ctx = c.getContext('2d');
+    if(rotate) { // rotate 90 degrees clockwise
+      ctx.translate(c.width, 0);
+      ctx.rotate(Math.PI/2);
+    }
     ctx.drawImage(this.ctx.canvas, 0, 0);
     return ctx;
   };
@@ -75,7 +84,7 @@ function PlateLabelMaker(opts) {
       console.error(err);
       return false;
     }
-
+    
     return true;;
   };
   
@@ -104,7 +113,7 @@ function PlateLabelMaker(opts) {
     console.log("GOT HERE");
 		ctx.restore();
     show();
-
+    
     // TODO unused?
     function show() {
       if(canvas) {
@@ -118,7 +127,7 @@ function PlateLabelMaker(opts) {
   };
   
   this.getDataURL = function(monochrome) {
-    var ctx = this.ctxCopy();
+    var ctx = this.ctxCopy(true);
     if(monochrome) {
       this.toMonochrome(ctx);
     }

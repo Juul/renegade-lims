@@ -22,6 +22,7 @@ function build(opts, cb) {
     opts = {};
   }
   opts = opts || {};
+  console.log("OPTS:", opts);
 
   const buildDir = path.join(__dirname, '..', 'static', 'build');
   fs.ensureDirSync(buildDir);
@@ -128,6 +129,9 @@ if (require.main === module) {
     build: build,
 
     watch: function(opts) {
+      if(typeof(opts) === 'function') {
+        opts = {};
+      }
       opts = opts || opts;
       opts.dev = true;
       return build(opts);

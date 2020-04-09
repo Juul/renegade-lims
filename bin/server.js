@@ -19,6 +19,7 @@ const sublevel = require('subleveldown');
 const router = require('routes')(); // server side router
 const backoff = require('backoff');
 const ecstatic = require('ecstatic');
+const minimist = require('minimist');
 
 const objectsByGUIDView = require('../views/objectsByGUID.js');
 const swabsByTimeView = require('../views/swabsByTimestamp.js');
@@ -44,6 +45,16 @@ const USERS_BY_GUID = 'ug';
 const USERS_BY_NAME = 'un';
 
 // ------------------
+
+const argv = minimist(process.argv.slice(2), {
+  boolean: [
+    'debug'
+  ],
+  alias: {
+    'd': 'debug', // enable debug output
+    'i': 'introvert' // don't initiate any outbound connections
+  }
+});
 
 const labDeviceServer = new LabDeviceServer();
 
@@ -434,8 +445,12 @@ async function init() {
   if(settings.host) {
     initInbound();
   }
-  
-  initOutbound();
+
+  if(!argv.introvert) {
+    initOutbound();
+  } else {
+    console.log("Introvert mode enabled. Ignoring settings.tlsPeers");
+  }
   
   if(settings.webHost) {
     initWebserver();

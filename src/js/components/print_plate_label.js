@@ -18,11 +18,6 @@ class PrintPlateLabel extends Component {
 
     });
   }
-
-  submitForm(e) {
-    e.preventDefault()
-    var imageData = this.labelMaker.getDataURL();
-  }
   
   close(e) {
     if (this.props.onClose) this.props.onClose(false)
@@ -30,6 +25,16 @@ class PrintPlateLabel extends Component {
     //        app.actions.prompt.reset()
   }
 
+  print(e) {
+    e.preventDefault()
+    var imageData = this.labelMaker.getDataURL();
+    app.actions.printLabel(imageData, function(err) {
+      if(err) return app.actions.notify(err, 'error');
+
+      console.log("Printing");
+    })
+    
+  }
 
   componentDidMount() {
     this.labelMaker.drawLabel('labelPreview');
@@ -50,9 +55,10 @@ class PrintPlateLabel extends Component {
     return (
         <div>
           <h3>Label maker</h3>
+          <input type="button" onClick={this.print.bind(this)} value="Print" />
           <div style="width:174px;height:560px;">
             <canvas id="labelPreview" class="labelPreview" width="174" height="560"></canvas>
-          </div>
+        </div>
         </div>
     )
   }

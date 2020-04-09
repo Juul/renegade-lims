@@ -45,6 +45,14 @@ module.exports = function() {
       });
     },
 
+    savePhysical(labelData, imageData, doPrint, cb) {
+      app.remote.savePhysical(labelData, imageData, doPrint, cb);
+    },
+
+    printLabel(imageData, cb) {
+      app.remote.printLabel(imageData, cb);
+    },
+    
     login: function(username, password, cb) {
       app.rpc.login(username, password, cb);
     },
