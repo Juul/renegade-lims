@@ -1,14 +1,18 @@
 'use strict';
 import {h, render} from 'preact';
 import { store as createStore, view } from 'z-preact-easy-state';
+const uuid = require('uuid').v4;
+
+const NOTIFICATION_DURATION = 6000;
 
 var app = {};
 window.app = app;
 app.rpc = require('./rpc.js');
 
+
 // TODO use app.actions.notify
 app.error = function(err) {
-  alert(err);
+  console.error("TODO remote code that uses app.error");
 }
 
 var whenConnectedCallbacks = [];
@@ -20,8 +24,24 @@ app.whenConnected = function(cb) {
 
 app.state = createStore({
   connected: false,
-  user: null
+  user: null,
+  notifications: {}
 });
+
+app.notify = function(msg, level) {
+  console.log("[notify "+level+"]", msg);
+  const id = uuid();
+  app.state.notifications[id] = {
+    id,
+    msg,
+    level
+  };
+  
+  setTimeout(() => {
+    delete app.state.notifications[id]
+  }, NOTIFICATION_DURATION);
+};
+
 
 app.actions = require('./actions')();
 

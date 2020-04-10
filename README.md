@@ -129,6 +129,18 @@ Shows an existing label where the user can edit the text and re-print the label.
 * Drop-down to select user
 * Date from and to constraints
 
+# Production
+
+This section details how to set up renegade-lims to auto-start on boot and auto-restart when it fails.
+
+Ensure you're logged in as the user who will be running the lims app, then install the psy process monitor globally:
+
+```
+npm install -g psy
+```
+
+
+
 # Credit
 
 This project builds upon the work of many talented hackers and would not be possible at all without the excellent work of Kira a.k.a [noffle](https://github.com/noffle) on [kappa-core](https://www.npmjs.com/package/kappa-core), [kappa-view](https://www.npmjs.com/package/kappa-view) and [multifeed](https://www.npmjs.com/package/multifeed) developed in part for [Mapeo](https://www.digital-democracy.org/mapeo/). This work in turn builds on [hypercore](https://www.npmjs.com/package/hypercore) developed by Mathias Buus a.k.a [mafintosh](https://github.com/mafintosh/) for the [dat](https://dat.foundation/) project.

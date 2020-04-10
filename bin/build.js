@@ -22,7 +22,6 @@ function build(opts, cb) {
     opts = {};
   }
   opts = opts || {};
-  console.log("OPTS:", opts);
 
   const buildDir = path.join(__dirname, '..', 'static', 'build');
   fs.ensureDirSync(buildDir);
@@ -105,6 +104,15 @@ function build(opts, cb) {
       ['transform-react-jsx', {pragma: 'h'}]
     ]
   })
+
+  b.transform('aliasify', {
+    aliases: {
+      'react': 'preact/compat',
+      'react-dom': 'preact/compat',
+    },
+    global: true
+  });
+
   
   onBuildStart();
 }

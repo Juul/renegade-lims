@@ -11,6 +11,16 @@ var reconnectAttemptsMax = 10;
 function setConnectState(isConnected, msg, delay) {
   app.state.connected = isConnected;
   app.state.reconnectDelay = delay;
+  if(delay) {
+    setTimeout(reconnectCountdown, 1000);
+  }
+}
+
+function reconnectCountdown() {
+  if(!app.state.reconnectDelay) return;
+
+  app.state.reconnectDelay--;
+  setTimeout(reconnectCountdown, 1000);
 }
 
 function setLoginState(user, token) {

@@ -13,7 +13,6 @@ import TextField from '@material-ui/core/TextField';
 import FormControlLabel from '@material-ui/core/FormControlLabel';
 import Checkbox from '@material-ui/core/Checkbox';
 import Link from '@material-ui/core/Link';
-import Grid from '@material-ui/core/Grid';
 import Box from '@material-ui/core/Box';
 import LockOutlinedIcon from '@material-ui/icons/LockOutlined';
 import Typography from '@material-ui/core/Typography';
@@ -49,14 +48,14 @@ class Login extends Component {
   onFormSubmit(e) {
     e.preventDefault();
 
-    app.actions.login(this.state.username, this.state.password, function(err, token, user) {
+    app.actions.resetPassword(this.state.username, this.state.password, function(err, token, user) {
       if(err) {
         app.actions.notify(err, 'error');
         console.error(err);
         return;
       }
       console.log("User:", user, token);
-      route('/');
+      
     });
   }
   
@@ -65,12 +64,13 @@ class Login extends Component {
     
     return (
     <Container component="main" maxWidth="xs">
+      <CssBaseline />
       <div className={classes.paper}>
         <Avatar className={classes.avatar}>
           <LockOutlinedIcon />
         </Avatar>
         <Typography component="h1" variant="h5">
-          Log in
+          Password reset
         </Typography>
         <form className={classes.form} onsubmit={this.onFormSubmit.bind(this)} noValidate>
           <TextField
@@ -79,27 +79,11 @@ class Login extends Component {
             required
             fullWidth
             id="username"
-            label="Username"
+            label="Username or email"
             name="username"
             autoComplete="username"
+            autoFocus
             onInput={linkState(this, 'username')}
-          />
-          <TextField
-            variant="outlined"
-            margin="normal"
-            required
-            fullWidth
-            name="password"
-            label="Password"
-            type="password"
-            id="password"
-            autoComplete="current-password"
-            onInput={linkState(this, 'password')}
-          />
-          <FormControlLabel
-            control={<Checkbox value="remember" color="primary" />}
-            label="Remember me"
-            checked
           />
           <Button
             type="submit"
@@ -108,20 +92,8 @@ class Login extends Component {
             color="primary"
             className={classes.submit}
           >
-            Log in
+            Send reset link
           </Button>
-          <Grid container>
-            <Grid item xs>
-              <Link href="/password-reset" variant="body2">
-                Forgot password?
-              </Link>
-            </Grid>
-            <Grid item>
-              <Link href="/signup" variant="body2">
-                {"Don't have an account? Sign Up"}
-              </Link>
-            </Grid>
-          </Grid>
         </form>
       </div>
     </Container>

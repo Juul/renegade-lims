@@ -15,15 +15,6 @@ function navigateToObject(item) {
 module.exports = function() {
   return {
 
-    // TODO implement a proper notify
-    notify: function(msg, level) {
-      if(level === 'error') {
-        alert(msg);
-      } else {
-        console.log("[notify]", msg);
-      }
-    },
-
     // Get some guaranteed unique non-guid barcodes from the server
     getBarcodes: function(howMany, cb) {
       app.remote.getBarcodes(howMany, cb);
