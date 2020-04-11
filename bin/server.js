@@ -108,7 +108,7 @@ function ensureInitialUser(settings, adminCore, cb) {
     writer.saveUser(adminCore, {
       name: user.name,
       groups: ['admin', 'user']
-    }, user.password, function(err, user) {
+    }, user.password, null, true, function(err, user) {
       if(err) {
         console.error("Failed to create initial user:", err);
         return;
@@ -480,17 +480,20 @@ async function init() {
 }
 
 
-function login(data, cb) {
+function login(remoteIP, data, cb) {
   
-  console.log("Login attempt:", data.username);
+  console.log("Login attempt:", data.username, remoteIP);
 
+//  antiBruteforce(settings.attemptsLog, remoteIP, null, function(err) {
+//    if(err) return cb(err);
+  
   adminCore.api.usersByName.get(data.username, function(err, users) {
     if(err) return cb(err);
 
     if(!users.length) {
       return cb(new Error("No user with that username exists"))
     }
-    
+
     var user;
     try {
       user = userUtils.verifyAll(users, data.password);

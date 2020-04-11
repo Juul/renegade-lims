@@ -36,8 +36,8 @@ module.exports = function(db) {
         const t = through.obj();
         
         const opts = {
-          gt: key + '!',
-          lt: key + '~',
+          gt: key + '!!',
+          lt: key + '!~',
           valueEncoding: 'json'
         }
         
