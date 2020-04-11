@@ -8,6 +8,7 @@ import { view } from 'z-preact-easy-state';
 import React from 'react';
 import CssBaseline from '@material-ui/core/CssBaseline';
 
+import Container from '@material-ui/core/Container';
 import Snackbar from '@material-ui/core/Snackbar';
 import MuiAlert from '@material-ui/lab/Alert';
 import AppBar from '@material-ui/core/AppBar';
@@ -97,8 +98,10 @@ class Root extends Component {
               </Toolbar>
             </AppBar>
           </div>
-          <p>Disconnected from server.</p>
-          <p>{(app.state.reconnectDelay) ? "Attempting to reconnect in " + app.state.reconnectDelay + " seconds." : "Reconnecting..."}</p>
+          <Container>
+            <p>Disconnected from server.</p>
+            <p>{(app.state.reconnectDelay) ? "Attempting to reconnect in " + app.state.reconnectDelay + " seconds." : "Reconnecting..."}</p>
+          </Container>
         </div>
       )
     }

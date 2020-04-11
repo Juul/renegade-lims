@@ -3,6 +3,8 @@
 import { h, Component } from 'preact';
 import { view } from 'z-preact-easy-state';
 
+import Container from '@material-ui/core/Container';
+
 var QrCode = require('qrcode-reader');
 var getUserMedia = require('getusermedia');
 var path = require('path');
@@ -277,7 +279,7 @@ class Scan extends Component {
     var cameraAccessMsg = '';
 
     if(!this.state.disableDataMatrixScanner) {
-      helpMessage.push("the tabletop or hand-held DataMatrix scanners.");
+      helpMessage.push("Use the tabletop or hand-held DataMatrix scanners.");
     }
     if(!this.state.disableKeyboard) {
       helpMessage.push("Scan 1D barcodes using hand-held 1D barcode scanner");
@@ -338,7 +340,7 @@ class Scan extends Component {
     }
     
     return (
-
+      <Container>
         <div id="scan-wrapper" class="scan">
           <div class="row">
             <div class="col s1 m1 l1"></div>            
@@ -354,6 +356,7 @@ class Scan extends Component {
             </div>
           </div>      
         </div>
+      </Container>
     )
   }
 }

@@ -3,6 +3,8 @@ import { h, Component } from 'preact';
 import { view } from 'z-preact-easy-state';
 import linkState from 'linkstate';
 
+import Container from '@material-ui/core/Container';
+
 var PlateLabelMaker = require('../plate_labelmaker.js');
 var settings = require('../../../settings.web.js');
 
@@ -40,7 +42,7 @@ class PrintPlateLabel extends Component {
 
       var imageData = this.labelMaker.getDataURL();
       app.actions.printLabel(imageData, function(err) {
-        if(err) return app.actions.notify(err, 'error');
+        if(err) return app.notify(err, 'error');
 
         console.log("Printing");
       })
@@ -84,14 +86,15 @@ class PrintPlateLabel extends Component {
 	render() {
 
     return (
-        <div>
-        <h3>Label maker</h3>
-        <p>Copies (1 to 15): <input type="text" value={this.state.copies} onInput={this.updateLabel.bind(this)} /></p>
-          <p><input type="button" onClick={this.print.bind(this)} value="Print" /></p>
+        <Container>
+        <h3>Print plate labels</h3>
+        <p>Copies per label (1 to 15): <input type="text" value={this.state.copies} onInput={this.updateLabel.bind(this)} /></p>
+        <p><input type="button" onClick={this.print.bind(this)} value="Print" /></p>
+        <h4>Print preview</h4>
           <div style="width:174px;height:560px;">
             <canvas id="labelPreview" class="labelPreview" width="174" height="560"></canvas>
         </div>
-        </div>
+        </Container>
     )
   }
 }

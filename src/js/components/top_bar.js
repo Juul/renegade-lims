@@ -161,7 +161,9 @@ class Login extends Component {
       onClose={handleMenuClose}
         >
         <MenuItem onClick={handleMenuClose}>Profile</MenuItem>
-        <MenuItem onClick={handleMenuClose}>My account</MenuItem>
+        <Link onClick={this.logout.bind(this)}>
+          <MenuItem onClick={handleMenuClose}>Log out</MenuItem>
+        </Link>
         </Menu>
     );
 
@@ -215,10 +217,14 @@ class Login extends Component {
             aria-label="open drawer"
           >
             <MenuIcon />
-          </IconButton>
-          <Typography className={classes.title} variant="h6" noWrap>
-            renegade
-          </Typography>
+        </IconButton>
+        
+        <Typography className={classes.title} variant="h6" noWrap>
+        <Link href="/" style="color:white">
+        renegade
+      </Link>
+      </Typography>
+
           <div className={classes.search}>
             <div className={classes.searchIcon}>
               <SearchIcon />

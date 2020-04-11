@@ -10,18 +10,14 @@ const writer = require('../lib/writer.js');
 
 module.exports = function(settings, labDeviceServer, dmScanner, labCore, adminCore, labLocal) {
   return {
-    
-    foo: function(userData, cb) {
-      cb(null, "bar");
-    },
 
-    getBarcodes: function(userData, howMany, cb) {
+    getBarcodes: function(userData, remoteIP, howMany, cb) {
       labLocal.getBarcodes(howMany, cb);
     },
     
     // TODO move all of the below to the 'user' namespace
 
-    savePhysical: function(userData, obj, imageData, doPrint, cb) {
+    savePhysical: function(userData, remoteIP, obj, imageData, doPrint, cb) {
 
       if(imageData) {
         obj.labelPath = idToLabelPath(settings, obj.id);
@@ -38,7 +34,7 @@ module.exports = function(settings, labDeviceServer, dmScanner, labCore, adminCo
       });
     },
 
-    printLabelAndIncrement: function(userData, imageData, toInc) {
+    printLabelAndIncrement: function(userData, remoteIP, imageData, toInc) {
       // TODO implement
     },
     
@@ -52,22 +48,22 @@ module.exports = function(settings, labDeviceServer, dmScanner, labCore, adminCo
       return labDeviceServer.printWherever(imageBuffer, cb);
     },
     
-    getPhysical: function(userData, code, cb) {
+    getPhysical: function(userData, remoteIP, code, cb) {
       // TODO implement
     },
 
-    getPhysicalByBarcode: function(userData, code, cb) {
+    getPhysicalByBarcode: function(userData, remoteIP, code, cb) {
       // TODO implement
     },
     
-    claimDataMatrixScanner: function(userData, cb) {
+    claimDataMatrixScanner: function(userData, remoteIP, cb) {
       if(!dmScanner) return cb(new Error("No Data Matrix scanner configured"));
 
       // TODO we should unregister when this web client disconnects
       dmScanner.registerCallback(cb);
     },
 
-    saveUser: function(user, password, cb) {
+    saveUser: function(userData, remoteIP, user, password, cb) {
       // TODO check that currently logged in user id matches this user id
       // or that user is in admin group
       // TODO require original password or reset token if changing password
@@ -78,16 +74,16 @@ module.exports = function(settings, labDeviceServer, dmScanner, labCore, adminCo
       writer.saveUser(adminCore, user, password, cb);
     },
 
-    getPlateByBarcode: function(id, cb) {
+    getPlateByBarcode: function(userData, remoteIP, id, cb) {
       // TODO implement
       throw new Error("Not implemented");
     },
     
-    getObject: function(userData, id, cb) {
+    getObject: function(userData, remoteIP, id, cb) {
       labCore.api.objectsByGUID.get(id, cb);
     },
 
-    updatePlate: function(userData, plate, cb) {
+    updatePlate: function(userData, remoteIP, plate, cb) {
       // TODO implement
       cb();
     }

@@ -50,7 +50,12 @@ class Signup extends Component {
   onFormSubmit(e) {
     e.preventDefault();
 
-    app.actions.login(this.state.username, this.state.password, function(err, token, user) {
+    const user = {
+      username: this.state.username,
+      email: this.state.email
+    };
+    
+    app.actions.signup(user, this.state.password, this.state.masterPassword, function(err, token, user) {
       if(err) {
         app.actions.notify(err, 'error');
         console.error(err);
@@ -73,29 +78,19 @@ class Signup extends Component {
         <Typography component="h1" variant="h5">
           Sign up
         </Typography>
-        <form className={classes.form} noValidate>
+        <form className={classes.form} noValidate onSubmit={this.onFormSubmit.bind(this)}>
           <Grid container spacing={2}>
-            <Grid item xs={12} sm={6}>
+            <Grid item xs={12}>
               <TextField
-                autoComplete="fname"
-                name="firstName"
+                autoComplete="username"
+                name="username"
                 variant="outlined"
                 required
                 fullWidth
-                id="firstName"
-                label="First Name"
+                id="username"
+                label="Username"
                 autoFocus
-              />
-            </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                variant="outlined"
-                required
-                fullWidth
-                id="lastName"
-                label="Last Name"
-                name="lastName"
-                autoComplete="lname"
+                onInput={linkState(this, 'username')}
               />
             </Grid>
             <Grid item xs={12}>
@@ -107,6 +102,7 @@ class Signup extends Component {
                 label="Email Address"
                 name="email"
                 autoComplete="email"
+                onInput={linkState(this, 'email')}
               />
             </Grid>
             <Grid item xs={12}>
@@ -119,6 +115,7 @@ class Signup extends Component {
                 type="password"
                 id="password"
                 autoComplete="current-password"
+                onInput={linkState(this, 'password')}
               />
             </Grid>
             <Grid item xs={12}>
@@ -130,6 +127,7 @@ class Signup extends Component {
                 label="Master password"
                 type="password"
                 id="master-password"
+                onInput={linkState(this, 'masterPassword')}
               />
             </Grid>
           </Grid>

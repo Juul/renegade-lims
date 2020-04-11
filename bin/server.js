@@ -59,6 +59,10 @@ const argv = minimist(process.argv.slice(2), {
 
 const labDeviceServer = new LabDeviceServer();
 
+if(!settings.attemptsLog) {
+  console.log("Warning: settings.attemptsLog is not set. Login and signup brute forcing prevention is disabled.");
+}
+
 fs.ensureDirSync(settings.dataPath, {
   mode: 0o2750
 });
@@ -132,7 +136,7 @@ function initWebserver() {
     secret: settings.loginToken.secret,
     login: login
   }, rpcMethods, function(userdata, namespace, functionName, cb) {
-    if(!userdata && !namespace) return cb();
+    if(!namespace) return cb();
     if(!userdata.groups || userdata.groups.indexOf(namespace) < 0) {
       return cb(new Error("User tried to access function in the '"+namespace+"' namespace but is not in the '"+namespace+"' group"));
     }
@@ -211,8 +215,8 @@ function initWebserver() {
 
 
   // initialize the websocket server on top of the webserver
-  var ws = websocket.createServer({server: server}, function(stream) {
-
+  var ws = websocket.createServer({server: server}, function(stream, request) {
+    
     stream.on('error', function(err) {
       console.error("WebSocket stream error:", err);
     });
@@ -227,6 +231,20 @@ function initWebserver() {
       debug: false
     });
 
+    var remoteIP = null;
+    if(settings.behindProxy) {
+      if(request.headers['x-forwarded-for']) {
+        remoteIP = headers['x-forwarded-for'].split(/\s*,\s*/)[0];
+      }
+    } else {
+      remoteIP = request.connection.remoteAddress;
+    }
+    console.log("Remote IP:", remoteIP);
+    
+    // Ensure that all incoming RPC calls
+    // will have the IP pre-pended as first argument
+    rpcServer.setStaticInArgs(remoteIP);
+    
     rpcServer.on('error', function(err) {
       console.error("Connection error (client disconnect?):", err);
     });
@@ -234,7 +252,7 @@ function initWebserver() {
 
     // when we receive a methods list from the other endpoint
     rpcServer.on('methods', function(remote) {
-      console.log("got methods");
+//      console.log("got methods");
     });
 
     rpcServer.pipe(stream).pipe(rpcServer);

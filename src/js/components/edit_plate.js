@@ -3,6 +3,9 @@
 import { h, Component } from 'preact';
 import { view } from 'z-preact-easy-state';
 
+import Link from '@material-ui/core/Link';
+import Container from '@material-ui/core/Container';
+
 const PlatePhysical = require('../physicals/plate.js');
 
 const Scan = require('./scan.js');
@@ -98,20 +101,23 @@ class EditPlate extends Component {
     var main;
     if(!this.state.id) {
       main = (
-        <div>
-        <p>Scan plate QR code to begin.</p>
-        <Scan onScan={this.plateScanned.bind(this)} disableKeyboard disableDataMatrixScanner />
-        </div>  
+        <Container>
+          <p>Scan plate barcode to begin.</p>
+          <Scan onScan={this.plateScanned.bind(this)} disableWebcam disableDataMatrixScanner />
+          <p>If your plate does not have a barcode you can <Link href="/print-plate-label">print one here</Link>.</p>
+        </Container>
       );
     } else if(!this.state.plate) {
       main = (
-        <div>
-          Loading plate {this.id}
-        </div>
+        <Container>
+          <div>
+            Loading plate {this.id}
+          </div>
+        </Container>
       )
     } else {
       main = (
-        <div>
+        <Container>
           <h3>Plate: {this.state.id}</h3>
           <p>
           Label created at: {this.state.plate.createdAt}
@@ -124,7 +130,7 @@ class EditPlate extends Component {
           </div>
           <Scan onScan={this.plateScanned.bind(this)} disableWebcam hideText />
           {sampleHtml}
-        </div>
+        </Container>
       )
     }
     

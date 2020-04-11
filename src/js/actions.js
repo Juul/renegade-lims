@@ -15,6 +15,12 @@ function navigateToObject(item) {
 module.exports = function() {
   return {
 
+    // TODO this is only here for backwards compatibility
+    // we should get rid of all calls to app.actions.notify
+    notify: function(msg, level) {
+      app.notify(msg, level);
+    },
+    
     // Get some guaranteed unique non-guid barcodes from the server
     getBarcodes: function(howMany, cb) {
       app.remote.getBarcodes(howMany, cb);
@@ -51,6 +57,11 @@ module.exports = function() {
     
     login: function(username, password, cb) {
       app.rpc.login(username, password, cb);
+    },
+
+    signup: function(user, password, masterPassword, cb) {
+      console.log("SIGNING UP!");
+      app.remote.signup(user, password, masterPassword, cb);
     },
 
     logout: function(cb) {

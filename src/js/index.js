@@ -28,15 +28,15 @@ app.state = createStore({
   notifications: {}
 });
 
+// Display notification that automatically disappears after a time
 app.notify = function(msg, level) {
   console.log("[notify "+level+"]", msg);
   const id = uuid();
   app.state.notifications[id] = {
     id,
-    msg,
+    msg: msg.toString(),
     level
-  };
-  
+  };  
   setTimeout(() => {
     delete app.state.notifications[id]
   }, NOTIFICATION_DURATION);

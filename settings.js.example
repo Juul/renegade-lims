@@ -14,7 +14,11 @@ module.exports = {
   // Comment these out to disable webserver
   webHost: 'localhost',
   webPort: 8000,
-  
+
+  // If this is set then anyone with the master password
+  // can create a non-admin account
+  masterPassword: 'foobarbaz',
+
   dataPath: './data',
   staticPath: './static',
   staticUserPath: './user-static',
@@ -96,6 +100,9 @@ module.exports = {
 
     // path to directory containing the public keys of authorized labdevice clients
     clientKeys: path.join(__dirname, 'labdevice', 'client_keys')
-  }
+  },
+
+  // Where to log failed attempts to sign up or log in
+  attemptsLog: 'log/attempts.log'
   
 };
