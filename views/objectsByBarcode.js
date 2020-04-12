@@ -21,10 +21,10 @@ module.exports = function(db) {
       var entry;
       for(entry of entries) {
         if(!validateObject(entry)) {
-          return;
+          return next();
         }
         if(!entry.barcode) {
-          return;
+          return next();
         }
         nicify(entry);
 
@@ -60,6 +60,7 @@ module.exports = function(db) {
     },
     
     api: {
+      // TODO are barcodes really guaranteed to be unique?
       get: function(core, key, cb) {
         this.ready(function() { // wait for all views to catch up
           db.get(key, {valueEncoding: 'json'}, cb);

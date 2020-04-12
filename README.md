@@ -79,6 +79,7 @@ npm run dev
 
 # ToDo
 
+* Add QuaggaJS for 1D barcode scanning with webcam: https://serratus.github.io/quaggaJS/examples/live_w_locator.html
 * Move to something other than ecstatic for static file serving
 
 Admins sign new users. When new users are pulled in, verify that they are signed by a known admin, or signed by an admin who was signed by a known admin, etc.

@@ -18,6 +18,7 @@ class Main extends Component {
       <Container>
         <h3>Main</h3>
         <ul>
+        <li><Link href="/tube-intake">Tube intake (associate tubes with accession forms)</Link></li>
           <li><Link href="/map-tubes-to-plate">Map tubes to plate</Link></li>
           <li><Link href="/plate-test">Plate test</Link></li>
           <li><Link href="/print-plate-label">Print plate barcode label</Link></li>

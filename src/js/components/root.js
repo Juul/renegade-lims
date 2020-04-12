@@ -1,6 +1,6 @@
 'use strict';
 
-import {route, Router} from 'preact-router';
+import { route, Router } from 'preact-router';
 import Match from 'preact-router/match';
 import { h, Component } from 'preact';
 import { view } from 'z-preact-easy-state';
@@ -20,6 +20,7 @@ const TopBar = require('./top_bar.js')
 const Main = require('./main.js')
 const Login = require('./login.js')
 const Plate = require('./plate.js')
+const TubeIntake = require('./tube_intake.js')
 const CreatePlate = require('./create_plate.js')
 const MapTubesToPlate = require('./map_tubes_to_plate.js')
 const Scan = require('./scan.js')
@@ -28,6 +29,7 @@ const PrintTest = require('./print_test.js')
 const NotFound = require('./not_found.js')
 const Signup = require('./signup.js');
 const PasswordReset = require('./password_reset.js');
+
 
 class Root extends Component {
 
@@ -130,6 +132,7 @@ class Root extends Component {
           {unprivileged}
           <Main path="/" />
           <CreatePlate path="/plate-new" />
+          <TubeIntake path="/tube-intake/:formBarcode?" />
           <MapTubesToPlate path="/map-tubes-to-plate" />
           <MapTubesToPlate path="/map-tubes-to-plate/:id" />
           <Plate path="/plate-test" />

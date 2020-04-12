@@ -41,6 +41,10 @@ module.exports = function() {
       app.remote.getPhysicalByBarcode(code, cb);
     },
     
+    getSwabTubeByFormBarcode: function(code, cb) {
+      app.remote.getSwabTubeByFormBarcode(code, cb);
+    },
+    
     gotoPhysicalByBarcode: function(code) {
       app.remote.getPhysicalByBarcode(code, function(err, item) {
         if(err) return app.error(err);
@@ -49,6 +53,11 @@ module.exports = function() {
         
         navigateToPhysical(item);
       });
+    },
+
+    saveSwabTube(tube, cb) {
+      console.log("APP.REMOTE:", app.remote);
+      app.remote.saveSwabTube(tube, cb);
     },
 
     savePhysical(labelData, imageData, doPrint, cb) {

@@ -5,7 +5,7 @@ const through = require('through2');
 
 const u = require('./common/utils.js');
 const nicify = require('./common/nicify.js');
-const validateObject = require('../validators/object.js');
+const validateSwabTube = require('../validators/swab_tube.js');
 
 function sortByTimestamp(a, b) {
   return a.ts - b.ts;
@@ -20,7 +20,7 @@ module.exports = function(db) {
       const firstPass = [];
       var entry;
       for(entry of entries) {
-        if(!validateObject(entry)) {
+        if(!validateSwabTube(entry)) {
           return next();
         }
         nicify(entry);
@@ -45,7 +45,7 @@ module.exports = function(db) {
           }
           batch.push({
             type: 'put',
-            key: entry.value.id,
+            key: entry.value.formBarcode,
             value: entry.value
           });
           next();
@@ -57,6 +57,7 @@ module.exports = function(db) {
     },
     
     api: {
+      // TODO are barcodes really guaranteed to be unique?
       get: function(core, key, cb) {
         this.ready(function() { // wait for all views to catch up
           db.get(key, {valueEncoding: 'json'}, cb);

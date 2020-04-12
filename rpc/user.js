@@ -53,6 +53,10 @@ module.exports = function(settings, labDeviceServer, dmScanner, labCore, adminCo
     getPhysicalByBarcode: function(userData, remoteIP, barcode, cb) {
       labCore.api.objectsByBarcode.get(barcode, cb);
     },
+
+    getSwabTubeByFormBarcode: function(userData, remoteIP, formBarcode, cb) {
+      labCore.api.swabTubesByFormBarcode.get(formBarcode, cb);
+    },
     
     claimDataMatrixScanner: function(userData, remoteIP, cb) {
       if(!dmScanner) return cb(new Error("No Data Matrix scanner configured"));
@@ -70,6 +74,10 @@ module.exports = function(settings, labDeviceServer, dmScanner, labCore, adminCo
         password = null;
       }
       writer.saveUser(adminCore, user, password, cb);
+    },
+
+    saveSwabTube: function(userData, remoteIP, tube, cb) {
+      writer.saveSwabTube(labCore, tube, cb);
     },
 
     getPlateByBarcode: function(userData, remoteIP, id, cb) {

@@ -23,6 +23,7 @@ const minimist = require('minimist');
 
 const objectsByGUIDView = require('../views/objectsByGUID.js');
 const objectsByBarcodeView = require('../views/objectsByBarcode.js');
+const swabTubesByFormBarcodeView = require('../views/swabTubesByFormBarcode.js');
 const swabsByTimeView = require('../views/swabsByTimestamp.js');
 const swabsByUserView = require('../views/swabsByUsername.js');
 const platesByTimeView = require('../views/platesByTimestamp.js');
@@ -40,6 +41,7 @@ const settings = require('../settings.js');
 
 const OBJECTS_BY_GUID = 'og'; // everything by GUID
 const OBJECTS_BY_BARCODE = 'ob'; // everything by barcode
+const SWAB_TUBES_BY_FORM_BARCODE = 'sfb';
 const SWABS_BY_TIME = 'st';
 const SWABS_BY_USER = 'su';
 const PLATES_BY_TIME = 'pt';
@@ -83,9 +85,11 @@ const adminDB = sublevel(db, 'a', {valueEncoding: 'json'});
 const localDB = sublevel(db, 'lo', {valueEncoding: 'json'}); // never replicated
 const labLocal = new LabLocal(localDB, settings.labBarcodePrefix);
 
+
 labCore.use('objectsByGUID', 1, view(sublevel(labDB, OBJECTS_BY_GUID, {valueEncoding: 'json'}), objectsByGUIDView));
 labCore.use('objectsByBarcode', 1, view(sublevel(labDB, OBJECTS_BY_BARCODE, {valueEncoding: 'json'}), objectsByBarcodeView));
-labCore.use('swabsByTime', 1, view(sublevel(labDB, SWABS_BY_TIME, {valueEncoding: 'json'}), swabsByTimeView));
+labCore.use('objectsByBarcode', 1, view(sublevel(labDB, OBJECTS_BY_BARCODE, {valueEncoding: 'json'}), objectsByBarcodeView));
+labCore.use('swabTubesByFormBarcode', 1, view(sublevel(labDB, SWAB_TUBES_BY_FORM_BARCODE, {valueEncoding: 'json'}), swabTubesByFormBarcodeView));
 labCore.use('swabsByUser', 1, view(sublevel(labDB, SWABS_BY_USER, {valueEncoding: 'json'} ), swabsByUserView));
 labCore.use('platesByTime', 1, view(sublevel(labDB, SWABS_BY_TIME, {valueEncoding: 'json'} ), platesByTimeView));
 
