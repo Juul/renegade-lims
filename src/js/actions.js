@@ -37,6 +37,10 @@ module.exports = function() {
       });
     },
 
+    getPhysicalByBarcode: function(code, cb) {
+      app.remote.getPhysicalByBarcode(code, cb);
+    },
+    
     gotoPhysicalByBarcode: function(code) {
       app.remote.getPhysicalByBarcode(code, function(err, item) {
         if(err) return app.error(err);

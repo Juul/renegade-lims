@@ -10,13 +10,11 @@ const writer = require('../lib/writer.js');
 
 module.exports = function(settings, labDeviceServer, dmScanner, labCore, adminCore, labLocal) {
   return {
-
+    
     getBarcodes: function(userData, remoteIP, howMany, cb) {
       labLocal.getBarcodes(howMany, cb);
     },
     
-    // TODO move all of the below to the 'user' namespace
-
     savePhysical: function(userData, remoteIP, obj, imageData, doPrint, cb) {
 
       if(imageData) {
@@ -52,8 +50,8 @@ module.exports = function(settings, labDeviceServer, dmScanner, labCore, adminCo
       // TODO implement
     },
 
-    getPhysicalByBarcode: function(userData, remoteIP, code, cb) {
-      // TODO implement
+    getPhysicalByBarcode: function(userData, remoteIP, barcode, cb) {
+      labCore.api.objectsByBarcode.get(barcode, cb);
     },
     
     claimDataMatrixScanner: function(userData, remoteIP, cb) {

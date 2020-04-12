@@ -1,13 +1,18 @@
 'use strict';
 
 import { h, Component } from 'preact';
+import {route} from 'preact-router';
 import { view } from 'z-preact-easy-state';
 
 import Link from '@material-ui/core/Link';
 import Container from '@material-ui/core/Container';
 
+const uuid = require('uuid').v4;
+const timestamp = require('monotonic-timestamp');
+
 const PlatePhysical = require('../physicals/plate.js');
 
+const utils = require('../utils.js');
 const Scan = require('./scan.js');
 const Plate = require('./plate.js');
 
@@ -33,11 +38,60 @@ class EditPlate extends Component {
       error: err
     });
   }
+
+  // Change URI without triggering any other actions
+  fakeRoute(id) {
+    history.pushState({}, "Map tubes to plate", '/map-tubes-to-plate/'+encodeURIComponent(id));
+  }
   
   plateScanned(code) {
-    app.remote.getPlateByBarcode(id, this.gotPlate);
+    app.actions.getPhysicalByBarcode(code, (err, o) => {
+      if(err) {
+        if(!err.notFound) {
+          app.notify(err, 'error');
+          return;
+        }
+        
+        // barcode not found
+        const id = uuid();
+        this.fakeRoute(id);
+        this.newPlate(id, code);
+        return;
+      }
+
+      if(!plate.type === 'plate') {
+        app.notify("Scanned object is not a plate", 'error');
+        return;
+      }
+
+      fakeRoute(o.id);
+      this.gotPlate(o);
+    });
   }
 
+  tubeScanned(code) {
+    app.actions.getPhysicalByBarcode(code, (err, o) => {
+      if(err) {
+        console.log(err);
+        if(!err.notFound) {
+          app.notify(err, 'error');
+          return;
+        }
+        app.notify("Tube with barcode '"+code+"' not registered in LIMS", 'error');
+        return;
+      }
+
+      this.gotTube(tube);
+    });
+  }
+
+  gotTube(tube) {
+    this.setState({
+      tube
+    });
+    
+  }
+  
   saveSampleToSelectedWell() {
 
   }
@@ -52,15 +106,24 @@ class EditPlate extends Component {
  //   console.log("Hovered well:", well);
   }
 
-  gotPlate(err, plate) {
-    if(err) {
-      console.log(err);
-    }
-    if(!plate || !plate.type === 'plate') {
-      app.actions.notify("Plate not found", 'error');
-      return;
-    }
+  newPlate(id, barcode) {
 
+    const plate = {
+      id: id,
+      barcode: barcode,
+      createdAt: timestamp(),
+      createdBy: app.state.user.name,
+      wells: [],
+      isNew: true
+    };
+    
+    this.setState({
+      id: plate.id,
+      plate: plate
+    });
+  }
+  
+  gotPlate(plate) {
     
     this.setState({
       id: plate.id,
@@ -88,13 +151,32 @@ class EditPlate extends Component {
       )
     }
 
-    var sampleHtml = '';
-    if(this.sample) {
+    var sampleHtml;
+    if(this.state.tube) {
+      var saveHtml;
+      if(this.state.selectedWell) {
+        saveHtml = (
+            <button>Save sample to well {this.state.selectedWell || ''}</button>
+        );
+      } else {
+        saveHtml = (
+          <p>Click a well to assign sample.</p>
+        )
+      }
+      
       sampleHtml = (
           <div>
-          <button>Save sample to well {this.state.selectedWell || ''}</button>
+          <p><b>Current tube:</b> {this.state.tube.barcode} created at {utils.formateDateTime(this.state.tube.createdAt)} by {this.state.tube.createdBy}.</p>
+          {saveHtml}
+          <button>Cancel</button>
           </div>
       );
+    } else {
+      sampleHtml = (
+          <div>
+          To place a sample in a well, first scan a sample tube, or manually enter the barcode number with the keyboard and press enter.
+          </div>
+      )
     }
     
     var main;
@@ -117,18 +199,16 @@ class EditPlate extends Component {
     } else {
       main = (
         <Container>
-          <h3>Plate: {this.state.id}</h3>
+          <h3>Plate: {this.state.plate.barcode}</h3>
           <p>
-          Label created at: {this.state.plate.createdAt}
+          Plate created at: {utils.formatDateTime(this.state.plate.createdAt)}
           <br/>
-          Label created by: {this.state.plate.createdBy || "Unknown"}
+          Plate created by: {this.state.plate.createdBy || "Unknown"}
           </p>
           <Plate occupied={this.state.plate.wells} selectfree={!!this.state.sample} allowselectempty={!!this.state.sample} onselect={this.onWellSelect.bind(this)} onhover={this.showWellInfo.bind(this)} />
-          <div>
-          Scan a cryotube to begin plating, or manually enter a cryotube ID with the keyboard and press enter.
-          </div>
-          <Scan onScan={this.plateScanned.bind(this)} disableWebcam hideText />
+          
           {sampleHtml}
+          <Scan onScan={this.tubeScanned.bind(this)} disableWebcam hideText />
         </Container>
       )
     }
