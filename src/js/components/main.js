@@ -18,7 +18,7 @@ class Main extends Component {
       <Container>
         <h3>Main</h3>
         <ul>
-          <li><Link href="/plate">Plate</Link></li>
+          <li><Link href="/map-tubes-to-plate">Map tubes to plate</Link></li>
           <li><Link href="/plate-test">Plate test</Link></li>
           <li><Link href="/print-plate-label">Print plate barcode label</Link></li>
           <li><Link href="/scan">Scan</Link></li>

@@ -17,7 +17,7 @@ class PrintPlateLabel extends Component {
     });
 
     this.setState({
-      copies: 5
+      copies: 1
     });
   }
   

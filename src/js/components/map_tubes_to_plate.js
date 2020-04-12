@@ -71,7 +71,6 @@ class EditPlate extends Component {
   componentDidMount() {
     app.whenConnected(() => {
       if(this.state.id) {
-        console.log('AAAA', app.remote);
         app.remote.getObject(this.state.id, this.gotPlate.bind(this))
       }
     });

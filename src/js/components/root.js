@@ -21,7 +21,7 @@ const Main = require('./main.js')
 const Login = require('./login.js')
 const Plate = require('./plate.js')
 const CreatePlate = require('./create_plate.js')
-const EditPlate = require('./edit_plate.js')
+const MapTubesToPlate = require('./map_tubes_to_plate.js')
 const Scan = require('./scan.js')
 const PrintPlateLabel = require('./print_plate_label.js')
 const PrintTest = require('./print_test.js')
@@ -130,8 +130,8 @@ class Root extends Component {
           {unprivileged}
           <Main path="/" />
           <CreatePlate path="/plate-new" />
-          <EditPlate path="/plate" />
-          <EditPlate path="/plate/:id" />
+          <MapTubesToPlate path="/map-tubes-to-plate" />
+          <MapTubesToPlate path="/map-tubes-to-plate/:id" />
           <Plate path="/plate-test" />
           <Scan path="/scan" />
           <PrintPlateLabel path="/print-plate-label" />

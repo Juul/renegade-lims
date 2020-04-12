@@ -21,7 +21,7 @@ class Scan extends Component {
       disableDataMatrixScanner: props.disableDataMatrixScanner,
       disableKeyboard: props.disableKeyboard,
       hideText: props.hideText,
-      scanAccess: false
+      cameraAccess: false
     });
 
     this.enableDM = false;
@@ -29,7 +29,7 @@ class Scan extends Component {
 
   componentWillUnmount() {
     this.setState({
-      scanAccess: false
+      cameraAccess: false
     });
     this.stopCameraStream();
     this.stopKeyboardCapture();
@@ -65,7 +65,7 @@ class Scan extends Component {
         audio: false
       });
       this.setState({
-        scanAccess: true
+        cameraAccess: true
       });
       
       this.cameraStream = stream;
@@ -83,7 +83,7 @@ class Scan extends Component {
                     Unable to show camera video stream.
                   </span>
               ),
-              scanAccess: false
+              cameraAccess: false
             });
             return;
           }
@@ -97,19 +97,19 @@ class Scan extends Component {
       if (err.name === 'DevicesNotFoundError' || err.name === 'NotFoundError') {
         this.setState({
           error: "Looks like your device does not have a webcam",
-          scanAccess: false,
+          cameraAccess: false,
           cameraFailed: true
         });
       } else if (err.name === 'InternalError' || err.name === 'NotReadableError') {
         this.setState({
           error: "Could not access your camera. Is another application using it?",
-          scanAccess: false,
+          cameraAccess: false,
           cameraFailed: true
         });
       } else {
         this.setState({
           error: "Unknown camera access error.",
-          scanAccess: false,
+          cameraAccess: false,
           cameraFailed: true
         });
         console.error("Camera access error:", err);
@@ -155,7 +155,7 @@ class Scan extends Component {
   }
 
   scan(delay) {
-    if(!this.state.scanAccess) return;
+    if(!this.state.cameraAccess) return;
     delay = delay || 250; // delay between frames in ms
     
     var scanVideo = document.getElementById('scanVideo');
@@ -188,12 +188,14 @@ class Scan extends Component {
   keyboardScan(code) {
 
     var code = code.toLowerCase();
-    console.log("code:", code);
 
     if(code.length <= 0){
       return;
     }
 
+    this.scanSuccess(code, 'unknown');
+    
+    /* // todo re-enable checking
     if(this.isUUID(code)) {
       this.scanSuccess(code, 'uuid');
       return;
@@ -203,6 +205,7 @@ class Scan extends Component {
       this.scanSuccess(code, 'cryotube');
       return;      
     }
+    */
 
     return;   
   }
@@ -237,11 +240,20 @@ class Scan extends Component {
         code: ''
       })
       return;
+      
+    } else if(e.keyCode === 8) { // backspace
+      this.setState({
+        code: this.state.code.slice(0, -1)
+      })
+    } else if(e.keyCode === 27) { // escape
+      this.setState({
+        code: ''
+      })
     }
   }
 
   keypress(e) {
-    if(e.ctrlKey || e.shiftKey || e.altKey || e.metaKey) {
+    if(e.ctrlKey || e.altKey || e.metaKey) {
       return;
     }
 
@@ -249,9 +261,16 @@ class Scan extends Component {
     if(e.charCode < 32 || e.charCode > 126) {
       return;
     }
-
+    
     e.preventDefault();
     var c = String.fromCharCode(e.charCode);
+    if(!c.match(/[\d\w-]+/)) {
+      return;
+    }
+    
+    if(e.shiftKey) {
+      c = c.toUpperCase();
+    }
 
     if(!c) return;
 
@@ -279,17 +298,16 @@ class Scan extends Component {
     var cameraAccessMsg = '';
 
     if(!this.state.disableDataMatrixScanner) {
-      helpMessage.push("Use the tabletop or hand-held DataMatrix scanners.");
+      helpMessage.push("Scan cryotubes usig the tabletop or hand-held DataMatrix scanners.");
     }
     if(!this.state.disableKeyboard) {
       helpMessage.push("Scan 1D barcodes using hand-held 1D barcode scanner");
-      helpMessage.push("or use the keyboard to manually enter any barcode number or ID, then hit enter");
+      helpMessage.push("or use the keyboard to manually enter any barcode number, then hit enter");
     }
 
     if(!helpMessage.length || this.state.hideText) {
       helpMessage = '';
     } else {
-      helpMessage.push("Scan cryotubes using");
       helpMessage = (
           <p>
           {helpMessage.join(" ")+'.'}
@@ -306,7 +324,7 @@ class Scan extends Component {
         scanVideo = (<video id="scanVideo" class="scanVideo" width="440" height="330"></video>);
       }
       
-      if(!this.state.scanAccess) {
+      if(!this.state.cameraAccess) {
         let statusMsg = '';
         if(!this.state.cameraFailed) {
           statusMsg = (
@@ -318,16 +336,15 @@ class Scan extends Component {
           );
         }
         cameraAccessMsg = (
-            <div id="cameraAccessMsg">
-            <div class="spinner">
-            <div class="cssload-whirlpool"></div>
-            </div>
+          <div id="cameraAccessMsg">
             {statusMsg}
           </div>
         );
       } else {
         cameraAccessMsg = (
-            <p>Scan QR codes by showing them to the webcam.</p>
+            <p>
+              Scan QR code labels using webcam.
+            </p>
         );
       }
     }
