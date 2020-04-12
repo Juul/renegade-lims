@@ -21,7 +21,7 @@ module.exports = function(db) {
       var entry;
       for(entry of entries) {
         if(!validateUser(entry)) {
-          return;
+          return next();
         }
 
         // TODO check signature chain

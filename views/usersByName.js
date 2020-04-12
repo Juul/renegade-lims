@@ -14,7 +14,7 @@ module.exports = function(db) {
       
       const batch = [];
       entries.forEach(function(entry) {
-        if(!validateUser(entry)) return;
+        if(!validateUser(entry)) return next();
         
         var key = entry.value.name + '!' + entry.value.id;
 
