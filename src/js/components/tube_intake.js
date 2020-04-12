@@ -7,7 +7,6 @@ import { view } from 'z-preact-easy-state';
 import Link from '@material-ui/core/Link';
 import Container from '@material-ui/core/Container';
 
-const uuid = require('uuid').v4;
 const timestamp = require('monotonic-timestamp');
 
 const PlatePhysical = require('../physicals/plate.js');
@@ -29,7 +28,9 @@ class EditPlate extends Component {
   }
 
   tubeScanned(code) {
+    console.log("GETTING:", code);
     app.actions.getPhysicalByBarcode(code, (err, o) => {
+      console.log("GOT:", err, o, code);
       if(err && !err.notFound) {
         app.notify(err, 'error');
         return;
@@ -79,13 +80,14 @@ class EditPlate extends Component {
       app.notify("You must scan both an accession form and a swab tube before attempting to save.", 'error');
       return 
     }
-    
+
     const tube = {
-      id: (this.state.tube && this.state.tube.id) ? this.state.tube.id : uuid(),
+      id: (this.state.tube && this.state.tube.id) ? this.state.tube.id : undefined,
       barcode: this.state.tubeBarcode,
       formBarcode: this.props.formBarcode
     };
-
+    console.log("Saving:", tube);
+    
     app.actions.saveSwabTube(tube, function(err) {
       if(err) {
         app.notify(err, 'error');
@@ -129,7 +131,6 @@ class EditPlate extends Component {
     var formWarning = '';
 
     if(this.state.existingTube) {
-      console.log("EXISTING TUBE", this.state.existingTube.barcode, this.state.tubeBarcode);
       if(this.state.tubeBarcode && this.state.existingTube.barcode && this.state.existingTube.barcode === this.state.tubeBarcode) {
         formWarning = (
             <div>
@@ -139,7 +140,7 @@ class EditPlate extends Component {
       } else {
         formWarning = (
               <div>
-              <p><b><i>WARNING:</i>This accession form is <i>already</i> associated with a swab tube with barcode '{this.state.existingTube.formBarcode}'.</b></p>
+              <p><b><i>WARNING:</i>This accession form is <i>already</i> associated with a swab tube with barcode '{this.state.existingTube.barcode}'.</b></p>
               <p>Saving will overwrite the existing association between accession form and swab tube.</p>
               <p>Make <i><b>ABSOLUTELY SURE</b></i> you know what you are doing before clicking save!</p>
               </div>
@@ -157,7 +158,10 @@ class EditPlate extends Component {
         );
       } else {
         var warning = '';
-        if(this.state.tube && this.state.tube.barcode && this.state.tube.barcode !== this.props.formBarcode) {
+        if(this.state.tube) {
+          console.log("Tube code:", this.state.tube.barcode, this.state.tube.formBarcode)
+        }
+        if(this.state.tube && this.state.tube.barcode && this.state.tube.formBarcode !== this.props.formBarcode) {
           warning = (
               <div>
               <p><b><i>WARNING:</i>This tube is <i>already</i> associated with another accession form with barcode '{this.state.tube.formBarcode}'.</b></p>

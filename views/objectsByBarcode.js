@@ -23,7 +23,7 @@ module.exports = function(db) {
         if(!validateObject(entry)) {
           return next();
         }
-        if(!entry.barcode) {
+        if(!entry.value.barcode) {
           return next();
         }
         nicify(entry);
