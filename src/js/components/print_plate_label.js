@@ -27,35 +27,59 @@ class PrintPlateLabel extends Component {
     //        app.actions.prompt.reset()
   }
 
+  printCustom() {
+    var customCode = this.state.code;
+
+    this.labelMaker.drawLabel('labelPreview', this.state.code);
+
+    var imageData = this.labelMaker.getDataURL();
+    app.actions.printLabel(imageData, function(err) {
+      if(err) return app.notify(err, 'error');
+
+      app.notify("Printing", 'success');
+    })
+  }
+  
   print(e) {
     e.preventDefault()
-    console.log();
 
+    if(this.state.customCode) {
+      this.printCustom();
+      return;
+    }
+    
+    
     const copies = this.state.copies;
     
     app.actions.getBarcodes(this.state.numUniqueCodes, function(err, startCode, howMany, prefix) {
 
       if(err) return app.actions.notify(err, 'error');
 
-      console.log("Got prefix:", prefix);
       this.labelMaker.drawLabel('labelPreview', startCode, copies, prefix);
 
       var imageData = this.labelMaker.getDataURL();
       app.actions.printLabel(imageData, function(err) {
         if(err) return app.notify(err, 'error');
 
-        console.log("Printing");
+        app.notify("Printing", 'success');
       })
       
-    }.bind(this));
-    
-
-    
+    }.bind(this));  
   }
 
-  updateLabel(e) {
+  updateCustomCode(e) {
+    var customCode = e.target.value;
+
+    this.labelMaker.drawLabel('labelPreview', customCode);
+    
+    this.setState({
+      customCode: customCode || ''
+    })
+  }
+  
+  updateLabelCopies(e) {
     var copies = e.target.value;
-    console.log("COPIES:", copies);
+
     if(copies !== '') {
       copies = parseInt(copies);
       if(copies > 15) copies = 15;
@@ -85,11 +109,21 @@ class PrintPlateLabel extends Component {
 
 	render() {
 
+    var warning = '';
+    if(this.state.customCode) {
+      warning = (
+          <p><b>Warning:</b> Only use the custom barcode feature when re-printing destroyed or lost barcode stickers or risk having two different items labeled with the same code.</p>
+      );
+    }
+    
     return (
         <Container>
         <h3>Print plate labels</h3>
-        <p>Copies per label (1 to 15): <input type="text" value={this.state.copies} onInput={this.updateLabel.bind(this)} /></p>
+        <p>Copies per label (1 to 15): <input type="text" value={this.state.copies} onInput={this.updateLabelCopies.bind(this)} /></p>
+        <p>Custom barcode: <input type="text" value={this.state.customCode} onInput={this.updateCustomCode.bind(this)} /></p>
+        {warning}
         <p><input type="button" onClick={this.print.bind(this)} value="Print" /></p>
+
         <h4>Print preview</h4>
           <div style="width:174px;height:560px;">
             <canvas id="labelPreview" class="labelPreview" width="174" height="560"></canvas>

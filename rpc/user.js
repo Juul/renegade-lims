@@ -37,7 +37,7 @@ module.exports = function(settings, labDeviceServer, dmScanner, labCore, adminCo
       // TODO implement
     },
     
-    printLabel: function(userData, imageData, cb) {
+    printLabel: function(userData, remoteIP, imageData, cb) {
       if(!imageData) return cb(new Error("Image data missing"));
       
       var mtch = imageData.match(/^data:image\/png;base64,(.*)/)

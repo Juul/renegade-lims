@@ -46,7 +46,9 @@ function PlateLabelMaker(opts) {
 
 
   this.drawBarcodes = function(ctx, startNumber, ofEach, prefix) {
-
+    ofEach = ofEach || 0;
+    prefix = prefix || '';
+    
     var numUniqueCodes = Math.floor(LABELS_PER_LABEL / ofEach);
     var numLabels = Math.floor(LABELS_PER_LABEL / ofEach) * ofEach;
     var count = 0;
@@ -67,9 +69,11 @@ function PlateLabelMaker(opts) {
       count++;
       if(eachCount >= ofEach) {
         eachCount = 0;
-        number++;
+        if(ofEach) {
+          number++;
+        }
       }
-    } while(ret && count < numLabels);
+    } while(ret && (count < numLabels || !ofEach));
     
     return numUniqueCodes;
   }
