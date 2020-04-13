@@ -46,6 +46,8 @@ class EditPlate extends Component {
   componentDidUpdate(prevProps) {
     prevProps = prevProps || {}
     if(prevProps.formBarcode !== this.props.formBarcode) {
+      // TODO don't change state based on props!
+      // see map_tubes_to_plate.js 
       // If the form changes then reset state
       this.setState({
         checkedExistingTube: false,

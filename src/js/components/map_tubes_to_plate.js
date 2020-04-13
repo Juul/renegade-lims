@@ -199,15 +199,9 @@ class EditPlate extends Component {
 
   componentDidUpdate(prevProps) {
     prevProps = prevProps || {}
-
-    if(prevProps.barcode === this.props.barcode) {
-      return
-    }
     
-    this.setState({
-      id: undefined,
-      plate: undefined
-    })
+    if(!this.props.barcode) return;
+    if(prevProps.barcode === this.props.barcode) return;
     
     app.whenConnected(() => {
       
@@ -261,7 +255,7 @@ class EditPlate extends Component {
     }
     
     var main;
-    if(!this.state.plate) {
+    if(!this.props.barcode) {
       main = (
         <Container>
           <p>Scan plate barcode to begin.</p>
