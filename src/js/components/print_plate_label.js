@@ -30,10 +30,10 @@ class PrintPlateLabel extends Component {
   printCustom() {
     var customCode = this.state.code;
 
-    this.labelMaker.drawLabel('labelPreview', this.state.code);
+    this.labelMaker.drawLabel('labelPreview', this.state.customCode);
 
     var imageData = this.labelMaker.getDataURL();
-    app.actions.printLabel(imageData, function(err) {
+    app.actions.printLabel(imageData, this.state.totalCopies, function(err) {
       if(err) return app.notify(err, 'error');
 
       app.notify("Printing", 'success');
@@ -58,7 +58,7 @@ class PrintPlateLabel extends Component {
       this.labelMaker.drawLabel('labelPreview', startCode, copies, prefix);
 
       var imageData = this.labelMaker.getDataURL();
-      app.actions.printLabel(imageData, function(err) {
+      app.actions.printLabel(imageData, this.state.totalCopies, function(err) {
         if(err) return app.notify(err, 'error');
 
         app.notify("Printing", 'success');
@@ -119,8 +119,9 @@ class PrintPlateLabel extends Component {
     return (
         <Container>
         <h3>Print plate labels</h3>
-        <p>Copies per label (1 to 15): <input type="text" value={this.state.copies} onInput={this.updateLabelCopies.bind(this)} /></p>
+        <p>Number of identical barcodes per label (1 to 15): <input type="text" value={this.state.copies} onInput={this.updateLabelCopies.bind(this)} /></p>
         <p>Custom barcode: <input type="text" value={this.state.customCode} onInput={this.updateCustomCode.bind(this)} /></p>
+        <p>Copies to print: <input type="text" value={this.state.totalCopies} onInput={linkState(this, 'totalCopies')} /></p>
         {warning}
         <p><input type="button" onClick={this.print.bind(this)} value="Print" /></p>
 

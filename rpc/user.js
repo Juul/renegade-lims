@@ -37,14 +37,14 @@ module.exports = function(settings, labDeviceServer, dmScanner, labCore, adminCo
       // TODO implement
     },
     
-    printLabel: function(userData, remoteIP, imageData, cb) {
+    printLabel: function(userData, remoteIP, imageData, copies, cb) {
       if(!imageData) return cb(new Error("Image data missing"));
       
       var mtch = imageData.match(/^data:image\/png;base64,(.*)/)
       if(!mtch) return cb(new Error("Image data not in data:image/png;base64 format"));
       
       var imageBuffer = new Buffer.from(mtch[1], 'base64');
-      return labDeviceServer.printWherever(imageBuffer, cb);
+      return labDeviceServer.printWherever(imageBuffer, copies, cb);
     },
     
     getPhysical: function(userData, remoteIP, code, cb) {
