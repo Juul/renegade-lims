@@ -30,6 +30,10 @@ class AnalyzeQPCR extends Component {
 //    this.componentDidUpdate();
   }
 
+  plateScanned(barcode) {
+    console.log("Plate scanned!");
+  }
+
   openFile(e) {
     const files = e.target.files;
     if(!files.length) return;
@@ -67,7 +71,7 @@ class AnalyzeQPCR extends Component {
   analyze(data) {    
     const lines = data.split(/\r?\n/);
 
-    const metadata = '';
+    var metadata = {};
     const wells = {};
 
     var channelNames;
@@ -75,16 +79,17 @@ class AnalyzeQPCR extends Component {
     var i, j, line, wellName, cycle, fields;
     for(i=0; i < lines.length; i++) {
       line = lines[i].split(',');
-//      console.log("LINE:", line);
+
       if(!foundStart) {
         // Look for first two header columns called Well and Cycle
         if(line[0].match(/^\s*well\s*$/i) && line[1].match(/^\s*cycle\s*$/i)) {
           channelNames = line.slice(2); // grab channel names from header
-          console.log("Found channel names:", channelNames);
           foundStart = true;
           continue;
         }
-        metadata += line + "\n";
+        if(line[0].trim()) {
+          metadata[line[0].trim()] = line[1].trim()
+        }
         continue;
       }
 
@@ -108,17 +113,26 @@ class AnalyzeQPCR extends Component {
         wells[wellName][cycle][channelNames[j] || j] = fields[j];
       }
     }
+
+    metadata["Channels"] = channelNames.join(', ');
+    
+    this.setState({
+      analyzing: false,
+      wells: wells,
+      metadata: metadata
+    });
   }
 
-  
-  
   render() {
 
     var fileUploader = '';
 
     if(!this.state.file) {
       fileUploader = (
+          <div>
+          <p>Select CSV file to analyze</p>
           <input type="file" onChange={this.openFile.bind(this)} />
+          </div>
       );
     } else if(!this.state.analyzing) {
       fileUploader = (
@@ -134,13 +148,44 @@ class AnalyzeQPCR extends Component {
           </div>
       );
     }
+
+    var metadata = '';
+    var scanner = '';
+    if(this.state.metadata) {
+      var lis = [];
+      for(let key in this.state.metadata) {
+        lis.push((
+            <li><b>{key}</b>: {this.state.metadata[key]}</li>
+        ));
+      }
+      metadata = (
+          <div>
+            <ul>
+              {lis}
+            </ul>
+        </div>
+      );
+
+      if(!this.state.plate) {
+        scanner = (
+            <div>
+            <p><b><u>Warning:</u></b> Unable to find plate barcode in qPCR .csv file.</p>
+            <p>Please find the original qPCR plate from this run and scan the plate's barcode to continue.</p>
+          
+          <Scan onScan={this.plateScanned.bind(this)} disableWebcam disableDataMatrixScanner />
+        </div>
+      );
+    }
+    }
     
+
     
     return (
         <Container>
-        <h3>Analyze qPCR results</h3>
-        <p>Select CSV file to analyze</p>
+        <h3>qPCR result analyzer</h3>
         {fileUploader}
+      {metadata}
+      {scanner}
       </Container>
     )
   }
