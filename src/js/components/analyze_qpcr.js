@@ -76,7 +76,16 @@ class AnalyzeQPCR extends Component {
     var reader = new FileReader();
     
     reader.onload = (e) => {
-      this.analyze(e.target.result);
+      try {
+        this.analyze(e.target.result);
+      } catch(e) {
+        app.notify("Failed to parse CSV file", 'error');
+        
+        this.setState({
+          file: undefined,
+          analyzing: undefined
+        })
+      }
     };
 
     reader.readAsText(this.state.file)
@@ -196,7 +205,15 @@ class AnalyzeQPCR extends Component {
         );
       } else {
         plate = (
-          <Plate occupied={this.state.plate.wells}  />
+          <div>
+            <h3>Plate layout</h3>
+            <ul>
+            <li><b>Plate barcode:</b> {this.state.plate.barcode}</li>
+            <li><b>Created at:</b> {utils.formatDateTime(this.state.plate.createdAt)}</li>
+            <li><b>Created by:</b> {this.state.plate.createdBy || 'Unknown'}</li>
+            </ul>
+            <Plate occupied={this.state.plate.wells}  />
+          </div>
         )
        }
     }
