@@ -95,6 +95,10 @@ module.exports = function() {
     },
 
 
+    rimbaudReportResults(orderID, data, cb) {
+      app.remote.rimbaudReportResults(orderID, data, cb);
+    },
+    
     // TODO remove debug function
     increase: function() {
       app.state.count++;

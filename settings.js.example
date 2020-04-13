@@ -103,6 +103,12 @@ module.exports = {
   },
 
   // Where to log failed attempts to sign up or log in
-  attemptsLog: 'log/attempts.log'
-  
+  attemptsLog: 'log/attempts.log',
+
+  // A Rimbaud REST API endpoint
+  rimbaud: {
+    host: 'example.com', // REST server
+    port: 443, // server port for https
+    basePath: '/rim-lab-rest' // where the web app is mounted
+  }
 };

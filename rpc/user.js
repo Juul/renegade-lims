@@ -7,6 +7,7 @@ const timestamp = require('monotonic-timestamp');
 const uuid = require('uuid').v4;
 const userUtils = require('../lib/user.js');
 const writer = require('../lib/writer.js');
+const rimbaudAPI = require('../lib/rimbaud.js');
 
 module.exports = function(settings, labDeviceServer, dmScanner, labCore, adminCore, labLocal) {
   return {
@@ -97,6 +98,12 @@ module.exports = function(settings, labDeviceServer, dmScanner, labCore, adminCo
     updatePlate: function(userData, remoteIP, plate, cb) {
       // TODO implement
       cb();
+    },
+
+    rimbaudReportResults: function(userData, remoteIP, orderID, data, cb) {
+      const rimbaud = rimbaudAPI(settings);
+
+      rimbaud.putResult(orderID, data, cb);
     }
   };
 };
