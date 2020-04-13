@@ -1,4 +1,7 @@
 
+
+
+
 /* -- LABEL -- */
 
 .labelPreview {
@@ -108,6 +111,14 @@
 
 .col .occupied {
     background-color: green;
+}
+
+.col .neg-ctrl {
+    background-color: blue;
+}
+
+.col .pos-ctrl {
+    background-color: red;
 }
 
 .col .selected {

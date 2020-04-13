@@ -16,6 +16,9 @@ const utils = require('../utils.js');
 const Scan = require('./scan.js');
 const Plate = require('./plate.js');
 
+const POS_CTRL_ID = "11111111-1111-1111-1111-111111111111";
+const NEG_CTRL_ID = "22222222-2222-2222-2222-222222222222";
+
 class EditPlate extends Component {
   
   constructor(props) {
@@ -148,9 +151,27 @@ class EditPlate extends Component {
       selectedWell: undefined,
       plate: plate
     })
-
   }
 
+  addSpecial(type, id) {
+    const sample = {
+      id: id,
+      special: type,
+      createdAt: timestamp(),
+      createdBy: app.state.user.name
+    };
+
+    this.gotTube(sample);
+  }
+
+  addPosCtrl() {
+    this.addSpecial('positiveControl', POS_CTRL_ID);
+  }
+  
+  addNegCtrl() {
+    this.addSpecial('negativeControl', NEG_CTRL_ID);
+  }
+  
   cancelTube() {
     // kinda hacky :/
     if(this.replicateGroupIncremented) {
@@ -220,6 +241,16 @@ class EditPlate extends Component {
       )
     }
 
+    var ctrlButtons = '';
+    if(!this.state.tube) {
+      ctrlButtons = (
+        <div>
+          <button onClick={this.addPosCtrl.bind(this)}>Positive ctrl</button>
+          <button onClick={this.addNegCtrl.bind(this)}>Negative ctrl</button>
+          </div>
+      )
+    }
+    
     var sampleHtml;
     if(this.state.tube) {      
       sampleHtml = (
@@ -263,7 +294,8 @@ class EditPlate extends Component {
           Plate created by: {this.state.plate.createdBy || "Unknown"}
           </p>
           <Plate occupied={this.state.plate.wells} selectedReplicateGroup={(this.state.tube) ? this.state.tube.replicateGroup : ''} selectedWell={this.state.selectedWell} selectFree={!!this.state.tube} allowSelectEmpty={!!this.state.tube} onSelect={this.onWellSelect.bind(this)} onSave={this.savePlate.bind(this)} onCancel={this.cancelTube.bind(this)} onhover={this.showWellInfo.bind(this)} />
-          
+
+          {ctrlButtons}
           {sampleHtml}
           <Scan onScan={this.tubeScanned.bind(this)} disableWebcam hideText />
         </Container>

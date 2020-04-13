@@ -144,6 +144,11 @@ class Plate extends Component {
           occupiedWell = occupiedClass[well];
           if(occupiedWell) {
             dotClass += ' occupied';
+            if(occupied[well].special === 'positiveControl') {
+              dotClass += ' pos-ctrl';
+            } else if(occupied[well].special === 'negativeControl') {
+              dotClass += ' neg-ctrl';
+            }
             number = occupied[well].replicateGroup || '';
           }
         }
