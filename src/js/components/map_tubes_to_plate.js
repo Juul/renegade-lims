@@ -116,7 +116,10 @@ class EditPlate extends Component {
     const tube = Object.assign({}, this.state.tube);
     plate.wells[this.state.selectedWell] = tube;
     app.actions.savePlate(plate, (err) => {
-      // TODO check error
+      if(err) {
+        app.notify(err, 'error')
+        return;
+      }
       this.setState({
         tube: undefined,
         selectedWell: undefined,
@@ -144,6 +147,34 @@ class EditPlate extends Component {
   
   addNegCtrl() {
     this.addSpecial('negativeControl', NEG_CTRL_ID);
+  }
+
+  deleteWell() {
+    if(!confirm("Are you sure you want to delete the sample from this well?")) {
+      return;
+    }
+    
+    if(!this.state.selectedWell) {
+      app.notify("Error: No well selected", 'error');
+      return;
+    }
+    
+    const plate = this.state.plate;
+    delete plate.wells[this.state.selectedWell]
+    
+    app.actions.savePlate(plate, (err) => {
+      if(err) {
+        app.notify(err, 'error')
+        return;
+      }
+      this.setState({
+        tube: undefined,
+        selectedWell: undefined,
+        plate: plate
+      })
+
+      app.notify("Deleted", 'success');
+    });
   }
   
   cancelTube() {
@@ -280,7 +311,7 @@ class EditPlate extends Component {
           <br/>
           Plate created by: {this.state.plate.createdBy || "Unknown"}
           </p>
-          <Plate occupied={this.state.plate.wells} selectedReplicateGroup={(this.state.tube) ? this.state.tube.replicateGroup : ''} selectedWell={this.state.selectedWell} selectFree={!!this.state.tube} allowSelectEmpty={!!this.state.tube} onSelect={this.onWellSelect.bind(this)} onSave={this.savePlate.bind(this)} onCancel={this.cancelTube.bind(this)} onhover={this.showWellInfo.bind(this)} />
+          <Plate occupied={this.state.plate.wells} selectedReplicateGroup={(this.state.tube) ? this.state.tube.replicateGroup : ''} selectedWell={this.state.selectedWell} selectFree={!!this.state.tube} placingMode={!!this.state.tube} onSelect={this.onWellSelect.bind(this)} onSave={this.savePlate.bind(this)} onCancel={this.cancelTube.bind(this)} onDelete={this.deleteWell.bind(this)} onhover={this.showWellInfo.bind(this)} />
 
           {ctrlButtons}
           {sampleHtml}

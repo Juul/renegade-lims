@@ -124,3 +124,15 @@
 .col .selected {
     background-color: orange;
 }
+
+.col .replicate-number {
+    display:absolute;
+    top:0;
+    height:0
+}
+
+
+.occupied-selected {
+    background-color: orange;
+    border: 2px solid black;
+}

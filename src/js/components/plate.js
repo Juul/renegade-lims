@@ -100,11 +100,18 @@ class Plate extends Component {
   }
   
   selectWellClick(event) {
-    if(!this.props.allowSelectEmpty) return;
     const well = wellFromEvent(event);
     if(!well) return;
-    if(this.props.occupied[well]) return;
-    this.selectWell(well);
+    
+    if(!this.props.placingMode) {
+      if(!this.props.occupied[well]) return;
+
+      this.selectWell(well);
+
+    } else {
+      if(this.props.occupied[well]) return;
+      this.selectWell(well);
+    }
   }
 
   hoverWell(event) {
@@ -134,10 +141,11 @@ class Plate extends Component {
             <div class="hcol">{rowName}</div>
         )
       }
+      var squareClass = '';
       var dotClass = 'dot';
       var occupiedWell;
       if(rowName) {
-        if(selectedWell === well) {
+        if(selectedWell === well && this.props.placingMode) {
           dotClass += ' selected';
           number = selectedReplicateGroup || '';
         } else {
@@ -154,10 +162,15 @@ class Plate extends Component {
         }
       }
       inner = (
-          <div class={dotClass}><div style="display:absolute;top:0;height:0">{number.toString()}</div></div>
+          <div class={dotClass}><div class="replicate-number">{number.toString()}</div></div>
       )
     }
-    var className = 'col col-'+col;
+    
+    if(!this.props.placingMode && selectedWell === well) {
+      squareClass += ' occupied-selected';
+    }
+    
+    var className = 'col col-'+col+' '+squareClass;
 
     return (
         <div class={className} data-well={well} onClick={this.selectWellClick.bind(this)} onMouseOver={this.hoverWell.bind(this)}>{inner}</div>
@@ -202,26 +215,41 @@ class Plate extends Component {
       rows.push(this.makeRow(r, cols));
     }
 
-    var saveHtml;
-    if(selectedWell) {
-      saveHtml = (
-        <div>
-          <button onClick={this.props.onSave || function(){}}>Save sample to well {selectedWell || ''}</button>
-          <button onClick={this.props.onCancel || function(){}}>Cancel</button>
-          </div>
-      );
+    var buttonsHtml;
+    if(this.props.placingMode) {
+      if(selectedWell) {
+        buttonsHtml = (
+            <div>
+            <button onClick={this.props.onSave || function(){}}>Save sample to well {selectedWell || ''}</button>
+            <button onClick={this.props.onCancel || function(){}}>Cancel</button>
+            </div>
+        );
+      } else {
+        buttonsHtml = (
+            <p>Click an empty well to move this sample.</p>
+        )
+      }
     } else {
-      saveHtml = (
-          <p>Click an emptry well to move sample or save to proceed next sample.</p>
-      )
+      if(selectedWell) {
+        buttonsHtml = (
+            <div>
+            <button onClick={this.props.onDelete || function(){}}>Delete</button>
+            </div>
+        );
+      } else {
+        buttonsHtml = (
+            <p>Click an occupied well for info and options.</p>
+        )
+      }
     }
+      
     
     return (
       <div>
       <div id="my-plate" class="plate">
         {rows}
       </div>
-        {saveHtml}
+        {buttonsHtml}
         </div>
     );
   }
