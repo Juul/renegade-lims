@@ -487,9 +487,9 @@ async function init() {
 }
 
 
-function login(remoteIP, data, cb) {
+function login(data, cb) {
   
-  console.log("Login attempt:", data.username, remoteIP);
+  console.log("Login attempt:", data);
 
 //  antiBruteforce(settings.attemptsLog, remoteIP, null, function(err) {
 //    if(err) return cb(err);
@@ -516,8 +516,7 @@ function login(remoteIP, data, cb) {
 
     delete user.password;
     cb(null, user.id, user);
-  });
-  
+  });  
 }
 
 function startDataMatrixScanner() {
