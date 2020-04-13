@@ -11,6 +11,7 @@ const timestamp = require('monotonic-timestamp');
 
 const utils = require('../utils.js');
 const Scan = require('./scan.js');
+const Plate = require('./plate.js');
 
 // Max file size in bytes to read into client
 const FILE_SIZE_MAX = 1024 * 1024 * 1024 * 10; // 10 MB
@@ -31,7 +32,20 @@ class AnalyzeQPCR extends Component {
   }
 
   plateScanned(barcode) {
-    console.log("Plate scanned!");
+    app.actions.getPhysicalByBarcode(barcode, (err, plate) => {
+      if(err) {
+        if(!err.notFound) {
+          app.notify("Plate barcode not found in LIMS", 'error');
+          return;
+        }
+        app.notify(err, 'error');
+        return;
+      }
+
+      this.setState({
+        plate: plate
+      });
+    });
   }
 
   openFile(e) {
@@ -76,6 +90,7 @@ class AnalyzeQPCR extends Component {
 
     var channelNames;
     var foundStart;
+    var highestCycle = 0;
     var i, j, line, wellName, cycle, fields;
     for(i=0; i < lines.length; i++) {
       line = lines[i].split(',');
@@ -102,6 +117,8 @@ class AnalyzeQPCR extends Component {
       cycle = line[1].trim();
       fields = line.slice(2);
 
+      highestCycle = Math.max(highestCycle, parseInt(cycle));
+
       if(!wells[wellName]) {
         wells[wellName] = [];
       }
@@ -115,6 +132,7 @@ class AnalyzeQPCR extends Component {
     }
 
     metadata["Channels"] = channelNames.join(', ');
+    metadata["Number of cycles"] = highestCycle - 1
     
     this.setState({
       analyzing: false,
@@ -134,7 +152,7 @@ class AnalyzeQPCR extends Component {
           <input type="file" onChange={this.openFile.bind(this)} />
           </div>
       );
-    } else if(!this.state.analyzing) {
+    } else if(!this.state.analyzing && !this.state.metadata) {
       fileUploader = (
           <div>
           <p>Ready for analysis: {this.state.file.name}</p>
@@ -150,7 +168,7 @@ class AnalyzeQPCR extends Component {
     }
 
     var metadata = '';
-    var scanner = '';
+    var plate = '';
     if(this.state.metadata) {
       var lis = [];
       for(let key in this.state.metadata) {
@@ -160,6 +178,7 @@ class AnalyzeQPCR extends Component {
       }
       metadata = (
           <div>
+          <h3>Metadata from CSV file</h3>
             <ul>
               {lis}
             </ul>
@@ -167,15 +186,19 @@ class AnalyzeQPCR extends Component {
       );
 
       if(!this.state.plate) {
-        scanner = (
+        plate = (
             <div>
             <p><b><u>Warning:</u></b> Unable to find plate barcode in qPCR .csv file.</p>
-            <p>Please find the original qPCR plate from this run and scan the plate's barcode to continue.</p>
+            <p>Please find the original qPCR plate from this run and scan the plate barcode to continue.</p>
           
           <Scan onScan={this.plateScanned.bind(this)} disableWebcam disableDataMatrixScanner />
         </div>
-      );
-    }
+        );
+      } else {
+        plate = (
+          <Plate occupied={this.state.plate.wells}  />
+        )
+       }
     }
     
 
@@ -185,7 +208,7 @@ class AnalyzeQPCR extends Component {
         <h3>qPCR result analyzer</h3>
         {fileUploader}
       {metadata}
-      {scanner}
+      {plate}
       </Container>
     )
   }
