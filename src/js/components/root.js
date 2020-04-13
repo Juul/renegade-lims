@@ -29,6 +29,7 @@ const PrintTest = require('./print_test.js')
 const NotFound = require('./not_found.js')
 const Signup = require('./signup.js');
 const PasswordReset = require('./password_reset.js');
+const AnalyzeQPCR = require('./analyze_qpcr.js');
 
 
 class Root extends Component {
@@ -138,6 +139,7 @@ class Root extends Component {
           <Scan path="/scan" />
           <PrintPlateLabel path="/print-plate-label" />
           <PrintTest path="/print-test" />
+          <AnalyzeQPCR path="/analyze-qpcr" />
         
           <NotFound default />
         </Router>

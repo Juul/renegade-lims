@@ -28,9 +28,7 @@ class EditPlate extends Component {
   }
 
   tubeScanned(code) {
-    console.log("GETTING:", code);
     app.actions.getPhysicalByBarcode(code, (err, o) => {
-      console.log("GOT:", err, o, code);
       if(err && !err.notFound) {
         app.notify(err, 'error');
         return;

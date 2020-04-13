@@ -65,6 +65,7 @@ class EditPlate extends Component {
     tube.replicateGroup = this.replicateGroupForSample(tube.id);
     
     this.setState({
+      selectedWell: null,
       tube: tube
     });
   }
