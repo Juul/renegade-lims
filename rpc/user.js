@@ -80,6 +80,11 @@ module.exports = function(settings, labDeviceServer, dmScanner, labCore, adminCo
       writer.saveSwabTube(labCore, tube, cb);
     },
 
+    savePlate: function(userData, remoteIP, plate, cb) {
+      console.log("Saving:",plate);
+      writer.savePlate(labCore, plate, cb);
+    },
+
     getPlateByBarcode: function(userData, remoteIP, id, cb) {
       // TODO implement
       throw new Error("Not implemented");

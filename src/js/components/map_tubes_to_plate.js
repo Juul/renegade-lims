@@ -40,37 +40,9 @@ class EditPlate extends Component {
       error: err
     });
   }
-
-  // Change URI without triggering any other actions
-  fakeRoute(id) {
-    history.pushState({}, "Map tubes to plate", '/map-tubes-to-plate/'+encodeURIComponent(id));
-  }
   
-  plateScanned(code) {
-    app.actions.getPhysicalByBarcode(code, (err, o) => {
-      if(err) {
-        if(!err.notFound) {
-          app.notify(err, 'error');
-          return;
-        }
-        
-        // barcode not found
-        // TODO do we really want the client to be allowed
-        //      to set the id for a new plate?
-        const id = uuid();
-        this.fakeRoute(id);
-        this.newPlate(id, code);
-        return;
-      }
-
-      if(!plate.type === 'plate') {
-        app.notify("Scanned object is not a plate", 'error');
-        return;
-      }
-
-      fakeRoute(o.id);
-      this.gotPlate(o);
-    });
+  plateScanned(barcode) {
+    route('/map-tubes-to-plate/'+encodeURIComponent(barcode));
   }
 
   tubeScanned(code) {
@@ -143,14 +115,16 @@ class EditPlate extends Component {
 
     const tube = Object.assign({}, this.state.tube);
     plate.wells[this.state.selectedWell] = tube;
+    app.actions.savePlate(plate, (err) => {
+      // TODO check error
+      this.setState({
+        tube: undefined,
+        selectedWell: undefined,
+        plate: plate
+      })
 
-    // TODO actually save
-    
-    this.setState({
-      tube: undefined,
-      selectedWell: undefined,
-      plate: plate
-    })
+      app.notify("Saved", 'success');
+    });
   }
 
   addSpecial(type, id) {
@@ -197,19 +171,17 @@ class EditPlate extends Component {
  //   console.log("Hovered well:", well);
   }
 
-  newPlate(id, barcode) {
+  newPlate(barcode) {
 
     const plate = {
-      id: id,
       barcode: barcode,
       createdAt: timestamp(),
       createdBy: app.state.user.name,
-      wells: [],
+      wells: {},
       isNew: true
     };
     
     this.setState({
-      id: plate.id,
       plate: plate
     });
   }
@@ -222,11 +194,32 @@ class EditPlate extends Component {
   }
   
   componentDidMount() {
+   this.componentDidUpdate();
+  }
+
+  componentDidUpdate(prevProps) {
+    prevProps = prevProps || {}
+
+    if(prevProps.barcode === this.props.barcode) {
+      return
+    }
+    
+    this.setState({
+      id: undefined,
+      plate: undefined
+    })
+    
     app.whenConnected(() => {
-      if(this.state.id) {
-        app.remote.getObject(this.state.id, this.gotPlate.bind(this))
-      }
-    });
+      
+      app.actions.getPhysicalByBarcode(this.props.barcode, (err, plate) => {
+        if(!plate) {
+          this.newPlate(this.props.barcode);
+          return
+        }
+        console.log("Plate.wells:", plate.wells);
+        this.gotPlate(plate);
+      })
+    })    
   }
   
   render(props) {
@@ -245,8 +238,8 @@ class EditPlate extends Component {
     if(!this.state.tube) {
       ctrlButtons = (
         <div>
-          <button onClick={this.addPosCtrl.bind(this)}>Positive ctrl</button>
-          <button onClick={this.addNegCtrl.bind(this)}>Negative ctrl</button>
+          <button onClick={this.addPosCtrl.bind(this)}>Positive control</button>
+          <button onClick={this.addNegCtrl.bind(this)}>Negative control</button>
           </div>
       )
     }
@@ -268,7 +261,7 @@ class EditPlate extends Component {
     }
     
     var main;
-    if(!this.state.id) {
+    if(!this.state.plate) {
       main = (
         <Container>
           <p>Scan plate barcode to begin.</p>

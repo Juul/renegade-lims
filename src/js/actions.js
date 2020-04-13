@@ -37,6 +37,11 @@ module.exports = function() {
       });
     },
 
+    // Find and show a physical by uuid
+    getPhysical: function(id, cb) {
+      app.remote.getPhysical(id, cb);
+    },
+
     getPhysicalByBarcode: function(code, cb) {
       app.remote.getPhysicalByBarcode(code, cb);
     },
@@ -56,8 +61,11 @@ module.exports = function() {
     },
 
     saveSwabTube(tube, cb) {
-      console.log("APP.REMOTE:", app.remote);
       app.remote.saveSwabTube(tube, cb);
+    },
+
+    savePlate(plate, cb) {
+      app.remote.savePlate(plate, cb);
     },
 
     savePhysical(labelData, imageData, doPrint, cb) {
