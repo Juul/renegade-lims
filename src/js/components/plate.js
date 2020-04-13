@@ -58,27 +58,21 @@ class Plate extends Component {
     //   A3: <id>,
     //   B5: <id>
     // }
+  }
 
-    const occupied = (props.occupied) ? wellsToClass(props.occupied, 'green') : {};
-    
-    const firstState = {
-      allowSelectEmpty: props.allowselectempty,
-      occupied: occupied,
-      rows: props.rows || 8,
-      cols: props.cols || 12
-    };
+  componentDidUpdate(prevProps) {
+    console.log("update");
+    /*
+    prevProps = prevProps || {}
 
-    if(props.selectfree) {
-      const nextFreeWell = findNextFreeWell(firstState.rows, firstState.cols, firstState.occupied);
-      if(nextFreeWell) {
-        firstState.selected = nextFreeWell;
-        if(props.onselect) {
-          props.onselect(nextFreeWell);
-        }
-      }
-    }
     
     this.setState(firstState);
+    */
+  }
+  
+  componentDidMount() {
+    console.log("mount");
+//    this.componentDidUpdate();
   }
   
   makeRow(l, inner) {
@@ -100,19 +94,16 @@ class Plate extends Component {
   }
 
   selectWell(well) {
-    if(this.props.onselect) {
-      this.props.onselect(well);
+    if(this.props.onSelect) {
+      this.props.onSelect(well);
     }
   }
   
   selectWellClick(event) {
-    if(!this.state.allowSelectEmpty) return;
+    if(!this.props.allowSelectEmpty) return;
     const well = wellFromEvent(event);
     if(!well) return;
-    if(this.state.occupied[well]) return;
-    this.setState({
-      selected: well
-    });
+    if(this.props.occupied[well]) return;
     this.selectWell(well);
   }
 
@@ -125,10 +116,12 @@ class Plate extends Component {
     }
   }
   
-  makeColumn(col, row) {
+  makeColumn(col, row, occupied, occupiedClass, selectedWell, selectedReplicateGroup) {
     var inner;
     const rowName = rowNames[row-1];
     const well = (rowName || '')+col.toString()
+    var number = '';
+    
     if(!row) {
       if(!col) {
         inner = '';
@@ -142,19 +135,21 @@ class Plate extends Component {
         )
       }
       var dotClass = 'dot';
-      var occupied;
+      var occupiedWell;
       if(rowName) {
-        if(this.state.selected === well) {
-            dotClass += ' selected';          
+        if(selectedWell === well) {
+          dotClass += ' selected';
+          number = selectedReplicateGroup || '';
         } else {
-          occupied = this.state.occupied[well];
-          if(occupied) {
+          occupiedWell = occupiedClass[well];
+          if(occupiedWell) {
             dotClass += ' occupied';
+            number = occupied[well].replicateGroup || '';
           }
         }
       }
       inner = (
-          <div class={dotClass}></div>
+          <div class={dotClass}><div style="display:absolute;top:0;height:0">{number.toString()}</div></div>
       )
     }
     var className = 'col col-'+col;
@@ -163,26 +158,66 @@ class Plate extends Component {
         <div class={className} data-well={well} onClick={this.selectWellClick.bind(this)} onMouseOver={this.hoverWell.bind(this)}>{inner}</div>
     );
   }
+
   
   render() {
+    
+    const occupiedClass = (this.props.occupied) ? wellsToClass(this.props.occupied, 'green') : {};
+    
+    const numRows = this.props.rows || 8;
+    const numCols = this.props.cols || 12;
 
+    var nextFreeWell;
+    var selectedWell;
+    if(this.props.selectedWell) {
+      
+      selectedWell = this.props.selectedWell;
+      
+    } else if(this.props.selectFree) {
+      
+      selectedWell = findNextFreeWell(numRows, numCols, occupiedClass);
+      
+      if(selectedWell) {
+        if(this.props.onSelect) {
+          this.props.onSelect(selectedWell);
+        }
+      }
+    }
+    
     var rows = [];
     var cols;
     var r, c;
-    for(r=0; r <= this.state.rows; r++) {
+    for(r=0; r <= numRows; r++) {
       cols = []
-      for(c=0; c <= this.state.cols; c++) {
+      for(c=0; c <= numCols; c++) {
         cols.push(
-          this.makeColumn(c, r)
+          this.makeColumn(c, r, this.props.occupied, occupiedClass, selectedWell, this.props.selectedReplicateGroup)
         );
       }
       rows.push(this.makeRow(r, cols));
     }
 
+    var saveHtml;
+    if(selectedWell) {
+      saveHtml = (
+        <div>
+          <button onClick={this.props.onSave || function(){}}>Save sample to well {selectedWell || ''}</button>
+          <button onClick={this.props.onCancel || function(){}}>Cancel</button>
+          </div>
+      );
+    } else {
+      saveHtml = (
+          <p>Click an emptry well to move sample or save to proceed next sample.</p>
+      )
+    }
+    
     return (
+      <div>
       <div id="my-plate" class="plate">
         {rows}
       </div>
+        {saveHtml}
+        </div>
     );
   }
 }
