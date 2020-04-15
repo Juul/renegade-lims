@@ -1,4 +1,4 @@
-This is a work-in-progress decentralized offline-capable Laboratory Inventory Management (LIMS) system. This is not ready for use by anyone, come back later.
+This is a work-in-progress decentralized offline-capable Laboratory Inventory Management (LIMS) system to support Covid-19 testing labs. This is not yet ready for use by anyone else.
 
 # Theory of operation
 
