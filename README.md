@@ -84,32 +84,7 @@ npm run dev
 
 Admins sign new users. When new users are pulled in, verify that they are signed by a known admin, or signed by an admin who was signed by a known admin, etc.
 
-# Lab client views
-
-* Create/edit rna_plate
-* Create/edit qpcr_plate
-* Create/edit container
-* Search
-* User admin (add/remove/edit user)
-
-## Create plate
-
-For rna_plate it first goes to "edit/print label" view showing a suggested label for the plate which can be edited before hitting "save and print".
-
-For qpcr_plate it first goes to scan since those plates are pre-labeled.
-
-Then we proceed to the edit plate view.
-
-## Edit plate
-
-The view shows the plate and if the plate is empty says "scan first swab sample to begin". When a swab sample is scanned, the info about the sample is displayed and it is associated with the next well. If the user clicks another well after this then the sample is moved to that well.
-
-Buttons are "next sample" (save sample to currently selected well and proceed to next empty well), "move well", "remove well", "view info" (view info about the sample), "undo", "redo", "manual sample entry" (type sample ID if scanner is not able to scan sample) and "add/change location" (select parent container),
-
-Scanning a sample you are about to place will highlight where to place it in yellow.
-Scanning a sample that is already placed in the well will highlight it in green.
-
-## Create/edit container
+## UI: Create/edit container 
 
 Like "Edit/print label" but with an added "select parent".
 
@@ -119,18 +94,10 @@ Like "Edit/print label" but with an added "select parent".
 
 Shows a list of all children.
 
-Buttons: "save", "save and print", "cancel".
+## UI: Recently added/changed
 
-## Edit/print label
+Should include everything.
 
-Shows an existing label where the user can edit the text and re-print the label.
-
-## Search
-
-* Type to search plain text of everything with auto-complete.
-* Drop-down to select type of object
-* Drop-down to select user
-* Date from and to constraints
 
 # Production
 
@@ -142,19 +109,19 @@ Ensure you're logged in as the user who will be running the lims app, then insta
 npm install -g psy
 ```
 
-
+TODO complete this guide
 
 # Credit
 
-This project builds upon the work of many talented hackers and would not be possible at all without the excellent work of Kira a.k.a [noffle](https://github.com/noffle) on [kappa-core](https://www.npmjs.com/package/kappa-core), [kappa-view](https://www.npmjs.com/package/kappa-view) and [multifeed](https://www.npmjs.com/package/multifeed) developed in part for [Mapeo](https://www.digital-democracy.org/mapeo/). This work in turn builds on [hypercore](https://www.npmjs.com/package/hypercore) developed by Mathias Buus a.k.a [mafintosh](https://github.com/mafintosh/) for the [dat](https://dat.foundation/) project.
+This project builds upon the work of many talented hackers and would not be possible at all without the excellent work of Kira a.k.a [noffle](https://github.com/noffle) on [kappa-core](https://www.npmjs.com/package/kappa-core), [kappa-view](https://www.npmjs.com/package/kappa-view) and [multifeed](https://www.npmjs.com/package/multifeed) developed in part for [Mapeo](https://www.digital-democracy.org/mapeo/). Additional thanks to Kira for answering questions and guiding me directly! Her work in turn builds on [hypercore](https://www.npmjs.com/package/hypercore) developed by Mathias Buus a.k.a [mafintosh](https://github.com/mafintosh/) for the [dat](https://dat.foundation/) project.
 
 Thanks to [Asbjørn Sloth Tønnesen](http://asbjorn.it/) for [reverse-engineering the Brother QL label printer protocol](https://github.com/biobricks/ql-printer-driver).
 
-Also shout out to the [BioBricks Foundation](https://biobricks.org/) for funding previous development of open source LIMS software much of which can be found [here](https://github.com/biobricks/).
+Also shout out to the [BioBricks Foundation](https://biobricks.org/) for funding previous development of open source LIMS software some of which has been re-used for this project. All of this code can be found [here](https://github.com/biobricks/).
 
 # Copyright and license
 
-* Copyright 2020 Marc Juul Christoffersen
+* Copyright 2020 renegade.bio
 * Copyright 2016-2018 BioBricks Foundation
 * License: AGPLv3
 
