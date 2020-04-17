@@ -308,8 +308,8 @@ function beginReplication(peer, socket) {
     return labDeviceConnection(peer, socket, peerDesc);
   }
   
-  var labReadAllowed;
-  var adminWriteAllowed;
+  var labReadAllowed = false;
+  var adminWriteAllowed = false;
   
   if(peer.type === 'field') {
 
@@ -317,7 +317,7 @@ function beginReplication(peer, socket) {
     adminWriteAllowed = false;
     
   } else if(peer.type === 'lab' || peer.type === 'server') {
-
+    
     labReadAllowed = true;
     adminWriteAllowed = true;
     
@@ -327,6 +327,8 @@ function beginReplication(peer, socket) {
     return;
   }
 
+  console.log("peer is of type:", peer.type)
+  
   const mux = multiplex();
   const labStream = mux.createSharedStream('labStream');
   const adminStream = mux.createSharedStream('adminStream');
