@@ -37,4 +37,10 @@ if [ ! "$?" -eq "0" ]; then
     exit 1
 fi
 
+chmod 640 *.pem
+if [ ! "$?" -eq "0" ]; then
+    echo "Failed to set file permissions for .pem files" >&2
+    exit 1
+fi
+
 echo "Certificate generated!"

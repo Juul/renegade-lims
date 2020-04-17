@@ -37,9 +37,9 @@ module.exports = function() {
       });
     },
 
-    // Find and show a physical by uuid
-    getPhysical: function(id, cb) {
-      app.remote.getPhysical(id, cb);
+    // Find and show an object by uuid
+    getObject: function(id, cb) {
+      app.remote.getObject(id, cb);
     },
 
     getPhysicalByBarcode: function(code, cb) {
@@ -94,9 +94,12 @@ module.exports = function() {
       console.log("Connect message:", isConnected, msg, delay);
     },
 
-
-    rimbaudReportResults(orderID, data, cb) {
-      app.remote.rimbaudReportResults(orderID, data, cb);
+    saveQpcrResult: function(result, cb) {
+      app.remote.saveQpcrResult(result, cb);
+    },
+    
+    rimbaudReportResult(orderID, data, cb) {
+      app.remote.rimbaudReportResult(orderID, data, cb);
     },
     
     // TODO remove debug function

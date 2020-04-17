@@ -81,8 +81,12 @@ module.exports = function(settings, labDeviceServer, dmScanner, labCore, adminCo
       writer.saveSwabTube(labCore, tube, cb);
     },
 
+    saveQpcrResult: function(userData, remoteIP, result, cb) {
+      console.log("Saving qPCR result:", result.id);
+      writer.saveQpcrResult(labCore, result, cb);
+    },
+    
     savePlate: function(userData, remoteIP, plate, cb) {
-      console.log("Saving:",plate);
       writer.savePlate(labCore, plate, cb);
     },
 
@@ -100,7 +104,7 @@ module.exports = function(settings, labDeviceServer, dmScanner, labCore, adminCo
       cb();
     },
 
-    rimbaudReportResults: function(userData, remoteIP, orderID, data, cb) {
+    rimbaudReportResult: function(userData, remoteIP, orderID, data, cb) {
       const rimbaud = rimbaudAPI(settings);
 
       rimbaud.putResult(orderID, data, cb);

@@ -388,7 +388,14 @@ function connectToPeerOnce(peer, cb) {
   const socket = tls.connect(peer.connect.port, peer.connect.host, {
     ca: peer.cert, // only trust this cert
     key: settings.tlsKey,
-    cert: settings.tlsCert
+    cert: settings.tlsCert,
+    rejectUnauthorized: true,
+    checkServerIdentity: function(host, cert) {
+      console.log("Checking cert for:", host);
+      const res = tls.checkServerIdentity(host, cert);
+      console.log("  result:", res);
+      return res;
+    }
   })
 
   socket.on('secureConnect', function() {
