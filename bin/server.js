@@ -373,7 +373,11 @@ function initInbound() {
 
     console.log("Peer connected:", peerDesc);
   });
-
+  
+  if(argv.debug) {
+    server.enableTrace();
+  }
+  
   server.on('tlsClientError', (err, tlsSocket) => {
     console.error("Client connecting from", tlsSocket.remoteAddress, "failed to authenticate:", err);
   });
@@ -402,6 +406,10 @@ function connectToPeerOnce(peer, cb) {
     }
   })
 
+  if(argv.debug) {
+    socket.enableTrace();
+  }
+  
   socket.on('secureConnect', function() {
     cb();
     console.log("Connected to peer:", peer.connect.host + ':' + peer.connect.port);
