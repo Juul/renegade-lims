@@ -357,8 +357,8 @@ function initInbound() {
     key: settings.tlsKey,
     cert: settings.tlsCert,
     requestCert: true,
-    rejectUnauthorized: true
-//    enableTrace: true
+    rejectUnauthorized: true,
+    enableTrace: !!argv.debug
     
   }, function(socket) {
     console.log("Inbound connection");
@@ -373,10 +373,6 @@ function initInbound() {
 
     console.log("Peer connected:", peerDesc);
   });
-  
-  if(argv.debug) {
-    server.enableTrace();
-  }
   
   server.on('tlsClientError', (err, tlsSocket) => {
     console.error("Client connecting from", tlsSocket.remoteAddress, "failed to authenticate:", err);
@@ -398,6 +394,7 @@ function connectToPeerOnce(peer, cb) {
     key: settings.tlsKey,
     cert: settings.tlsCert,
     rejectUnauthorized: true,
+    enableTrace: !!argv.debug,
     checkServerIdentity: function(host, cert) {
       console.log("Checking cert for:", host);
       const res = tls.checkServerIdentity(host, cert);
@@ -405,10 +402,6 @@ function connectToPeerOnce(peer, cb) {
       return res;
     }
   })
-
-  if(argv.debug) {
-    socket.enableTrace();
-  }
   
   socket.on('secureConnect', function() {
     cb();
