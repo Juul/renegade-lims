@@ -295,7 +295,7 @@ function labDeviceConnection(peer, socket, peerDesc) {
   return peerDesc;
 }
 
-function beginReplication(peer, socket) {
+function beginReplication(peer, socket, isInitiator) {
 
   const peerDesc = {
     type: peer.type,
@@ -335,13 +335,13 @@ function beginReplication(peer, socket) {
 
   socket.pipe(mux).pipe(socket);
 
-  labStream.pipe(labMulti.replicate(false, {
+  labStream.pipe(labMulti.replicate(isInitiator, {
     download: true,
     upload: labReadAllowed,
     live: true
   })).pipe(labStream);
   
-  adminStream.pipe(adminMulti.replicate(false, {
+  adminStream.pipe(adminMulti.replicate(isInitiator, {
     download: adminWriteAllowed,
     upload: true,
     live: true
@@ -371,7 +371,7 @@ function initInbound() {
       socket.destroy();
       return;
     }
-    const peerDesc = beginReplication(peer, socket);
+    const peerDesc = beginReplication(peer, socket, true);
 
     console.log("Peer connected:", peerDesc);
   });
@@ -413,7 +413,7 @@ function connectToPeerOnce(peer, cb) {
     cb();
     console.log("Connected to peer:", peer.connect.host + ':' + peer.connect.port);
 
-    beginReplication(peer, socket);
+    beginReplication(peer, socket, false);
   });
 
   socket.on('close', function() {
