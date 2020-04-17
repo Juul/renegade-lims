@@ -374,7 +374,7 @@ function initInbound() {
     console.log("Peer connected:", peerDesc);
   });
 
-  server.tlsClientError((err, tlsSocket) => {
+  server.on('tlsClientError', (err, tlsSocket) => {
     console.error("Client connecting from", tlsSocket.remoteAddress, "failed to authenticate:", err);
   });
   
