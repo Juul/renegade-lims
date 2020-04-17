@@ -429,7 +429,6 @@ function connectToPeerOnce(peer, cb) {
 function connectToPeer(peer) {
   if(!peer.connect.port || !peer.connect.host) return;
 
-
   // Retry with increasing back-off 
   var back = backoff.fibonacci({
     randomisationFactor: 0,

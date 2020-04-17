@@ -93,41 +93,115 @@ class AnalyzeQPCR extends Component {
     reader.readAsText(this.state.file)
   }
 
-  calculateWellResult(channel1, channel2) {
+  // Returns a string on error
+  // Return false if test came out negative
+  // and true if it came out positive
+  calculateWellResult(famCtStr, vicCtStr, ctrl) {
+    const undeterminedRegExp = new RegExp(/^\s*undetermined\s*$/i);
+        
+    const famCt = parseFloat(famCtStr);
+    const famCtUn = famCtStr.match(undeterminedRegExp);
+    const vicCt = parseFloat(vicCtStr);
+    const vicCtUn = vicCtStr.match(undeterminedRegExp);
 
-    // TODO implement real analysis
+    if(!famCtUn && isNaN(famCt)) {
+      return "cT for FAM channel was unrecognized value";
+    }
 
-    if(!channel1 || !channel2) {
-      return undefined;
+    if(!vicCtUn && isNaN(vicCt)) {
+      return "cT for VIC channel was unrecognized value";
     }
     
-    const n1 = parseFloat(channel1[30]);
-    const n2 = parseFloat(channel2[30]);
+    if(ctrl === 'blank') {
+      if((famCtUn || famCt === 0) && (vicCtUn || vicCt === 0)) {
+        return false;
+      } else {
+        return "Plate blank control (negative control) was not blank"
+      }
+    }
+
+    if(ctrl === 'positive') {
+      if(!vicCtUn && vicCt < 32 && !famCtUn && famCt < 32) {
+        return true;
+      } else {
+        return "Plate positive control was not positive";
+      }
+    }
     
-    if(isNaN(n1) || isNaN(n2)) {
-      return undefined;
+    /*
+    if(ctrl === 'specimen') {
+      if(!vicCtUn && vicCt < 32 && !famCtUn && famCt < 32) {
+        return true;
+      } else {
+        return "Plate 'testing specimen'-control was not positive";
+      }
     }
+    */
 
-    if(n1 > 30000 && n2 > 20000) {
-      return true;
+    if(famCtUn || famCt === 0) {
+      if(vicCt < 32) {
+        return false; // test was negative
+      } else {
+        return 'retest';
+      }
+    } else {
+      if(famCt < 38) {
+        return true; // test was positive
+      } else {
+        return 'retest';
+      }
     }
-
-    return false;
   }
 
   calculateWellResults(wells) {
-    var results = {};
     
-    var wellName, well;
+    var wellName, well, result, ctrl;
     for(wellName in wells) {
       well = wells[wellName];
-      results[wellName] = this.calculateWellResult(well['FAM'], well['ROX'])
+      
+      if(wellName === 'A1') { // TODO hardcoded control positions!
+        ctrl = 'blank'
+      } else if(wellName === 'B1') {
+        ctrl = 'positive'
+      } else {
+        ctrl = false;
+      }
+      
+      if(!well['FAM']) {
+        result = "Missing data from FAM channel";
+      } else if(!well['VIC']) {
+        result = "Missing data from VIC channel";
+      } else {
+        result = this.calculateWellResult(well['FAM'].ct, well['VIC'].ct, ctrl);
+      }
+
+      well.result = result;
     }
 
-    return {
+    const o = {
       protocol: "BGI 0.0.1",
-      wells: results
+      wells: wells,
+    };
+
+    var errors = [];
+
+    if(!wells['A1']) {
+      errors.push("Plate blank (negative) control was missing");
+    } else if(wells['A1'].result !== false) {
+      errors.push(wells['A1'].result)
     }
+
+    if(!wells['B1']) {
+      errors.push("Plate positive control was missing");
+    } else if(wells['B1'].result !== true) {
+      errors.push(wells['B1'].result);
+    } 
+
+    if(errors.length) {
+      o.errors = errors;
+    }
+
+    return o;
   }
   
   analyze(data) {    
@@ -136,54 +210,45 @@ class AnalyzeQPCR extends Component {
     var metadata = {};
     const wells = {};
 
-    var channelNames;
     var foundStart;
     var highestCycle = 0;
-    var i, j, line, wellName, cycle, fields;
+    var i, j, line, wellName, sampleName, reporter, ct;
     for(i=0; i < lines.length; i++) {
       line = lines[i].split(',');
 
       if(!foundStart) {
+
         // Look for first two header columns called Well and Cycle
-        if(line[0].match(/^\s*well\s*$/i) && line[1].match(/^\s*cycle\s*$/i)) {
-          channelNames = line.slice(2); // grab channel names from header
+        if(line[0].match(/^\s*well\s*$/i) && line[1].match(/^\s*sample\s+name\s*$/i)) {
           foundStart = true;
           continue;
         }
-        if(line[0].trim()) {
+        if(line[0].trim() && line[1].trim()) {
           metadata[line[0].trim()] = line[1].trim()
         }
         continue;
       }
-
-      if(!line[0] || (!line[1] && line[1] !== 0)) {
+      if(!line[0] || !line[1] || !line[4] || !line[6]) {
         continue;
       }
       
-      // Now we've reached the actual data;
-      wellName = line[0].trim().toUpperCase();
-      cycle = line[1].trim();
-      fields = line.slice(2);
-
-      highestCycle = Math.max(highestCycle, parseInt(cycle));
-
-      if(!wells[wellName]) {
-        wells[wellName] = [];
+      const o = {
+        wellName: line[0].trim(),
+        sampleName: line[1].trim(),
+        reporter: line[4].trim(),
+        ct: line[6].trim()
+      };
+      
+      if(!o.wellName || !o.reporter || !o.ct) {
+        continue;
       }
       
-      for(j=0; j < fields.length; j++) {
-        let channelName = channelNames[j] || j;
-        
-        if(!wells[wellName][channelName]) {
-          wells[wellName][channelName] = {};
-        }
-        
-        wells[wellName][channelName][cycle] = fields[j];
+      if(!wells[o.wellName]) {
+        wells[o.wellName] = {}
       }
+      
+      wells[o.wellName][o.reporter] = o;
     }
-
-    metadata["Channels"] = channelNames.join(', ');
-    metadata["Number of cycles"] = highestCycle - 1
 
     const results = this.calculateWellResults(wells);
     
@@ -276,16 +341,16 @@ class AnalyzeQPCR extends Component {
 
   }
 
-  toHumanResult(result) {
-    if(result === true) return (
+  toHumanResult(well) {
+    if(well.result === true) return (
       <span style="color:red">Positive</span>
     );
-    if(result === false) return (
+    if(well.result === false) return (
       <span style="color:green">Negative</span>
     );
     
     return (
-      <span>Unknown</span>
+      <span style="color:blue">{well.result}</span>
     );
   }
   
@@ -358,11 +423,29 @@ class AnalyzeQPCR extends Component {
 
       var results = '';
       if(this.state.results) {
+        if(this.state.results.errors) {
+          let errors = [];
+          for(let err of this.state.results.errors) {
+            errors.push((
+              <li>Error: {this.state.results.errors}</li>
+            ));
+          }
+          return (
+              <div>
+              <h3>Plate control error(s):</h3>
+              <ul>
+              {errors}
+              </ul>
+            </div>
+          );
+        }
+        
         var wellResults = [];
+        console.log("AAAAA", this.state.results);
         for(let wellName in this.state.results.wells) {
-          let wellResult = this.state.results.wells[wellName];
+          let well = this.state.results.wells[wellName];
           wellResults.push((
-              <li><b>{wellName}:</b> {this.toHumanResult(wellResult)}</li>
+              <li><b>{wellName}:</b> {this.toHumanResult(well)}</li>
           ));
         }
         results = (
