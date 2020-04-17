@@ -374,6 +374,10 @@ function initInbound() {
     console.log("Peer connected:", peerDesc);
   });
 
+  server.tlsClientError((err, tlsSocket) => {
+    console.error("Client connecting from", tlsSocket.remoteAddress, "failed to authenticate:", err);
+  });
+  
   console.log("Replication server listening on", settings.host+':'+settings.port);
   
   server.listen({
