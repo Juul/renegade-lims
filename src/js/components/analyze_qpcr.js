@@ -179,7 +179,7 @@ class AnalyzeQPCR extends Component {
     }
 
     const o = {
-      protocol: "BGI",
+      protocol: "bgi",
       wells: wells,
     };
 
@@ -283,7 +283,7 @@ class AnalyzeQPCR extends Component {
     result.plateID = this.state.plate.id;
     result.csvData = this.state.csvData;
     
-    app.actions.saveQpcrResult(result, (err) => {
+    app.actions.saveQpcrResult(result, (err, resultID) => {
       if(err) {
         console.error(err);
         app.notify("Failed to save analyzed results: " + err, 'error');
@@ -291,8 +291,8 @@ class AnalyzeQPCR extends Component {
       }
 
       console.log("SAVED!");
-      
-      this.generateRimbaudReports(result, (err, reports) => {
+      // We use the qpcr analysis resultID as the rimbaud resultID
+      this.generateRimbaudReports(result, resultID, (err, reports) => {
         if(err) {
           console.error(err);
           app.notify("Failed to generate Rimbaud reports: " + err, 'error');
@@ -317,7 +317,7 @@ class AnalyzeQPCR extends Component {
   // results is an object like: {orderID: <string>, data: []}
   // where the data array will contain an array of all the relevant data entries.
   // An entry is e.g.
-  // {type: 'testResult', plateID: <string>, well: 'A1', result: 'positive', protocol: 'BGI', version: '0.0.1'}
+  // {type: 'testResult', plateID: <string>, well: 'A1', result: 'positive', protocol: 'bgi', version: '0.0.1'}
   //  there might be more if there was re-tests but maybe that array
   //  will always only have one element
   //
@@ -325,7 +325,7 @@ class AnalyzeQPCR extends Component {
   //   plateBarcode, sampleID and sampleBarcode
   //   user who ran analysis
   //   user who did initial accession  
-  generateRimbaudReport(result, wellName, cb) {
+  generateRimbaudReport(result, wellName, resultID, cb) {
     const well = this.state.plate.wells[wellName];
     if(!well || !well.id) return cb(new Error("Well "+wellName+" not found in plate layout"));
 
@@ -349,15 +349,28 @@ class AnalyzeQPCR extends Component {
 
       // We can't report if there's no result
       if(!resultWell) return cb();
+
+      var rimbaudResult;
+      if(resultWell.result === true) {
+        rimbaudResult = 'positive';
+      } else if(resultWell.result === false) {
+        rimbaudResult = 'negative';
+      } else if(resultWell.result === 'inconclusive') {
+        rimbaudResult = 'inconclusive';
+      } else {
+        // we don't report if it's not one of those three values
+        return cb(); 
+      }
       
       const report = {
+        id: resultID,
         orderID: sample.formBarcode,
         sampleID: sample.id,
         sampleBarcode: sample.barcode,
         plateID: this.state.plate.id,
         plateBarcode: this.state.plate.barcode,
         well: wellName,
-        result: resultWell.result,
+        'cov-2': rimbaudResult,
         protocol: result.protocol,
         analyzedBy: (app.state.user) ? app.state.user.name : 'Unknown',
         reportFormatVersion: '0.0.1'
@@ -370,7 +383,7 @@ class AnalyzeQPCR extends Component {
   }
   
 
-  generateRimbaudReports(result, cb) {
+  generateRimbaudReports(result, resultID, cb) {
     if(!result) return cb(new Error("No results to report"));
 
     const reports = [];
@@ -378,7 +391,7 @@ class AnalyzeQPCR extends Component {
     
     async.eachSeries(wellNames, (wellName, next) => {
 
-      this.generateRimbaudReport(result, wellName, (err, report) => {
+      this.generateRimbaudReport(result, wellName, resultID, (err, report) => {
         if(err) return next(err);
 
         if(report) {
@@ -399,7 +412,12 @@ class AnalyzeQPCR extends Component {
     if(!reports || !reports.length) return cb(new Error("Nothing to report"));
 
     async.eachSeries(reports, (report, next) => {
-      app.actions.rimbaudReportResult(report.orderID, report, next);
+
+      const toSend = {
+        results: [report]
+      };
+      
+      app.actions.rimbaudReportResult(report.orderID, toSend, next);
     }, cb);
 
   }
