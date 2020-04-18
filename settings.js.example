@@ -109,6 +109,7 @@ module.exports = {
   rimbaud: {
     host: 'example.com', // REST server
     port: 443, // server port for https
-    basePath: '/rim-lab-rest' // where the web app is mounted
+    basePath: '/rim-lab-rest', // where the web app is mounted
+    secretKey: '<your secret key>'
   }
 };

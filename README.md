@@ -17,6 +17,7 @@ This is currently implemented as a node.js server + web app, though work is in p
 ```
 cp settings.js.example settings.js
 cp settings.web.js.example settings.web.js
+chmod 640 settings.*
 ```
 
 Then edit both to your liking.
