@@ -3,10 +3,12 @@
 const fs = require('fs');
 const path = require('path');
 
+const rpc = require('rpc-multistream');
 const timestamp = require('monotonic-timestamp');
 const uuid = require('uuid').v4;
 const userUtils = require('../lib/user.js');
 const writer = require('../lib/writer.js');
+const csv = require('../lib/csv.js');
 const rimbaudAPI = require('../lib/rimbaud.js');
 
 module.exports = function(settings, labDeviceServer, dmScanner, labCore, adminCore, labLocal) {
@@ -108,7 +110,20 @@ module.exports = function(settings, labDeviceServer, dmScanner, labCore, adminCo
       const rimbaud = rimbaudAPI(settings);
 
       rimbaud.putResult(orderID, data, cb);
+    },
+
+    csvGetSamples: function(userData, remoteIP, cb) {
+      csv.getSamples(labCore, cb);
+    },
+
+    csvGetPlates: function(userData, remoteIP, cb) {
+      csv.getPlates(labCore, cb);
+    },
+    
+    csvGetQpcrResults: function(userData, remoteIP, cb) {
+      csv.getQpcrResults(labCore, cb);
     }
+    
   };
 };
 

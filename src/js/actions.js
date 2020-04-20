@@ -101,7 +101,19 @@ module.exports = function() {
     rimbaudReportResult(orderID, data, cb) {
       app.remote.rimbaudReportResult(orderID, data, cb);
     },
+
+    csvGetSamples(cb) {
+      app.remote.csvGetSamples(cb);
+    },
+
+    csvGetPlates(cb) {
+      app.remote.csvGetPlates(cb);
+    },
     
+    csvGetQpcrResults(cb) {
+      app.remote.csvGetQpcrResults(cb);
+    },
+
     // TODO remove debug function
     increase: function() {
       app.state.count++;

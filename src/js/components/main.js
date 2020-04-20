@@ -21,7 +21,8 @@ class Main extends Component {
         <li><Link href="/tube-intake">Sample intake (associate tubes with accession forms)</Link></li>
           <li><Link href="/map-tubes-to-plate">Map samples to 96 well plate</Link></li>
           <li><Link href="/analyze-qpcr">Analyze qPCR results</Link></li>
-          <li><Link href="/print-plate-label">Print plate barcode label</Link></li>
+        <li><Link href="/print-plate-label">Print plate barcode label</Link></li>
+        <li><Link href="/csv">Export to CSV</Link></li>
           <li><Link href="/scan">Scan (work in progress)</Link></li>
           <li><Link href="/print-test">Print (work in progress)</Link></li>
         </ul>
