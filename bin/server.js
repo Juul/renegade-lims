@@ -61,7 +61,8 @@ const argv = minimist(process.argv.slice(2), {
   ],
   alias: {
     'd': 'debug', // enable debug output
-    'i': 'introvert' // don't initiate any outbound connections
+    'i': 'introvert', // don't initiate any outbound connections
+    'D': 'dump' // dump data to CSV
   }
 });
 
@@ -89,7 +90,6 @@ const adminDB = sublevel(db, 'a', {valueEncoding: 'json'});
 const localDB = sublevel(db, 'lo', {valueEncoding: 'json'}); // never replicated
 const labLocal = new LabLocal(localDB, settings.labBarcodePrefix);
 
-swabTubesByTimestampView
 
 labCore.use('objectsByGUID', 1, view(sublevel(labDB, OBJECTS_BY_GUID, {valueEncoding: 'json'}), objectsByGUIDView));
 labCore.use('objectsByBarcode', 1, view(sublevel(labDB, OBJECTS_BY_BARCODE, {valueEncoding: 'json'}), objectsByBarcodeView));
@@ -485,6 +485,39 @@ function initOutbound() {
 }
 
 async function init() {
+
+  if(argv.dump) {
+    const csv = require('../lib/csv.js');
+    if(argv.dump === 'plates') {
+      csv.getPlates(labCore, (err, data) => {
+        if(err) return console.error(err);
+
+        console.log(data);
+        process.exit(0);
+      })
+    } else if(argv.dump === 'samples') {
+      csv.getSamples(labCore, (err, data) => {
+        if(err) return console.error(err);
+
+        console.log(data);
+        process.exit(0);
+      })
+    } else if(argv.dump === 'results') {
+      csv.getQpcrResults(labCore, (err, data) => {
+        if(err) return console.error(err);
+
+        console.log(data);
+        process.exit(0);
+      })
+    } else {
+      console.error("Unknown data dump type");
+      process.exit(1);
+    }
+
+    return;
+  }
+
+  
   // Periodically check if system time is to far off from NTP server time
   // this is just an extra check in case of a misconfigured system
   // since we may rely on timestamps for merging data when the same data
