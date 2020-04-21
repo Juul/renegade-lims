@@ -162,7 +162,7 @@ class AnalyzeQPCR extends Component {
     for(wellName in wells) {
       well = wells[wellName];
 
-      if(plateWells) {
+      if(plateWells && plateWells[wellName]) {
         ctrl = plateWells[wellName].special;
       }
       
