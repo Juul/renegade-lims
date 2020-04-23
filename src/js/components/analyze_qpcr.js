@@ -87,7 +87,7 @@ class AnalyzeQPCR extends Component {
         this.analyze(e.target.result);
       } catch(e) {
         console.error(e);
-        app.notify("Failed to parse CSV file", 'error');
+        app.notify("Failed to parse .txt file", 'error');
         
         this.setState({
           file: undefined,
@@ -274,7 +274,7 @@ class AnalyzeQPCR extends Component {
     }
 
     if(!this.state.csvData) {
-      app.notify("No CSV file associated. Cannot save or report.", 'error');
+      app.notify("No .txt file associated. Cannot save or report.", 'error');
       return;
     }
 
@@ -452,7 +452,6 @@ class AnalyzeQPCR extends Component {
   }
 
   toHumanResult(plateMapWell, resultWell) {
-
     function toText(bool) {
       if(bool === true) return 'Positive';
       if(bool === false) return 'Negative';
@@ -555,7 +554,7 @@ class AnalyzeQPCR extends Component {
     if(!this.state.file) {
       return (
           <Container>
-          <p>Select CSV file to load</p>
+          <p>Select .txt file to load</p>
           <input type="file" onChange={this.openFile.bind(this)} />
           </Container>
       );
@@ -602,7 +601,7 @@ class AnalyzeQPCR extends Component {
       }
       metadata = (
           <div>
-          <h3>Metadata from CSV file</h3>
+          <h3>Metadata from .txt file</h3>
           <ul>
           {lis}
         </ul>
@@ -652,7 +651,7 @@ class AnalyzeQPCR extends Component {
                 <td>{(resultWell) ? resultWell['VIC'].ct : "No result"}</td>
                 <td>?</td>
                 <td>{result.result}</td>
-                <td>{result.msg}</td>
+                <td></td>
                 
               </tr>
             ));

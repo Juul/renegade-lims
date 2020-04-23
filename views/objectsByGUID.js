@@ -2,6 +2,7 @@
 
 const async = require('async');
 const through = require('through2');
+const readonly = require('read-only-stream');
 
 const u = require('./common/utils.js');
 const nicify = require('./common/nicify.js');
@@ -61,6 +62,17 @@ module.exports = function(db) {
         this.ready(function() { // wait for all views to catch up
           db.get(key, {valueEncoding: 'json'}, cb);
         })
+      },
+      
+      read: function(core, opts) {
+        var t = through.obj();
+        
+        core.ready(function() {
+          var v = db.createValueStream(opts)
+          v.pipe(t)
+        })
+        
+        return readonly(t)
       }
     }
   }

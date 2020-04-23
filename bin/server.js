@@ -492,21 +492,21 @@ async function init() {
       csv.getPlates(labCore, (err, data) => {
         if(err) return console.error(err);
 
-        console.log(data);
+        process.stdout.write(data);
         process.exit(0);
       })
     } else if(argv.dump === 'samples') {
       csv.getSamples(labCore, (err, data) => {
         if(err) return console.error(err);
 
-        console.log(data);
+        process.stdout.write(data);
         process.exit(0);
       })
     } else if(argv.dump === 'results') {
       csv.getQpcrResults(labCore, (err, data) => {
         if(err) return console.error(err);
 
-        console.log(data);
+        process.stdout.write(data);
         process.exit(0);
       })
     } else {
