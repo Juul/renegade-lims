@@ -104,6 +104,27 @@ Should include everything.
 
 This section details how to set up renegade-lims to auto-start on boot and auto-restart when it fails.
 
+## Using low ports as non-root user
+
+If you plan to listen on a port < 1024 like 80 or 443 then you'll need to grant the node binary the appropriate permissions.
+
+First figure out which node binary is being used by the user running renegade-lims, e.g:
+
+```
+sudo su -l renegade
+readlink -f `which node`
+logout
+```
+
+Then install libcap2-bin and set the permission:
+
+```
+sudo apt install libcap2-bin
+sudo setcap cap_net_bind_service=+ep /path/to/node/binary
+```
+
+## Installing systemd service
+
 Assuming your system has systemd:
 
 ```
@@ -118,6 +139,10 @@ Reload systemd configuration and start the new service:
 systemctl daemon-reload
 systemctl start renegade-lims
 ```
+
+## HTTPS certificate
+
+First install [certbot](https://certbot.eff.org/instructions).
 
 # Credit
 
