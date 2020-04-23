@@ -176,6 +176,7 @@ function initWebserver() {
 
   const certbotStatic = ecstatic({
     root: '.well-known',
+    baseDir: './.well-known',
     cache: 0
   });
   router.addRoute('/.well-known/*', certbotStatic);
