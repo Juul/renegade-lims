@@ -29,8 +29,10 @@ You will also almost certainly want to change the `masterPassword` and `initialU
 # Generate certificate
 
 ```
-./scripts/gen_cert.sh
+./scripts/gen_cert.sh <hostname_or_email>
 ```
+
+If this server will have inbound connections and has a public IP then this should be a valid hostname for that public IP. If this is not the case then do _not_ set this to a valid hostname (not even localhost), just use an email address for the sysadmin instead.
 
 ## Copy peer certs
 
