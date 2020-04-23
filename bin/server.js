@@ -7,6 +7,7 @@ const path = require('path');
 const tls = require('tls');
 const net = require('net');
 const http = require('http');
+const https = require('https');
 const websocket = require('websocket-stream');
 const rpc = require('rpc-multistream'); // rpc and stream multiplexing
 const auth = require('rpc-multiauth'); // authentication
@@ -198,7 +199,17 @@ function initWebserver() {
     rs.pipe(res);
   });
 
-  var server = http.createServer(function(req, res) {
+  var httpOpts = {};
+  var whichHttp;
+  if(settings.webTLSKey && settings.webTLSCert) {
+    whichHttp = https;
+    httpOpts.key = settings.webTLSKey;
+    httpOpts.cert = settings.webTLSCert;
+  } else {
+    whichHttp = http;
+  }
+  
+  var server = whichHttp.createServer(httpOpts, function(req, res) {
     var m = router.match(req.url);
     m.fn(req, res, m);
   });
@@ -283,9 +294,16 @@ function initWebserver() {
     if(err) console.error("WebSocket server error:", err);
   });
 
-  console.log("Web server listening on", settings.webHost+':'+settings.webPort);
-  server.listen(settings.webPort, settings.webHost)
+  if(!settings.webPort) {
+    if(settings.webTLSKey && settings.webTLSCert) {
+      settings.webPort = 443;
+    } else {
+      settings.webPort = 80;
+    }
+  }
+    console.log("Web server listening on", settings.webHost+':'+settings.webPort, "using HTTPS:", !!(settings.webTLSKey && settings.webTLSCert));
 
+  server.listen(settings.webPort, settings.webHost)
 }
 
 

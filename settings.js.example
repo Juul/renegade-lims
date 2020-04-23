@@ -10,10 +10,14 @@ module.exports = {
   host: 'localhost',
   port: 4200,
   
-  // HTTP server socket
+  // HTTP(S) server socket
   // Comment these out to disable webserver
+  // If either webTLSKey or webTLSCert is not set
+  // then webserver will be HTTP, otherwise it will be HTTPS
   webHost: 'localhost',
-  webPort: 8000,
+  webPort: 8000, // defaults to 80 for HTTP and 443 for HTTPS
+  // webTLSKey: fs.readFileSync('tls/web_key.pem'),
+  // webTLSCert: fs.readFileSync('tls/web_cert.pem'),
 
   // If this is set then anyone with the master password
   // can create a non-admin account
