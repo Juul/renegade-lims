@@ -144,6 +144,36 @@ systemctl start renegade-lims
 
 First install [certbot](https://certbot.eff.org/instructions).
 
+Then ensure that renegade-lims is listening on port 80 on the domain for which you want an HTTPS certificate by setting `webHost` and `webPort` in `settings.js` (and of course starting `./bin/server.js`).
+
+Then, assuming you've read and agreed to the terms of service, run the following command replacing the email and hostname and possibly the path to the renegade-lims installation:
+
+```
+certbot certonly --webroot --agree-tos --email <your@email.org> -d <your_hostname> -w /home/renegade/renegade-lims/
+```
+
+TODO document renewal hook
+
+You new certificate and key should now be in `/etc/letsencrypt/live/<your_hostname>/`.
+
+In `settings.js` change `webTLSKey` to `fs.readFileSync('/etc/letsencrypt/live/<your_hostname>/privkey.pem')` and change `webTLSCert` to `fs.readFileSync('/etc/letsencrypt/live/<your_hostname>/fullchain.pem')`.
+
+You should probably also change `webPort` to `443`.
+
+Set permissions so the user running renegade-lims can read the cert and key:
+
+```
+chown root:renegade /etc/letsencrypt/live
+chown root:renegade /etc/letsencrypt/archive
+chown root:renegade /etc/letsencrypt/archive/<your_hostname>/*
+chmod g+rx /etc/letsencrypt/live
+chmod g+rx /etc/letsencrypt/archive
+chmod g+rx /etc/letsencrypt/archive/<your_hostname>
+chmod g+r /etc/letsencrypt/live/<your_hostname>/privkey.pem
+```
+
+
+
 # Credit
 
 This project builds upon the work of many talented hackers and would not be possible at all without the excellent work of Kira a.k.a [noffle](https://github.com/noffle) on [kappa-core](https://www.npmjs.com/package/kappa-core), [kappa-view](https://www.npmjs.com/package/kappa-view) and [multifeed](https://www.npmjs.com/package/multifeed) developed in part for [Mapeo](https://www.digital-democracy.org/mapeo/). Additional thanks to Kira for answering questions and guiding me directly! Her work in turn builds on [hypercore](https://www.npmjs.com/package/hypercore) developed by Mathias Buus a.k.a [mafintosh](https://github.com/mafintosh/) for the [dat](https://dat.foundation/) project.
