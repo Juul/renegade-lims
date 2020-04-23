@@ -104,13 +104,20 @@ Should include everything.
 
 This section details how to set up renegade-lims to auto-start on boot and auto-restart when it fails.
 
-Ensure you're logged in as the user who will be running the lims app, then install the psy process monitor globally:
+Assuming your system has systemd:
 
 ```
-npm install -g psy
+cp production/renegade-lims.service /etc/systemd/system/
 ```
 
-TODO complete this guide
+Edit the user name and paths in the `.service` file and if you're not using `nvm` then delete the `nvm_run` part at the beginning of `ExecStart=`.
+
+Reload systemd configuration and start the new service:
+
+```
+systemctl daemon-reload
+systemctl start renegade-lims
+```
 
 # Credit
 

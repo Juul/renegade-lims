@@ -1,0 +1,16 @@
+[Unit]
+Description=The renegade.bio LIMS system
+After=network.target
+
+[Service]
+Type=simple
+User=renegade
+Environment=
+WorkingDirectory=/home/renegade/renegade-lims
+ExecStart=/home/renegade/renegade-lims/production/nvm_run /home/renegade/renegade-lims/bin/server.js
+RemainAfterExit=no
+Restart=on-failure
+RestartSec=1s
+
+[Install]
+WantedBy=multi-user.target
