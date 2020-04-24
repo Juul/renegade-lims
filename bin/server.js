@@ -42,6 +42,8 @@ const LabDeviceServer = require('../lib/labdevice_server.js');
 const DataMatrixScanner = require('../lib/datamatrix_scanner.js');
 const settings = require('../settings.js');
 
+const rimbaud = require('../lib/rimbaud.js')(settings);
+
 const OBJECTS_BY_GUID = 'og'; // everything by GUID
 const OBJECTS_BY_BARCODE = 'ob'; // everything by barcode
 const SWAB_TUBES_BY_FORM_BARCODE = 'sfb';
@@ -58,7 +60,8 @@ const USERS_BY_NAME = 'un';
 
 const argv = minimist(process.argv.slice(2), {
   boolean: [
-    'debug'
+    'debug',
+    'init' // initialize a new LIMS network
   ],
   alias: {
     'd': 'debug', // enable debug output
@@ -113,12 +116,19 @@ labMulti.ready(function() {
 
 function ensureInitialUser(settings, adminCore, cb) {
   cb = cb || function() {};
-  if(!settings.initialUser) return cb();
+  if(!settings.initialUser || !settings.initialUser.name || !settings.initialUser.password) {
+    console.log("No initial user specified in settings.initialUser");
+    return cb();
+  }
   const user = settings.initialUser;
-  if(!user.name || !user.password) return cb();
 
+  console.log("Attempting to create initial user:", user.name);
+  
   adminCore.api.usersByName.get(user.name, function(err, users) {
-    if(!err && users && users.length) return cb();
+    if(!err && users && users.length) {
+      console.log("User", user.name, "already exists");
+      return cb();
+    }
     
     writer.saveUser(adminCore, {
       name: user.name,
@@ -144,7 +154,10 @@ function initWebserver() {
   // methods only available to logged-in users in the 'user' group
   rpcMethods.user = require('../rpc/user.js')(settings, labDeviceServer, dmScanner, labCore, adminCore, labLocal);
 
-  ensureInitialUser(settings, adminCore);
+  if(argv.init) {
+    console.log("Initializing new renegade-lims network");
+    ensureInitialUser(settings, adminCore);
+  }
   
   var rpcMethodsAuth = auth({
     userDataAsFirstArgument: true, 
@@ -436,7 +449,7 @@ function connectToPeerOnce(peer, cb) {
     checkServerIdentity: function(host, cert) {
       console.log("Checking cert for:", host);
       const res = tls.checkServerIdentity(host, cert);
-      console.log("  result:", res);
+      console.log("  result:", (res === undefined) ? "success" : "certificate invalid");
       return res;
     }
   })
@@ -527,6 +540,14 @@ async function init() {
         process.stdout.write(data);
         process.exit(0);
       })
+    } else if(argv.dump === 'samplesw') {
+      csv.getSamplesWrong(labCore, (err, data) => {
+        if(err) return console.error(err);
+
+        process.stdout.write(data);
+        process.exit(0);
+      })
+      
     } else if(argv.dump === 'results') {
       csv.getQpcrResults(labCore, (err, data) => {
         if(err) return console.error(err);
@@ -552,6 +573,10 @@ async function init() {
 
   tlsUtils.computeCertHashes(settings.tlsPeers);
 
+  if(settings.rimbaud && settings.rimbaud.synchronizeOrders) {
+    rimbaud.startOrderSynchronizer(labCore);
+  }
+  
   if(settings.host) {
     initInbound();
   }

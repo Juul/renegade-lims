@@ -3,6 +3,7 @@
 const through = require('through2');
 const charwise = require('charwise');
 const readonly = require('read-only-stream');
+const livefeed = require('level-livefeed');
 
 const nicify = require('./common/nicify.js');
 const validateSwabTube = require('../validators/swab_tube.js');
@@ -14,18 +15,19 @@ module.exports = function(db) {
     map: function(entries, next) {
       
       const batch = [];
-      entries.forEach(function(entry) {
-        if(!validateSwabTube(entry)) return next();
+      var entry;
+      for(entry of entries) {
+        if(!validateSwabTube(entry)) continue;
         
         const ts = nicify(entry);
-        var key = charwise.encode(ts);
+        var key = charwise.encode(ts) + '!' + entry.value.id;
         
         batch.push({
           type: 'put',
           key: key,
           value: entry.value
         });
-      })
+      }
 
       if(!batch.length) return next();
       db.batch(batch, {valueEncoding: 'json'}, next);
@@ -56,12 +58,27 @@ module.exports = function(db) {
         }
 
         core.ready(function() {
-          var v = db.createValueStream(Object.assign({reverse: true}, opts))
+          var v = db.createReadStream(Object.assign({reverse: true}, opts))
           v.pipe(t)
         })
 
         return readonly(t)
-      }
+      },
+
+      livefeed: function(core) {
+        return livefeed(db);
+      },
+      
+      // mark the sample as synchronized with rimbaud
+      markAsRimbaudSynced: function(core, key, cb) {
+        db.get(key, function(err, value) {
+          if(err) return cb(err);
+
+          value.rimbaudSynced = true;
+          db.put(key, value, cb);
+        });
+      },
+      
     }
   }
 };

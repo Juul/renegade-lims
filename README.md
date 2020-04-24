@@ -68,6 +68,15 @@ npm run build
 
 # Running
 
+If you are initializing a new renegade-lims network, meaning that this peer is the first peer in a new network rather than connecting to an existing network, then the very first time you run the server you should run:
+
+```
+./bin/server.js --init
+```
+
+This will create an initial admin user. If you are connecting to an existing renegade-lims network or this is not the first time running the server then run:
+
+
 ```
 ./bin/server.js
 ```
@@ -79,6 +88,10 @@ For live re-building of client during development:
 ```
 npm run dev
 ```
+
+# Rimbaud
+
+In `settings.js.example` there is a section called `rimbaud`. This is for integratiion with a separate system for reporting of results back to patients. This system is not currently open source.
 
 # ToDo
 
@@ -173,8 +186,6 @@ chmod g+rx /etc/letsencrypt/archive
 chmod g+rx /etc/letsencrypt/archive/<your_hostname>
 chmod g+r /etc/letsencrypt/live/<your_hostname>/privkey.pem
 ```
-
-
 
 # Credit
 

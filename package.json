@@ -23,6 +23,7 @@
     "kappa-core": "^6.0.0",
     "kappa-view": "^3.1.0",
     "level": "^6.0.1",
+    "level-livefeed": "^0.2.0",
     "minimist": "^1.2.5",
     "monotonic-timestamp": "0.0.9",
     "multifeed": "^5.2.1",

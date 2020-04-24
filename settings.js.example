@@ -114,6 +114,7 @@ module.exports = {
     host: 'example.com', // REST server
     port: 443, // server port for https
     basePath: '/rim-lab-rest', // where the web app is mounted
-    secretKey: '<your secret key>'
+    secretKey: '<your secret key>',
+    synchronizeOrders: 1200 // automatically sync order and sample ID assocications to rimbaud as they come into existance and re-try every this many seconds (only one peer in the renegade-lims network should be doing this)
   }
 };
