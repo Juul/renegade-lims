@@ -138,7 +138,7 @@ class Root extends Component {
           <MapTubesToPlate path="/map-tubes-to-plate/:barcode?" />
           <Plate path="/plate-test" />
           <Scan path="/scan" />
-          <PrintPlateLabel path="/print-plate-label" />
+          <PrintPlateLabel path="/print-plate-label/:customCode?" />
           <PrintTest path="/print-test" />
           <AnalyzeQPCR path="/analyze-qpcr" />
           <CSV path="/csv" />      

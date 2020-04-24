@@ -74,8 +74,13 @@ module.exports = function(db) {
         db.get(key, function(err, value) {
           if(err) return cb(err);
 
+          value = JSON.parse(value);
+          console.log("  --already synced");
+          if(value.rimbaudSynced) return cb();
+          
           value.rimbaudSynced = true;
-          db.put(key, value, cb);
+          console.log("  --flagged as synced");
+          db.put(key, JSON.stringify(value), cb);
         });
       },
       

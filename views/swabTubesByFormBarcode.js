@@ -21,21 +21,20 @@ module.exports = function(db) {
       var entry;
       for(entry of entries) {
         if(!validateSwabTube(entry)) {
-          return next();
+          continue;
         }
         nicify(entry);
 
         entry.ts = u.monotonicTimestampToTimestamp(entry.value.createdAt);
         firstPass.push(entry);
       }
-
       // Sort entries by creation time so that if we got multiple entries
       // for the same GUID then the newer will overwrite the older in the view
       firstPass.sort(sortByTimestamp);
 
       const batch = [];
       async.eachSeries(firstPass, function(entry, next) {
-
+        
         db.get(entry.value.id, function(err, oldEntry) {
           if(!err && oldEntry) {
             // If the db has a newer value already, don't overwrite with this one

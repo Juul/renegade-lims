@@ -45,7 +45,8 @@ class EditPlate extends Component {
     prevProps = prevProps || {}
     if(prevProps.formBarcode !== this.props.formBarcode) {
       // TODO don't change state based on props!
-      // see map_tubes_to_plate.js 
+      // see map_tubes_to_plate.js
+      
       // If the form changes then reset state
       this.setState({
         checkedExistingTube: false,
@@ -54,7 +55,7 @@ class EditPlate extends Component {
         tubeBarcode: undefined
       });
     }
-    
+
     if(!this.props.formBarcode || this.state.checkedExistingTube) return;
     
     app.whenConnected(() => {
@@ -129,25 +130,24 @@ class EditPlate extends Component {
     }
 
     var formWarning = '';
-
     if(this.state.existingTube) {
       if(this.state.tubeBarcode && this.state.existingTube.barcode && this.state.existingTube.barcode === this.state.tubeBarcode) {
         formWarning = (
             <div>
-            Note: This accession form is already associated with the scanned swab tube.
+            Note: This accession form is already associated with the scanned sample tube.
             </div>
         );
       } else {
-        formWarning = (
-              <div>
-              <p><b><i>WARNING:</i>This accession form is <i>already</i> associated with a swab tube with barcode '{this.state.existingTube.barcode}'.</b></p>
-              <p>Saving will overwrite the existing association between accession form and swab tube.</p>
-              <p>Make <i><b>ABSOLUTELY SURE</b></i> you know what you are doing before clicking save!</p>
-              </div>
+        return (
+            <Container>
+            <h3>Accession form: {this.props.formBarcode}</h3>
+            <p><b><i>WARNING:</i>This accession form is <i>already</i> associated with a sample tube with barcode '{this.state.existingTube.barcode}'.</b></p>
+            <p>Only one sample tube per accession form ID is allowed.</p>
+            <p>If the sample tube lost its barcode you can <Link href={"/print-plate-label/" + this.state.existingTube.barcode}>re-print it here</Link></p>
+            </Container>
         );
       }
     }
-    
       var tube;
       if(!this.state.tubeBarcode) {
         tube = (

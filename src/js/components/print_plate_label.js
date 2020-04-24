@@ -17,7 +17,8 @@ class PrintPlateLabel extends Component {
     });
 
     this.setState({
-      copies: 1
+      copies: 1, // copies of each barcode per label,
+      totalCopies: 1 // how many of these labels to print
     });
   }
   
@@ -67,8 +68,13 @@ class PrintPlateLabel extends Component {
     }.bind(this));  
   }
 
-  updateCustomCode(e) {
-    var customCode = e.target.value;
+  updateCustomCode(eventOrCode) {
+    var customCode;
+    if(typeof eventOrCode === 'object' && eventOrCode.target) {
+      customCode = eventOrCode.target.value;
+    } else {
+      customCode = eventOrCode;
+    }
 
     this.labelMaker.drawLabel('labelPreview', customCode);
     
@@ -95,8 +101,15 @@ class PrintPlateLabel extends Component {
         numUniqueCodes: numUniqueCodes
       })
     }
+  }
 
+  componentDidUpdate(prevProps) {
+    prevProps = prevProps || {}
+    if(this.props.customCode
+       && prevProps.customCode !== this.props.customCode) {
 
+      this.updateCustomCode(this.props.customCode);
+    }
   }
   
   componentDidMount() {
@@ -104,9 +117,12 @@ class PrintPlateLabel extends Component {
     
     this.setState({
       numUniqueCodes: numUniqueCodes
-    })    
+    });
+    this.componentDidUpdate();
   }
 
+
+  
 	render() {
 
     var warning = '';
@@ -115,11 +131,16 @@ class PrintPlateLabel extends Component {
           <p><b>Warning:</b> Only use the custom barcode feature when re-printing destroyed or lost barcode stickers or risk having two different items labeled with the same code.</p>
       );
     }
+
+    var numIdentical = '';
+    numIdentical = (
+        <p>Number of identical barcodes per label (1 to 15): <input type="text" value={this.state.copies} onInput={this.updateLabelCopies.bind(this)} disabled={!!this.state.customCode} /></p>
+    );
     
     return (
         <Container>
         <h3>Print plate labels</h3>
-        <p>Number of identical barcodes per label (1 to 15): <input type="text" value={this.state.copies} onInput={this.updateLabelCopies.bind(this)} /></p>
+        {numIdentical}
         <p>Custom barcode: <input type="text" value={this.state.customCode} onInput={this.updateCustomCode.bind(this)} /></p>
         <p>Copies to print: <input type="text" value={this.state.totalCopies} onInput={linkState(this, 'totalCopies')} /></p>
         {warning}
