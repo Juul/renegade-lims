@@ -9,6 +9,7 @@ import Container from '@material-ui/core/Container';
 
 const uuid = require('uuid').v4;
 const timestamp = require('monotonic-timestamp');
+const FileSaver = require('file-saver');
 
 const PlatePhysical = require('../physicals/plate.js');
 
@@ -224,6 +225,69 @@ class EditPlate extends Component {
       plate: plate
     });
   }
+
+  downloadEDS() {
+
+    const wells = {};
+    const plate = this.state.plate;
+    const plateWells = plate.wells;
+    var well, wellName;
+    for(wellName in plateWells) {
+      well = plateWells[wellName];
+      if(!well) continue;
+
+      if(well.barcode) {
+        wells[wellName] = well.barcode;
+      } else if(well.special) {
+        console.log(well);
+        if(well.special === 'positiveControl') {
+          console.log("YAH", wellName);
+          wells[wellName] = 'POS';  
+        } else if(well.special === 'negativeControl') {
+          wells[wellName] = 'NTC';
+        } else {
+          continue;
+        }
+      } else {
+        continue;
+      }
+        
+    }
+    return;
+    var createdBy = plate.createdBy;
+    if(!createdBy || createdBy.toLowerCase() === 'unknown') {
+      createdBy = 'admin';
+    }
+    
+    const o = {
+      barcode: plate.barcode,
+      name: "Generated on " + utils.formatDateTime(plate.createdAt),
+      operator: createdBy,
+      wells: wells
+    };
+
+    const dirpath = "C:\\somedir"; // TODO get from settings.js
+    const filename = o.barcode+'_'+utils.formatDateTime(new Date()).replace(/\s+/g, '_')+'.eds';
+    
+    app.actions.generateEDSFile(dirpath, filename, o, (err, dataURL) => {
+      if(err) {
+        console.error(err);
+        app.notify(err, 'error');
+        return;
+      }
+
+      // Convert from base64 DataURL to blob
+      fetch(dataURL).then(res => res.blob()).then((blob) => {
+        
+        FileSaver.saveAs(blob, filename);
+        
+      }).catch((err) => {
+        console.error(err);
+        app.notify(err, 'error');
+        return;
+      });
+    });
+  }
   
   componentDidMount() {
    this.componentDidUpdate();
@@ -242,7 +306,6 @@ class EditPlate extends Component {
           this.newPlate(this.props.barcode);
           return
         }
-        console.log("Plate.wells:", plate.wells);
         this.gotPlate(plate);
       })
     })    
@@ -282,6 +345,7 @@ class EditPlate extends Component {
       sampleHtml = (
           <div>
           To place a sample in a well, first scan a sample tube, or manually enter the barcode number with the keyboard and press enter.
+          <p><button onClick={this.downloadEDS.bind(this)}>Download .eds file</button></p>
           </div>
       )
     }

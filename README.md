@@ -44,6 +44,12 @@ For each peer you listed in `settings.js` copy the correct certificate file to t
 npm install
 ```
 
+Currently there's an issue with the `jsdom` package so you may have to manually:
+
+```
+npm install jsdom
+```
+
 ## Client only
 
 If you want to enable webcam-based DataMatrix scanning:

@@ -113,6 +113,11 @@ module.exports = function() {
     csvGetQpcrResults(cb) {
       app.remote.csvGetQpcrResults(cb);
     },
+    
+    generateEDSFile: function(dirpath, filename, data, cb) {
+      app.remote.generateEDSFile(dirpath, filename, data, cb);
+    },
+    
 
     // TODO remove debug function
     increase: function() {

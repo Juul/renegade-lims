@@ -6,10 +6,12 @@ const path = require('path');
 const rpc = require('rpc-multistream');
 const timestamp = require('monotonic-timestamp');
 const uuid = require('uuid').v4;
+const eds = require('eds-handler');
 const userUtils = require('../lib/user.js');
 const writer = require('../lib/writer.js');
 const csv = require('../lib/csv.js');
 const rimbaudAPI = require('../lib/rimbaud.js');
+
 
 module.exports = function(settings, labDeviceServer, dmScanner, labCore, adminCore, labLocal) {
   return {
@@ -122,6 +124,14 @@ module.exports = function(settings, labDeviceServer, dmScanner, labCore, adminCo
     
     csvGetQpcrResults: function(userData, remoteIP, cb) {
       csv.getQpcrResults(labCore, cb);
+    },
+
+    generateEDSFile: function(userData, remoteIP, dirpath, filename, data, cb) {
+      eds.generate(dirpath, filename, data, 'nodebuffer', function(err, buf) {
+        if(err) return cb(err);
+
+        cb(null, 'data:application/zip;base64,'+buf.toString('base64'));
+      })
     }
     
   };

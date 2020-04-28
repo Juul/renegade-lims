@@ -11,8 +11,8 @@ const timestamp = require('monotonic-timestamp');
 const async = require('async');
 
 const utils = require('../utils.js');
-const Scan = require('./scan.js');
 const Plate = require('./plate.js');
+const eds = require('../../../lib/eds-handler');
 
 // Max file size in bytes to read into client
 const FILE_SIZE_MAX = 1024 * 1024 * 1024 * 10; // 10 MB
@@ -36,8 +36,8 @@ class AnalyzeQPCR extends Component {
 //    this.componentDidUpdate();
   }
 
-  plateScanned(barcode) {
-    app.actions.getPhysicalByBarcode(barcode, (err, plate) => {
+  getPlate(barcode) {
+    app.actions.getPhysicalByBarcode(barcode.toLowerCase(), (err, plate) => {
       if(err) {
         if(!err.notFound) {
           app.notify("Plate barcode not found in LIMS", 'error');
@@ -47,6 +47,8 @@ class AnalyzeQPCR extends Component {
         return;
       }
 
+      this.calculateWellResults(this.state.result.wells, plate);
+      
       this.setState({
         plate: plate
       });
@@ -87,7 +89,7 @@ class AnalyzeQPCR extends Component {
         this.analyze(e.target.result);
       } catch(e) {
         console.error(e);
-        app.notify("Failed to parse .txt file", 'error');
+        app.notify("Failed to parse .eds file", 'error');
         
         this.setState({
           file: undefined,
@@ -96,14 +98,9 @@ class AnalyzeQPCR extends Component {
       }
     };
 
-    reader.readAsText(this.state.file)
+    reader.readAsArrayBuffer(this.state.file)
   }
 
-/*
-
-
-  
- */
   
   // Returns a string on error
   // Return false if test came out negative
@@ -155,115 +152,52 @@ class AnalyzeQPCR extends Component {
     }
   }
 
-  calculateWellResults(wells) {
+  calculateWellResults(wells, plate) {
+    var plateWells = plate.wells;
 
-    var plateWells = this.state.plate.wells;
-    var wellName, well, result, ctrl;
+    var wellName, well, outcome, ctrl;
     for(wellName in wells) {
-      well = wells[wellName];
+      well = wells[wellName].result;
 
       if(plateWells && plateWells[wellName]) {
         ctrl = plateWells[wellName].special;
       }
       
       if(!well['FAM']) {
-        result = "Missing data from FAM channel";
+        outcome = "Missing data from FAM channel";
       } else if(!well['VIC']) {
-        result = "Missing data from VIC channel";
+        outcome = "Missing data from VIC channel";
       } else {
-        result = this.calculateWellResult(well['FAM'].ct, well['VIC'].ct, ctrl);
+        outcome = this.calculateWellResult(well['FAM']['Ct'], well['VIC']['Ct'], ctrl);
       }
 
-      well.result = result;
+      well.outcome = outcome;
     }
-
-    const o = {
-      protocol: "bgi",
-      wells: wells,
-    };
-
-    var errors = [];
-
-    if(!wells['A1']) {
-      errors.push("Plate blank (negative) control was missing");
-    } else if(wells['A1'].result !== false) {
-      errors.push(wells['A1'].result)
-    }
-
-    if(!wells['B1']) {
-      errors.push("Plate positive control was missing");
-    } else if(wells['B1'].result !== true) {
-      errors.push(wells['B1'].result);
-    } 
-
-    if(errors.length) {
-      o.errors = errors;
-    }
-
-    return o;
   }
   
   analyze(data) {    
-    const lines = data.split(/\r?\n/);
-
-    var metadata = {};
-    const wells = {};
-
-    var foundStart;
-    var highestCycle = 0;
-    var i, j, line, wellName, sampleName, reporter, ct;
-    for(i=0; i < lines.length; i++) {
-      line = lines[i].split(',');
-
-      if(!foundStart) {
-
-        // Look for first two header columns called Well and Cycle
-        if(line[0].match(/^\s*well\s*$/i) && line[1].match(/^\s*sample\s+name\s*$/i)) {
-          foundStart = true;
-          continue;
-        }
-        if(line[0].trim() && line[1].trim()) {
-          metadata[line[0].trim()] = line[1].trim()
-        }
-        continue;
+    eds.parse(data, (err, res) => {
+      if(err) {
+        console.error(err);
+        app.notify(err, 'error');
+        return;
       }
-      if(!line[0] || !line[1] || !line[4] || !line[6]) {
-        continue;
-      }
-      
-      const o = {
-        wellName: line[0].trim(),
-        sampleName: line[1].trim(),
-        reporter: line[4].trim(),
-        ct: line[6].trim()
-      };
-      
-      if(!o.wellName || !o.reporter || !o.ct) {
-        continue;
-      }
-      
-      if(!wells[o.wellName]) {
-        wells[o.wellName] = {}
-      }
-      
-      wells[o.wellName][o.reporter] = o;
-    }
 
-    const results = this.calculateWellResults(wells);
+      this.setState({
+        analyzing: false,
+        result: res
+      })
+      
+      this.getPlate(res.metadata.barcode);
+    });
     
-    this.setState({
-      analyzing: false,
-      csvData: data,
-      wells: wells,
-      results: results,
-      metadata: metadata
-    });    
+
   }
 
 
   saveAndReport() {
 
-    if(!this.state.results) {
+    if(!this.state.result) {
       app.notify("No analyzed results available to save or report.", 'error');
       return;
     }
@@ -274,11 +208,11 @@ class AnalyzeQPCR extends Component {
     }
 
     if(!this.state.csvData) {
-      app.notify("No .txt file associated. Cannot save or report.", 'error');
+      app.notify("No .eds file associated. Cannot save or report.", 'error');
       return;
     }
 
-    const result = Object.assign({}, this.state.results); // clone results
+    const result = Object.assign({}, this.state.result); // clone results
     result.plateID = this.state.plate.id;
     result.csvData = this.state.csvData;
         
@@ -468,18 +402,18 @@ class AnalyzeQPCR extends Component {
           result: 'NA'
         }
       }
-      if((plateMapWell.special === 'negativeControl' && resultWell.result === false) || (plateMapWell.special === 'positiveControl' && resultWell.result === true)) {
+      if((plateMapWell.special === 'negativeControl' && resultWell.outcome === false) || (plateMapWell.special === 'positiveControl' && resultWell.outcome === true)) {
         return {
           msg: "This is a plate control",
           reportable: false,
-          result: toText(resultWell.result)
+          result: toText(resultWell.outcome)
         }
       } else {
         return {
           msg: "Plate control with unexpected qPCR result",
           reportable: false,
           fail: true,
-          result: toText(resultWell.result)
+          result: toText(resultWell.outcome)
         }
       }
     }
@@ -488,7 +422,7 @@ class AnalyzeQPCR extends Component {
       return {
         msg: "Unreportable: No well in well map for this qPCR result",
         reportable: false,
-        result: toText(resultWell.result)
+        result: toText(resultWell.outcome)
       }
     }
 
@@ -502,7 +436,7 @@ class AnalyzeQPCR extends Component {
     
     return {
       reportable: true,
-      result: toText(resultWell.result)
+      result: toText(resultWell.outcome)
     }
   }
 
@@ -550,27 +484,43 @@ class AnalyzeQPCR extends Component {
 
   render() {
 
+    if(!eds) {
+      return (
+          <Container>
+            Analyzing qPCR data requires the <b>eds-handler</b> library.
+          </Container>
+      );
+    }
+    
     var plate = '';
     if(!this.state.file) {
       return (
           <Container>
-          <p>Select .txt file to load</p>
+          <p>Select .eds file to load</p>
           <input type="file" onChange={this.openFile.bind(this)} />
           </Container>
       );
+
+    } else if(!this.state.result) {
+      return (
+          <Container>
+          <p>Ready for analysis: {this.state.file.name}</p>
+          <p><button onClick={this.loadFile.bind(this)}>Analyze</button></p>
+          {plate}
+          </Container>
+      ); 
+      
     } else if(!this.state.plate) {
         return (
             <Container>
-            <p>Please find the original qPCR plate from this run and scan the plate barcode to continue.</p>
-          
-          <Scan onScan={this.plateScanned.bind(this)} disableWebcam disableDataMatrixScanner />
+            <p>Loading plate...</p>
         </Container>
         );
     } else if(this.state.plate) {
 
       plate = (
           <div>
-          <h3>Plate layout</h3>
+          <h3>Plate layout from LIMS</h3>
           <ul>
           <li><b>Plate barcode:</b> {this.state.plate.barcode}</li>
           <li><b>Created at:</b> {utils.formatDateTime(this.state.plate.createdAt)}</li>
@@ -581,27 +531,20 @@ class AnalyzeQPCR extends Component {
         </div>
       );
 
-      if(!this.state.metadata) {
-        return (
-          <Container>
-            <p>Ready for analysis: {this.state.file.name}</p>
-            <p><button onClick={this.loadFile.bind(this)}>Analyze</button></p>
-            {plate}
-          </Container>
-        );
-      }  
-      
       var metadata = '';
       
       var lis = [];
-      for(let key in this.state.metadata) {
+      var metaVal;
+      for(let key in this.state.result.metadata) {
+        metaVal = this.state.result.metadata[key];
+        if(!metaVal || typeof metaVal !== 'string') continue;
         lis.push((
-            <li><b>{key}</b>: {this.state.metadata[key]}</li>
+            <li><b>{key}</b>: {metaVal}</li>
         ));
       }
       metadata = (
           <div>
-          <h3>Metadata from .txt file</h3>
+          <h3>Metadata from .eds file</h3>
           <ul>
           {lis}
         </ul>
@@ -611,24 +554,7 @@ class AnalyzeQPCR extends Component {
         
       var failMsgs = [];
       var results = '';
-      if(this.state.results) {
-
-        if(this.state.results.errors) {
-          let errors = [];
-          for(let err of this.state.results.errors) {
-            errors.push((
-                <li>Error: {this.state.results.errors}</li>
-            ));
-          }
-          return (
-              <div>
-              <h3>Plate control error(s):</h3>
-              <ul>
-              {errors}
-            </ul>
-              </div>
-          );
-        }
+      if(this.state.result) {
 
         var fail = [];
         var wellResults = [];
@@ -636,9 +562,12 @@ class AnalyzeQPCR extends Component {
         for(let wellName of wellNames) {
 
           let plateMapWell = this.state.plate.wells[wellName];
-          let resultWell = this.state.results.wells[wellName];
+
+          let well = this.state.result.wells[wellName]
           
-          if(plateMapWell || resultWell) {
+          
+          if(plateMapWell || well) {
+            let resultWell = well.result;
             let result = this.toHumanResult(plateMapWell, resultWell)
             if(result.fail) fail.push({well: wellName, msg: result.msg});
             
@@ -647,8 +576,8 @@ class AnalyzeQPCR extends Component {
                 <td><input type="checkbox" onClick={this.toggleResult.bind(this)} value={wellName} disabled={!result.reportable} checked={!!result.reportable && this.state.toggles[wellName]} /></td>
                 <td>{wellName}</td>
                 <td>{(plateMapWell) ? plateMapWell.barcode : "No plate mapping"}</td>
-                <td>{(resultWell) ? resultWell['FAM'].ct : "No result"}</td>
-                <td>{(resultWell) ? resultWell['VIC'].ct : "No result"}</td>
+                <td>{(resultWell) ? resultWell['FAM']['Ct'] : "No result"}</td>
+                <td>{(resultWell) ? resultWell['VIC']['Ct'] : "No result"}</td>
                 <td>?</td>
                 <td>{result.result}</td>
                 <td></td>
@@ -668,7 +597,6 @@ class AnalyzeQPCR extends Component {
         results = (
             <div>
             <h3>Results</h3>
-            <p><b>Protocol used:</b> {this.state.results.protocol}</p>
             <p>Check the checkbox next to each of the results that you want to sign off on and report, then click the "Save and report" button at the bottom of this page.</p>
             <p><button onClick={this.checkAll.bind(this)}>Check all</button><button onClick={this.uncheckAll.bind(this)}>Uncheck all</button></p>
             <table cellspacing="3" border="1">
