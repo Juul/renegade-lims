@@ -44,6 +44,8 @@ For each peer you listed in `settings.js` copy the correct certificate file to t
 npm install
 ```
 
+You need to manually install `eds-handler` in `node_modules/`.
+
 Currently there's an issue with the `jsdom` package so you may have to manually:
 
 ```

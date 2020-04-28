@@ -59,7 +59,6 @@
     "bwip-js": "^2.0.6",
     "byline": "^5.0.0",
     "colors": "^1.4.0",
-    "eds-handler": "git+ssh://github.com:renegadebio/eds-handler.git",
     "file-saver": "^2.0.2",
     "getusermedia": "^2.0.1",
     "gulp": "^4.0.2",
