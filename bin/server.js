@@ -533,6 +533,14 @@ async function init() {
         process.stdout.write(data);
         process.exit(0);
       })
+    } else if(argv.dump === 'platesw') {
+      csv.getPlatesWrong(labCore, (err, data) => {
+        if(err) return console.error(err);
+
+        process.stdout.write(data);
+        process.exit(0);
+      })
+      
     } else if(argv.dump === 'samples') {
       csv.getSamples(labCore, (err, data) => {
         if(err) return console.error(err);
@@ -542,6 +550,13 @@ async function init() {
       })
     } else if(argv.dump === 'samplesw') {
       csv.getSamplesWrong(labCore, (err, data) => {
+        if(err) return console.error(err);
+
+        process.stdout.write(data);
+        process.exit(0);
+      })
+    } else if(argv.dump === 'all') {
+      csv.getAll(labCore, (err, data) => {
         if(err) return console.error(err);
 
         process.stdout.write(data);
