@@ -31,7 +31,7 @@ const Signup = require('./signup.js');
 const PasswordReset = require('./password_reset.js');
 const AnalyzeQPCR = require('./analyze_qpcr.js');
 const CSV = require('./csv.js');
-
+const PlotTest = require('./plot_test.js');
 
 class Root extends Component {
 
@@ -141,7 +141,8 @@ class Root extends Component {
           <PrintPlateLabel path="/print-plate-label/:customCode?" />
           <PrintTest path="/print-test" />
           <AnalyzeQPCR path="/analyze-qpcr" />
-          <CSV path="/csv" />      
+          <CSV path="/csv" />
+          <PlotTest path="/plot-test" />
           <NotFound default />
         </Router>
       </div>

@@ -136,3 +136,57 @@
     background-color: orange;
     border: 2px solid black;
 }
+
+/*  plot */
+
+svg.xy-plot-min {
+
+    background-color: white;
+
+    rect.margin {
+        fill: white; 
+    }
+    
+    circle.point {
+        fill: red;
+    }
+
+    line.interpolated {
+        stroke: black;
+        stroke-width: 1;
+    }
+
+    line.axis {
+        stroke: black;
+        stroke-width: 1;
+    }
+
+    line.x-axis {
+    }
+    
+    line.y-axis {
+    }
+
+    line.axis-tick {
+        stroke: black;
+        stroke-width: 1;
+    }
+    
+    line.x-axis-tick {
+    }
+
+    line.y-axis-tick {
+    }
+
+    text.axis-label {
+        color: black;
+        font-family: monospace;
+        font-size: 11px;
+    }
+    
+    text.x-axis-label {
+    }
+
+    text.y-axis-label {
+    }
+}

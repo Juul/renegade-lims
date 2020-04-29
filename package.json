@@ -52,6 +52,7 @@
     "@material-ui/icons": "^4.9.1",
     "@material-ui/lab": "^4.0.0-alpha.48",
     "FontLoader": "0.0.2",
+    "akima-interpolator": "^1.0.0",
     "aliasify": "^2.1.0",
     "babel-plugin-transform-react-jsx": "^6.24.1",
     "babelify": "^10.0.0",
