@@ -253,11 +253,6 @@ class Plot extends Component {
     }
   }
 
-  componentWillReceiveProps(nextProps) {
-    // TODO should do a deep extend
-    this.setState(nextProps);
-  }
-
   render(props, state) {
     var i;
 
@@ -277,7 +272,7 @@ class Plot extends Component {
       }
     }
 
-    var interpolated = this.interpolate(this.state.xvals, this.state.yvals, this.state.interpolateMode);
+    var interpolated = this.interpolate(this.state.xvals, this.state.yvals, this.props.interpolateMode);
     
     return (
         <svg class="xy-plot-min" width={this.state.width} height={this.state.height} shape-rendering="geometricPrecision">

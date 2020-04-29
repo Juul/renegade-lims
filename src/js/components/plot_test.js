@@ -20,7 +20,7 @@ class PlotTest extends Component {
     }
   }
 
-  up() {
+  toggleInterpolate() {
     if(this.state.interpolateMode === 'akima') {
       this.setState({
         interpolateMode: 'lines'
@@ -61,7 +61,7 @@ class PlotTest extends Component {
         <Container>
         <h3>Plot test</h3>
         <Plot width="400" height="300" xvals={xvals} yvals={yvals} interpolateMode={this.state.interpolateMode} />
-        <button onclick={this.up.bind(this)}>up</button>
+        <button onclick={this.toggleInterpolate.bind(this)}>Toggle interpolate</button>
       </Container>
     ))
   }
