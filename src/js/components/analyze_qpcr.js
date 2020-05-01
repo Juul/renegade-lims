@@ -14,6 +14,7 @@ const async = require('async');
 const utils = require('../utils.js');
 const validatorUtils = require('../../../validators/common/utils.js');
 const Plate = require('./plate.js');
+const Plot = require('./plot.js');
 const eds = require('../../../lib/eds-handler');
 
 const negPosNames = ['NTC', 'POS'];
@@ -360,10 +361,10 @@ class AnalyzeQPCR extends Component {
       result.id = result.metadata.plateName;
       
       if(!validatorUtils.validateUUID(result.id)) {
-        app.notify(".eds file has invalid result ID: " + result.id, 'error');
+        app.notify(".eds file has invalid result ID", 'error');
         return;
       }
-      
+
       this.setState({
         analyzing: false,
         edsFileData: fileData
@@ -384,8 +385,8 @@ class AnalyzeQPCR extends Component {
         try {
           this.postProcessResult(result, plate);
         } catch(e) {
-          console.error(err);
-          app.notify(err, 'error');
+          console.error(e);
+          app.notify(e, 'error');
           return;
         }
         
@@ -460,7 +461,7 @@ class AnalyzeQPCR extends Component {
       }
 
       // We use the qpcr analysis resultID as the rimbaud resultID
-      this.generateRimbaudReports(result, resultID, (err, reports) => {
+      this.generateRimbaudReports(result, (err, reports) => {
         if(err) {
           console.error(err);
           app.notify("Failed to generate Rimbaud reports: " + err, 'error');
@@ -493,7 +494,7 @@ class AnalyzeQPCR extends Component {
   //   plateBarcode, sampleID and sampleBarcode
   //   user who ran analysis
   //   user who did initial accession  
-  generateRimbaudReport(result, wellName, resultID, cb) {
+  generateRimbaudReport(result, wellName, cb) {
     const well = this.state.plate.wells[wellName];
     if(!well || !well.id) return cb(new Error("Well "+wellName+" not found in plate layout"));
 
@@ -536,7 +537,7 @@ class AnalyzeQPCR extends Component {
       }
       
       const report = {
-        id: resultID,
+        id: result.id,
         orderID: sample.formBarcode,
         sampleID: sample.id,
         sampleBarcode: sample.barcode,
@@ -556,7 +557,7 @@ class AnalyzeQPCR extends Component {
   }
   
 
-  generateRimbaudReports(result, resultID, cb) {
+  generateRimbaudReports(result, cb) {
     if(!result) return cb(new Error("No results to report"));
 
     const reports = [];
@@ -564,7 +565,7 @@ class AnalyzeQPCR extends Component {
     
     async.eachSeries(wellNames, (wellName, next) => {
 
-      this.generateRimbaudReport(result, wellName, resultID, (err, report) => {
+      this.generateRimbaudReport(result, wellName, (err, report) => {
         if(err) return next(err);
 
         if(report) {
@@ -730,6 +731,41 @@ class AnalyzeQPCR extends Component {
     return count;
   }
 
+  showPlot(data) {
+    console.log("Data:", data);
+    this.setState({
+      plot: {
+        data: data
+      }
+    });
+  }
+  
+  showPlotForLink(key, e) {
+    if(!e || !e.target) return;
+    const wellName = e.target.getAttribute('data-well');
+    if(!wellName) return;
+
+    const wellResult = this.state.result.wells[wellName];
+    if(!wellResult) {
+      app.notify("Unable to find data for well " + wellName, 'error');
+      return;
+    }
+
+    const rawData = wellResult.raw[key];
+    if(!rawData) {
+      app.notify("Unable to find raw data for well " + wellName, 'error');
+      return;
+    }
+    
+    this.showPlot(rawData);
+  }
+  
+  showPlotForKey(key) {
+    return (e) => {
+      this.showPlotForLink(key, e);
+    };
+  }
+  
   renderPrevResults(prevResults) {
     var rows = [];
     var wellResult;
@@ -760,9 +796,32 @@ class AnalyzeQPCR extends Component {
         </table>
     );
   }
+
+  renderPlot(plotData) {
+    var xvals = [];
+    var yvals = plotData.data;
+    var i;
+    for(i=1; i <= yvals.length; i++) {
+      xvals.push(i);
+    }
+    
+    return (
+      <div class="popup">
+        <Container>
+        <h3>Plot test</h3>
+        <Plot width="400" height="300" xvals={xvals} yvals={yvals} interpolateMode='lines' />
+        </Container>
+      </div>
+    );
+  }
   
   render() {
 
+    var plot = '';
+    if(this.state.plot) {
+      plot = this.renderPlot(this.state.plot)
+    }
+    
     if(!eds) {
       return (
           <Container>
@@ -870,7 +929,7 @@ class AnalyzeQPCR extends Component {
                 <td><input type="checkbox" onClick={this.toggleResult.bind(this)} value={wellName} disabled={!result.reportable} checked={!!result.reportable && this.state.toggles[wellName]} /></td>
                 <td>{wellName}</td>
                 <td>{(plateMapWell) ? plateMapWell.barcode : "No plate mapping"}</td>
-                <td>{(resultWell) ? resultWell['FAM']['Ct'] : "No result"}</td>
+                <td><Link onClick={this.showPlotForKey('FAM').bind(this)} data-well={wellName} style="cursor:pointer">{(resultWell) ? resultWell['FAM']['Ct'] : "No result"}</Link></td>
                 <td>{(resultWell) ? resultWell['VIC']['Ct'] : "No result"}</td>
                 <td>?</td>
                 <td>{result.result}</td>
@@ -926,7 +985,8 @@ class AnalyzeQPCR extends Component {
         <h3>qPCR result analyzer</h3>
         {metadata}
         {plate}
-        {results}
+      {results}
+      {plot}
       </Container>
     )
   }

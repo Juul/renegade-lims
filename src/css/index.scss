@@ -190,3 +190,14 @@ svg.xy-plot-min {
     text.y-axis-label {
     }
 }
+
+/* plot popup */
+
+.popup {
+    position: fixed;
+    display: block;
+    top: 100px;
+    left: 100px;
+    right: 100px;
+    bottom: 100px;
+}
