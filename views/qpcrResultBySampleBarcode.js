@@ -11,6 +11,7 @@ const validateQpcrResult = require('../validators/qpcr_result.js');
 function createSampleResult(plateResult, well, wellName) {
 
   return {
+    resultID: plateResult.id,
     plateID: plateResult.plateID,
     plateBarcode: plateResult.plateBarcode,
     wellName: wellName,

@@ -12,6 +12,7 @@ const timestamp = require('monotonic-timestamp');
 const async = require('async');
 
 const utils = require('../utils.js');
+const validatorUtils = require('../../../validators/common/utils.js');
 const Plate = require('./plate.js');
 const eds = require('../../../lib/eds-handler');
 
@@ -270,7 +271,8 @@ class AnalyzeQPCR extends Component {
         prevResults = [];
         for(sampleResult of sampleResults) {
           
-          if(sampleResult.plateID === plate.id) {
+          if(!sampleResult.resultID || sampleResult.resultID === result.id) {
+            console.log("SKIPPING:", result.id);
             // Skip previous results for the same plate and sample barcode
             // since that's just a result from the previous analysis
             // of this exact same plate
@@ -349,7 +351,19 @@ class AnalyzeQPCR extends Component {
         app.notify(err, 'error');
         return;
       }
-        
+
+      if(!result.metadata || !result.metadata.plateName) {
+        app.notify(".eds file was missing a result ID", 'error');
+        return;
+      }
+      
+      result.id = result.metadata.plateName;
+      
+      if(!validatorUtils.validateUUID(result.id)) {
+        app.notify(".eds file has invalid result ID: " + result.id, 'error');
+        return;
+      }
+      
       this.setState({
         analyzing: false,
         edsFileData: fileData
@@ -419,7 +433,7 @@ class AnalyzeQPCR extends Component {
     result.edsFileData = this.state.edsFileData;
 
     console.log("SAVE:", result);
-    app.actions.saveQpcrResult(result, (err, resultID) => {
+    app.actions.saveQpcrResult(result, (err) => {
       if(err) {
         console.error(err);
         app.notify("Failed to save analyzed results: " + err, 'error');
@@ -593,13 +607,15 @@ class AnalyzeQPCR extends Component {
 
   }
 
+  outcomeToText(outcome) {
+    if(outcome === true) return 'Positive';
+    if(outcome === false) return 'Negative';
+    if(outcome === 'retest') return 'Retest';
+    return outcome;
+  }
+  
   toHumanResult(plateMapWell, resultWell) {
-    function toText(bool) {
-      if(bool === true) return 'Positive';
-      if(bool === false) return 'Negative';
-      return bool;
-    }
-    
+
     if(plateMapWell && plateMapWell.special) {
 
       if(!resultWell) {
@@ -614,14 +630,14 @@ class AnalyzeQPCR extends Component {
         return {
           msg: "This is a plate control",
           reportable: false,
-          result: toText(resultWell.outcome)
+          result: this.outcomeToText(resultWell.outcome)
         }
       } else {
         return {
           msg: "Plate control with unexpected qPCR result",
           reportable: false,
           fail: true,
-          result: toText(resultWell.outcome)
+          result: this.outcomeToText(resultWell.outcome)
         }
       }
     }
@@ -630,7 +646,7 @@ class AnalyzeQPCR extends Component {
       return {
         msg: "Unreportable: No well in well map for this qPCR result",
         reportable: false,
-        result: toText(resultWell.outcome)
+        result: this.outcomeToText(resultWell.outcome)
       }
     }
 
@@ -652,15 +668,23 @@ class AnalyzeQPCR extends Component {
       } else {
         return {
           reportable: true,
-          result: toText(resultWell.outcome),
+          result: this.outcomeToText(resultWell.outcome),
           msg: "Result determinted after re-test"
         }
       }
     }
     
+    if(resultWell.outcome === 'retest') {
+      return {
+        reportable: false,
+        result: "Retest",
+        msg: "Unable to determine result. Re-run sample on a new plate."
+      };
+    }
+
     return {
       reportable: true,
-      result: toText(resultWell.outcome)
+      result: this.outcomeToText(resultWell.outcome)
     }
   }
 
@@ -706,6 +730,37 @@ class AnalyzeQPCR extends Component {
     return count;
   }
 
+  renderPrevResults(prevResults) {
+    var rows = [];
+    var wellResult;
+    for(wellResult of prevResults) {
+      rows.push((
+          <tr>
+          <td>{utils.formatDateTime(wellResult.createdAt)}</td>
+          <td>{wellResult.plateBarcode}</td>
+          <td>{wellResult.result['FAM']['Ct']}</td>
+          <td>{wellResult.result['VIC']['Ct']}</td>
+          <td>{this.outcomeToText(wellResult.result.outcome)}</td>
+          </tr>
+      ));
+    }
+    
+    return (
+        <table cellspacing="3" border="1">
+        <thead>
+        <tr>
+        <th>Analyzed at</th>
+        <th>Plate</th>
+        <th>FAM Ct</th>
+        <th>VIC Ct</th>
+        <th>Result</th>
+        </tr>
+        </thead>
+        {rows}
+        </table>
+    );
+  }
+  
   render() {
 
     if(!eds) {
@@ -794,7 +849,7 @@ class AnalyzeQPCR extends Component {
                 <tr>
                 <td><input type="checkbox" disabled /></td>
                 <td>{wellName}</td>
-                <td colspan="6">No result for this well</td>                
+                <td colspan="7">No result for this well</td>                
                 </tr>
             ));
             continue;
@@ -803,7 +858,12 @@ class AnalyzeQPCR extends Component {
           if(plateMapWell || well) {
             let resultWell = well.result;
             let result = this.toHumanResult(plateMapWell, resultWell)
+            let prevResults = '';
             if(result.fail) fail.push({well: wellName, msg: result.msg});
+
+            if(resultWell.prevResults && resultWell.prevResults.length) {
+              prevResults = this.renderPrevResults(resultWell.prevResults);
+            }
             
             wellResults.push((
                 <tr>
@@ -815,7 +875,7 @@ class AnalyzeQPCR extends Component {
                 <td>?</td>
                 <td>{result.result}</td>
                 <td>{result.msg || ''}</td>
-                
+                <td>{prevResults}</td>
               </tr>
             ));
           }
@@ -844,6 +904,7 @@ class AnalyzeQPCR extends Component {
             <th>Re-run count</th>
             <th>Result</th>
             <th>Message</th>
+            <th>Previous result(s)</th>
             </tr>
             </thead>
             <tbody>

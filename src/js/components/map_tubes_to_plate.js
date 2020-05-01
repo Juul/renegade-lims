@@ -241,7 +241,6 @@ class EditPlate extends Component {
       } else if(well.special) {
         console.log(well);
         if(well.special === 'positiveControl') {
-          console.log("YAH", wellName);
           wells[wellName] = 'POS';  
         } else if(well.special === 'negativeControl') {
           wells[wellName] = 'NTC';
@@ -253,15 +252,18 @@ class EditPlate extends Component {
       }
         
     }
-    return;
+
     var createdBy = plate.createdBy;
     if(!createdBy || createdBy.toLowerCase() === 'unknown') {
       createdBy = 'admin';
     }
+
+    const resultID = uuid();
     
     const o = {
       barcode: plate.barcode,
-      name: "Generated on " + utils.formatDateTime(plate.createdAt),
+      name: resultID, // Save the result ID as the .eds experiment name
+      description: "Generated on " + utils.formatDateTime(plate.createdAt),
       operator: createdBy,
       wells: wells
     };
