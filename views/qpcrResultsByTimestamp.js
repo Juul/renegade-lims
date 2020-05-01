@@ -12,11 +12,14 @@ module.exports = function(db) {
     // Called with a batch of log entries to be processed by the view.
     // No further entries are processed by this view until 'next()' is called.
     map: function(entries, next) {
-      
+
+      var entry;
       const batch = [];
-      entries.forEach(function(entry) {
+      for(entry of entries) {
         if(!validateQpcrResult(entry)) return next();
-        
+
+        // TODO always add ID to end of timestamp key
+        // TODO check other views for this mistake
         const ts = nicify(entry);
         var key = charwise.encode(ts);
         
@@ -25,7 +28,7 @@ module.exports = function(db) {
           key: key,
           value: entry.value
         });
-      })
+      }
 
       if(!batch.length) return next();
       db.batch(batch, {valueEncoding: 'json'}, next);

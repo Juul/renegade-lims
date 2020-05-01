@@ -3,6 +3,7 @@
 import { h, Component } from 'preact';
 import {route} from 'preact-router';
 import { view } from 'z-preact-easy-state';
+import linkState from 'linkstate';
 
 import Link from '@material-ui/core/Link';
 import Container from '@material-ui/core/Container';
@@ -13,6 +14,8 @@ const async = require('async');
 const utils = require('../utils.js');
 const Plate = require('./plate.js');
 const eds = require('../../../lib/eds-handler');
+
+const negPosNames = ['NTC', 'POS'];
 
 // Max file size in bytes to read into client
 const FILE_SIZE_MAX = 1024 * 1024 * 1024 * 10; // 10 MB
@@ -36,22 +39,17 @@ class AnalyzeQPCR extends Component {
 //    this.componentDidUpdate();
   }
 
-  getPlate(barcode) {
+  getPlate(barcode, cb) {
     app.actions.getPhysicalByBarcode(barcode.toLowerCase(), (err, plate) => {
       if(err) {
         if(!err.notFound) {
-          app.notify("Plate barcode not found in LIMS", 'error');
-          return;
+          return cb(new Error("Plate barcode not found in LIMS"));
         }
-        app.notify(err, 'error');
-        return;
+        return cb(new Error(err));
       }
 
-      this.calculateWellResults(this.state.result.wells, plate);
-      
-      this.setState({
-        plate: plate
-      });
+      cb(null, plate);
+        
     });
   }
 
@@ -83,10 +81,10 @@ class AnalyzeQPCR extends Component {
     var reader = new FileReader();
     
     reader.onload = (e) => {
-      this.fileData = e.target.result;      
 
       try {
         this.analyze(e.target.result);
+        
       } catch(e) {
         console.error(e);
         app.notify("Failed to parse .eds file", 'error');
@@ -105,7 +103,7 @@ class AnalyzeQPCR extends Component {
   // Returns a string on error
   // Return false if test came out negative
   // and true if it came out positive
-  calculateWellResult(famCtStr, vicCtStr, ctrl) {
+  calculateWellOutcome(famCtStr, vicCtStr, ctrl) {
     const undeterminedRegExp = new RegExp(/^\s*undetermined\s*$/i);
         
     const famCt = parseFloat(famCtStr);
@@ -152,7 +150,8 @@ class AnalyzeQPCR extends Component {
     }
   }
 
-  calculateWellResults(wells, plate) {
+  // Set the .outcome for each well 
+  calculateWellOutcomes(wells, plate) {
     var plateWells = plate.wells;
 
     var wellName, well, outcome, ctrl;
@@ -168,30 +167,232 @@ class AnalyzeQPCR extends Component {
       } else if(!well['VIC']) {
         outcome = "Missing data from VIC channel";
       } else {
-        outcome = this.calculateWellResult(well['FAM']['Ct'], well['VIC']['Ct'], ctrl);
+        outcome = this.calculateWellOutcome(well['FAM']['Ct'], well['VIC']['Ct'], ctrl);
       }
 
       well.outcome = outcome;
     }
   }
+
+  // Given a result.wells object and a sample barcode
+  // return the well that matches this barcode
+  resultWellByBarcode(wells, barcode) {
+    barcode = barcode.toLowerCase();
+    var well, wellName;
+    for(wellName in wells) {
+      well = wells[wellName];
+      if(well.barcode === barcode) {
+        return well;
+      }
+    }
+    return undefined;
+  }
+
+  // For a well/sample which had the outcome: 'retest'
+  // Given the current result for this well
+  // and an array of previous results for the same sample
+  // return an updated outcome.
+  calculateRetestOutcome(wellResult, prevResults) {
+    const undeterminedRegExp = new RegExp(/^\s*undetermined\s*$/i);
+
+    var allSampleResults = prevResults.concat([wellResult]);
+
+    // how many results had a FAM Ct higher than 38?
+    var highFAMCtCount = 0;
+
+    // how many results had a VIC Ct lower than or equal to 32?
+    var lowVICCtCount = 0;
+    
+    var sampleResult, result, famCtStr, famCt, famCtUn, vicCtStr, vicCt, vicCtUn;
+    for(sampleResult of allSampleResults) {
+      result = sampleResult.result;
+
+      famCtStr = result['FAM']['Ct'];
+      famCt = parseFloat(famCtStr);
+      famCtUn = famCtStr.match(undeterminedRegExp);
+      vicCtStr = result['VIC']['Ct'];
+      vicCt = parseFloat(vicCtStr);
+      vicCtUn = vicCtStr.match(undeterminedRegExp);
+
+//      console.log("EEE:", wellResult.barcode, famCt)
+      
+      if(!famCtUn && famCt > 38) {
+        highFAMCtCount++;
+      }
+      
+      if(!vicCtUn && vicCt <= 32) {
+        lowVICCtCount++;
+      }
+      
+    }
+
+    // TODO check if S-curve or not
+    
+    // If more than one test resulted in FAM Ct > 38 then we can report positive
+    if(highFAMCtCount >= 2) {
+      console.log("  positive!");
+      return true;
+    }
+
+    // If more than one test resulted in VIC Ct <= 32 then we can report negative
+    if(lowVICCtCount >= 2) {
+      return false;
+    }
+    
+    return "Failed after retest. Re-extract RNA or re-swab patient.";
+  }
   
-  analyze(data) {    
-    eds.parse(data, (err, res) => {
+  // Check if any of the results that need re-testing
+  // have previously been tested
+  // and if so, update the .outcome accordingly
+  handleRetests(result, plate, cb) {
+    // The barcodes for samples where we want to check
+    // if they've previously been tested 
+    const barcodesToCheck = []; 
+    
+    var well, wellName, wellResult;
+    for(wellName in result.wells) {
+      well = result.wells[wellName];
+      if(!well.result) continue;
+      
+      if(well.result.outcome === 'retest') {
+        barcodesToCheck.push(well.barcode);
+      }
+    }
+
+    app.actions.getResultsForSampleBarcodes(barcodesToCheck, (err, allSampleResults) => {
+      if(err) return cb(err);
+
+      var sampleBarcode, sampleResults, sampleResult, well, outcome, prevResults;
+      for(sampleBarcode in allSampleResults) {
+        sampleResults = allSampleResults[sampleBarcode];
+
+        prevResults = [];
+        for(sampleResult of sampleResults) {
+          
+          if(sampleResult.plateID === plate.id) {
+            // Skip previous results for the same plate and sample barcode
+            // since that's just a result from the previous analysis
+            // of this exact same plate
+            continue;
+          }
+
+          prevResults.push(sampleResult);
+        }
+        if(!prevResults.length) continue;
+        
+        well = this.resultWellByBarcode(result.wells, sampleResult.barcode);
+        if(!well) {
+          return cb(new Error("Unable to find well for sample: " + sampleResult.barcode));
+        }
+
+        if(!well.result || well.result.outcome !== 'retest') {
+          return cb(new Error("Unexpected mismatch between current and previous result"));
+        }
+
+        outcome = this.calculateRetestOutcome(well, prevResults);
+
+        well.result.outcome = outcome;
+        well.result.prevResults = prevResults;
+      }
+      cb(null);
+    });
+  }
+  
+  // Post process the parsed result
+  // check the result layout against the plate layout
+  postProcessResult(result, plate) {
+    if(!result.wells) return;
+
+    var well, wellName, wellResult;
+    for(wellName in result.wells) {
+      well = result.wells[wellName];
+      wellResult = well.result;
+      if(!wellResult) continue;
+
+      if(!wellResult['FAM'] || !wellResult['FAM']['Sample Name']) {
+        continue;
+      }
+      
+      // The field 'Sample Name' from the parsed .eds file
+      // is the barcode of the sample.
+      // Since we're using the qPCR software's "sample name" field
+      // to store these barcodes so we can map the results back to their samples.
+      // For negative and positive controls these will be 'NTC' or 'POS'
+      const sampleBarcode = wellResult['FAM']['Sample Name'].trim();
+      
+      if(negPosNames.indexOf(sampleBarcode) >= 0) {
+        // TODO check for plate layout changes for pos/neg controls
+        continue;
+      }
+      well.barcode = sampleBarcode.toLowerCase();
+
+      if(this.state.allowDiscrepancies) {
+        continue;
+      }
+      
+      if(!plate.wells[wellName]) {
+        throw new Error("Plate layout was changed since .eds file was generated! Well "+wellName+" has sample "+well.barcode+" mapped in the .eds file, but is not mapped in the plate layout");
+      }
+      if(well.barcode !== plate.wells[wellName].barcode.toLowerCase()) {
+        throw new Error("Plate layout was changed since .eds file was generated! Well "+wellName+" has sample "+well.barcode+" mapped in the plate layout, but the .eds file has the same well mapped to sample "+plate.wells[wellName].barcode.toLowerCase());
+      }
+ 
+    }
+  };
+  
+  analyze(fileData) {
+    
+    eds.parse(fileData, (err, result) => {
       if(err) {
         console.error(err);
         app.notify(err, 'error');
         return;
       }
-
+        
       this.setState({
         analyzing: false,
-        result: res
+        edsFileData: fileData
       })
-      
-      this.getPlate(res.metadata.barcode);
-    });
-    
+        
+      this.getPlate(result.metadata.barcode, (err, plate) => {
+        if(err) {
+          console.error(err);
+          app.notify(err, 'error');
+          return;
+        }
 
+        // Sets the .outcome for each well
+        this.calculateWellOutcomes(result.wells, plate);
+        
+        console.log("PLATE:", JSON.stringify(plate, null, 2));
+
+        try {
+          this.postProcessResult(result, plate);
+        } catch(e) {
+          console.error(err);
+          app.notify(err, 'error');
+          return;
+        }
+        
+
+        this.handleRetests(result, plate, (err) => {
+          if(err) {
+            console.error(err);
+            app.notify(err, 'error');
+            return;
+          }
+
+          console.log("RESULT:", result);
+          
+          this.setState({
+            plate: plate,
+            result: result
+          });
+          
+        });
+      });
+    });
   }
 
 
@@ -207,15 +408,17 @@ class AnalyzeQPCR extends Component {
       return;
     }
 
-    if(!this.state.csvData) {
+    if(!this.state.edsFileData) {
       app.notify("No .eds file associated. Cannot save or report.", 'error');
       return;
     }
 
     const result = Object.assign({}, this.state.result); // clone results
     result.plateID = this.state.plate.id;
-    result.csvData = this.state.csvData;
-        
+    result.plateBarcode = this.state.plate.barcode;
+    result.edsFileData = this.state.edsFileData;
+
+    console.log("SAVE:", result);
     app.actions.saveQpcrResult(result, (err, resultID) => {
       if(err) {
         console.error(err);
@@ -230,10 +433,10 @@ class AnalyzeQPCR extends Component {
         if(!this.state.toggles[wellName]) continue;
         
         let plateMapWell = this.state.plate.wells[wellName];
-        let resultWell = this.state.results.wells[wellName];
+        let resultWell = this.state.result.wells[wellName];
         
         if(!plateMapWell || !resultWell) {
-          continue
+          continue;
         }
         
         let res = this.toHumanResult(plateMapWell, resultWell)
@@ -265,7 +468,7 @@ class AnalyzeQPCR extends Component {
    
   }
 
-  // results is an object like: {orderID: <string>, data: []}
+  // result is an object like: {orderID: <string>, data: []}
   // where the data array will contain an array of all the relevant data entries.
   // An entry is e.g.
   // {type: 'testResult', plateID: <string>, well: 'A1', result: 'positive', protocol: 'bgi', version: '0.0.1'}
@@ -280,8 +483,11 @@ class AnalyzeQPCR extends Component {
     const well = this.state.plate.wells[wellName];
     if(!well || !well.id) return cb(new Error("Well "+wellName+" not found in plate layout"));
 
-//    console.log("Well ID:", well.id, well.special);
-
+    // Skip unchecked wells
+    if(!this.state.toggles[wellName]) {
+      return cb();
+    }
+    
     // Special wells are e.g. positive and negative controls
     // They do not have samples associated
     if(well.special) {
@@ -299,14 +505,16 @@ class AnalyzeQPCR extends Component {
       const resultWell = result.wells[wellName];
 
       // We can't report if there's no result
-      if(!resultWell) return cb();
+      if(!resultWell || !resultWell.result) return cb();
 
+      console.log("Well:", resultWell);
+      
       var rimbaudResult;
-      if(resultWell.result === true) {
+      if(resultWell.result.outcome === true) {
         rimbaudResult = 'positive';
-      } else if(resultWell.result === false) {
+      } else if(resultWell.result.outcome === false) {
         rimbaudResult = 'negative';
-      } else if(resultWell.result === 'inconclusive') {
+      } else if(resultWell.result.outcome === 'inconclusive') {
         rimbaudResult = 'inconclusive';
       } else {
         // we don't report if it's not one of those three values
@@ -433,6 +641,22 @@ class AnalyzeQPCR extends Component {
         result: 'NA'
       }
     }
+
+    if(resultWell.prevResults && resultWell.prevResults.length) {
+      if(resultWell.outcome === 'retest') {
+        return {
+          reportable: false,
+          result: 'failed',
+          msg: "Result still undetermined after re-test"
+        }
+      } else {
+        return {
+          reportable: true,
+          result: toText(resultWell.outcome),
+          msg: "Result determinted after re-test"
+        }
+      }
+    }
     
     return {
       reportable: true,
@@ -505,6 +729,7 @@ class AnalyzeQPCR extends Component {
       return (
           <Container>
           <p>Ready for analysis: {this.state.file.name}</p>
+          <p>Allow discrepancies between plate map and qPCR results? <input type="checkbox" onInput={linkState(this, "allowDiscrepancies")} /></p>
           <p><button onClick={this.loadFile.bind(this)}>Analyze</button></p>
           {plate}
           </Container>
@@ -563,8 +788,17 @@ class AnalyzeQPCR extends Component {
 
           let plateMapWell = this.state.plate.wells[wellName];
 
-          let well = this.state.result.wells[wellName]
-          
+          let well = this.state.result.wells[wellName];
+          if(!well) {
+            wellResults.push((
+                <tr>
+                <td><input type="checkbox" disabled /></td>
+                <td>{wellName}</td>
+                <td colspan="6">No result for this well</td>                
+                </tr>
+            ));
+            continue;
+          }
           
           if(plateMapWell || well) {
             let resultWell = well.result;
@@ -580,7 +814,7 @@ class AnalyzeQPCR extends Component {
                 <td>{(resultWell) ? resultWell['VIC']['Ct'] : "No result"}</td>
                 <td>?</td>
                 <td>{result.result}</td>
-                <td></td>
+                <td>{result.msg || ''}</td>
                 
               </tr>
             ));

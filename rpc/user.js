@@ -3,6 +3,7 @@
 const fs = require('fs');
 const path = require('path');
 
+const async = require('async');
 const rpc = require('rpc-multistream');
 const timestamp = require('monotonic-timestamp');
 const uuid = require('uuid').v4;
@@ -86,7 +87,7 @@ module.exports = function(settings, labDeviceServer, dmScanner, labCore, adminCo
     },
 
     saveQpcrResult: function(userData, remoteIP, result, cb) {
-      console.log("Saving qPCR result:", result.id);
+      console.log("Saving qPCR result:", result);
       writer.saveQpcrResult(labCore, result, cb);
     },
     
@@ -132,7 +133,29 @@ module.exports = function(settings, labDeviceServer, dmScanner, labCore, adminCo
 
         cb(null, 'data:application/zip;base64,'+buf.toString('base64'));
       })
-    }
+    },
+
+    getResultsForSampleBarcode: function(userData, remoteIP, barcode, cb) {
+      labCore.api.qpcrResultBySampleBarcode.get(barcode, cb);
+    },
+
+    getResultsForSampleBarcodes: function(userData, remoteIP, barcodes, cb) {
+      var ret = {};
+      
+      async.eachSeries(barcodes, (barcode, next) => {
+
+        labCore.api.qpcrResultBySampleBarcode.get(barcode, (err, results) => {
+          if(err) return next(err);
+
+          ret[barcode] = results;
+          next();
+        });
+      }, function(err) {
+        if(err) return cb(err);
+        cb(null, ret);
+      });
+
+    },
     
   };
 };

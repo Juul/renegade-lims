@@ -117,8 +117,15 @@ module.exports = function() {
     generateEDSFile: function(dirpath, filename, data, cb) {
       app.remote.generateEDSFile(dirpath, filename, data, cb);
     },
-    
 
+    getResultsForSampleBarcode: function(barcode, cb) {
+      app.remote.getResultsForSampleBarcode(barcode, cb);
+    },
+
+    getResultsForSampleBarcodes: function(barcodes, cb) {
+      app.remote.getResultsForSampleBarcodes(barcodes, cb);
+    },
+    
     // TODO remove debug function
     increase: function() {
       app.state.count++;

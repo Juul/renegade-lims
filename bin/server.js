@@ -30,6 +30,7 @@ const swabsByTimeView = require('../views/swabsByTimestamp.js');
 const swabsByUserView = require('../views/swabsByUsername.js');
 const platesByTimestampView = require('../views/platesByTimestamp.js');
 const qpcrResultsByTimestampView = require('../views/qpcrResultsByTimestamp.js');
+const qpcrResultBySampleBarcodeView = require('../views/qpcrResultBySampleBarcode.js');
 const usersByGUIDView = require('../views/usersByGUID.js');
 const usersByNameView = require('../views/usersByName.js');
 
@@ -49,6 +50,7 @@ const OBJECTS_BY_BARCODE = 'ob'; // everything by barcode
 const SWAB_TUBES_BY_FORM_BARCODE = 'sfb';
 const SWAB_TUBES_BY_TIMESTAMP = 'stt';
 const QPCR_RESULTS_BY_TIMESTAMP = 'qrt';
+const QPCR_RESULT_BY_SAMPLE_BARCODE = 'qrsb';
 const SWABS_BY_TIME = 'st';
 const SWABS_BY_USER = 'su';
 const PLATES_BY_TIME = 'pt';
@@ -103,6 +105,7 @@ labCore.use('swabTubesByTimestamp', 1, view(sublevel(labDB, SWAB_TUBES_BY_TIMEST
 labCore.use('swabsByUser', 1, view(sublevel(labDB, SWABS_BY_USER, {valueEncoding: 'json'} ), swabsByUserView));
 labCore.use('platesByTimestamp', 1, view(sublevel(labDB, SWABS_BY_TIME, {valueEncoding: 'json'} ), platesByTimestampView));
 labCore.use('qpcrResultsByTimestamp', 1, view(sublevel(labDB, QPCR_RESULTS_BY_TIMESTAMP, {valueEncoding: 'json'} ), qpcrResultsByTimestampView));
+labCore.use('qpcrResultBySampleBarcode', 1, view(sublevel(labDB, QPCR_RESULT_BY_SAMPLE_BARCODE, {valueEncoding: 'json'} ), qpcrResultBySampleBarcodeView));
 
 adminCore.use('usersByGUID', 1, view(sublevel(adminDB, USERS_BY_GUID, {valueEncoding: 'json'} ), usersByGUIDView));
 adminCore.use('usersByName', 1, view(sublevel(adminDB, USERS_BY_NAME, {valueEncoding: 'json'} ), usersByNameView));
@@ -589,7 +592,9 @@ async function init() {
   tlsUtils.computeCertHashes(settings.tlsPeers);
 
   if(settings.rimbaud && settings.rimbaud.synchronizeOrders) {
-    rimbaud.startOrderSynchronizer(labCore);
+    if(!argv.introvert) {
+      rimbaud.startOrderSynchronizer(labCore);
+    }
   }
   
   if(settings.host) {

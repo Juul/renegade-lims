@@ -8,9 +8,9 @@ module.exports = function(o) {
   if(val.type !== 'qpcrResult') return false;
 
   if(!val.plateID) return false;
-  if(!val.csvData) return false;
-
-  // val.result contains actual result data and is optional
+  if(!val.plateBarcode) return false;
+  if(!val.edsFileData) return false;
+  if(!val.wells) return false;
   
   return true;
 }
