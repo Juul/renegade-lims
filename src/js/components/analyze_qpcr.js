@@ -7,6 +7,7 @@ import linkState from 'linkstate';
 
 import Link from '@material-ui/core/Link';
 import Container from '@material-ui/core/Container';
+import Modal from '@material-ui/core/Modal';
 
 const timestamp = require('monotonic-timestamp');
 const async = require('async');
@@ -731,11 +732,38 @@ class AnalyzeQPCR extends Component {
     return count;
   }
 
-  showPlot(data) {
-    console.log("Data:", data);
+  showPlot(wellName, key, wellResult) {
+
+    const rawData = wellResult.raw[key];
+    if(!rawData) {
+      app.notify("Unable to find raw data for well " + wellName, 'error');
+      return;
+    }
+
+    var title = "Plot for well " + wellName + " " + key;
+    
     this.setState({
       plot: {
-        data: data
+        title: title,
+        data: rawData
+      }
+    });
+  }
+
+  showPlotForResult(wellResult, key) {
+
+    const rawData = wellResult.raw[key];
+    if(!rawData) {
+      app.notify("Unable to find raw data for result", 'error');
+      return;
+    }
+
+    var title = "Plot for " + key;
+    
+    this.setState({
+      plot: {
+        title: title,
+        data: rawData
       }
     });
   }
@@ -743,21 +771,19 @@ class AnalyzeQPCR extends Component {
   showPlotForLink(key, e) {
     if(!e || !e.target) return;
     const wellName = e.target.getAttribute('data-well');
-    if(!wellName) return;
+    if(!wellName) {
+      const wellResult = e.target.getAttribute('data-result');
+      this.showPlotForResult(JSON.parse(wellResult), key);
+      return;
+    }
 
     const wellResult = this.state.result.wells[wellName];
     if(!wellResult) {
       app.notify("Unable to find data for well " + wellName, 'error');
       return;
     }
-
-    const rawData = wellResult.raw[key];
-    if(!rawData) {
-      app.notify("Unable to find raw data for well " + wellName, 'error');
-      return;
-    }
     
-    this.showPlot(rawData);
+    this.showPlot(wellName, key, wellResult);
   }
   
   showPlotForKey(key) {
@@ -774,8 +800,16 @@ class AnalyzeQPCR extends Component {
           <tr>
           <td>{utils.formatDateTime(wellResult.createdAt)}</td>
           <td>{wellResult.plateBarcode}</td>
-          <td>{wellResult.result['FAM']['Ct']}</td>
-          <td>{wellResult.result['VIC']['Ct']}</td>
+          <td>
+          <Link onClick={this.showPlotForKey('FAM').bind(this)} data-result={JSON.stringify(wellResult)} style="cursor:pointer">
+              {wellResult.result['FAM']['Ct']}
+            </Link>
+          </td>
+          <td>
+          <Link onClick={this.showPlotForKey('VIC').bind(this)} data-result={JSON.stringify(wellResult)} style="cursor:pointer">
+          {wellResult.result['VIC']['Ct']}
+        </Link>
+          </td>
           <td>{this.outcomeToText(wellResult.result.outcome)}</td>
           </tr>
       ));
@@ -797,20 +831,31 @@ class AnalyzeQPCR extends Component {
     );
   }
 
+  closePlot() {
+    this.setState({
+      plot: null
+    });
+  }
+  
   renderPlot(plotData) {
     var xvals = [];
     var yvals = plotData.data;
     var i;
+    console.log(yvals);
     for(i=1; i <= yvals.length; i++) {
       xvals.push(i);
     }
     
     return (
-      <div class="popup">
-        <Container>
-        <h3>Plot test</h3>
-        <Plot width="400" height="300" xvals={xvals} yvals={yvals} interpolateMode='lines' />
-        </Container>
+        <div class="popup" onClick={this.closePlot.bind(this)}>
+        <div class="vert-center">
+        <div class="horiz-center">
+        <div class="popup-box" onClick={(e) => {e.stopPropagation(); return false}}>
+        <h3>{plotData.title}</h3>
+        <Plot width="600" height="400" xvals={xvals} yvals={yvals} interpolateMode='lines' margin={{top: 10, right: 10, bottom: 30, left: 150}} />
+        </div>
+                </div>
+        </div>
       </div>
     );
   }
@@ -930,7 +975,7 @@ class AnalyzeQPCR extends Component {
                 <td>{wellName}</td>
                 <td>{(plateMapWell) ? plateMapWell.barcode : "No plate mapping"}</td>
                 <td><Link onClick={this.showPlotForKey('FAM').bind(this)} data-well={wellName} style="cursor:pointer">{(resultWell) ? resultWell['FAM']['Ct'] : "No result"}</Link></td>
-                <td>{(resultWell) ? resultWell['VIC']['Ct'] : "No result"}</td>
+                <td><Link onClick={this.showPlotForKey('VIC').bind(this)} data-well={wellName} style="cursor:pointer">{(resultWell) ? resultWell['VIC']['Ct'] : "No result"}</Link></td>
                 <td>?</td>
                 <td>{result.result}</td>
                 <td>{result.msg || ''}</td>

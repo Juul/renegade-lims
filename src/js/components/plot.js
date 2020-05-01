@@ -156,7 +156,7 @@ class Plot extends Component {
   drawYAxis(props) {
     var els = [];
     props = props || {};
-    props.offset = props.offset || 60;
+    props.offset = props.offset || 80;
     props.tickLength = props.tickLength || 10;
     props.labelEvery = props.labelEvery || 1; // label every n tick
     props.labelDecimals = props.labelDecimals || 2;
@@ -209,7 +209,7 @@ class Plot extends Component {
 
   translateToScreenX(x) {
     var retX;
-    // TODO don't recalculate this on every funcion run
+    // TODO don't recalculate this on every function run
     var width = this.state.width - this.state.margin.left - this.state.margin.right
     
     var factorX = width / (this.state.xAxis.to - this.state.xAxis.from);

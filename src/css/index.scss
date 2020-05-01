@@ -196,8 +196,32 @@ svg.xy-plot-min {
 .popup {
     position: fixed;
     display: block;
-    top: 100px;
-    left: 100px;
-    right: 100px;
-    bottom: 100px;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+.vert-center {
+    height: 100%;
+    padding: 0;
+    margin: 0;
+    display: -webkit-box;
+    display: -moz-box;
+    display: -ms-flexbox;
+    display: -webkit-flex;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.horiz-center {
+    width: auto;
+}
+
+.popup-box {
+    background-color: rgba(200, 200, 200, 1);
+    border: 1px solid black;
+    padding: 30px 30px;
 }
