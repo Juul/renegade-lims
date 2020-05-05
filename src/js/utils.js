@@ -3,6 +3,14 @@
 var date = require('date-and-time');
 
 const utils = {
+
+  formatDateTimeYMD: function(d) {
+    if(typeof d === 'number') d = new Date(d);
+    d = d || new Date();
+    const pattern = date.compile('YYYY-MM-DD');
+    return date.format(d, pattern);
+  },
+
   
   formatDateTime: function(d) {
     if(typeof d === 'number') d = new Date(d);

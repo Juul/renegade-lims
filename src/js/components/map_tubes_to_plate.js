@@ -269,7 +269,7 @@ class EditPlate extends Component {
     };
 
     const dirpath = "C:\\somedir"; // TODO get from settings.js
-    const filename = o.barcode+'_'+utils.formatDateTime(new Date()).replace(/\s+/g, '_')+'.eds';
+    const filename = utils.formatDateTimeYMD(new Date()).replace(/[\s\-]+/g, '_')+'_'+o.barcode.toUpperCase+'.eds';
     
     app.actions.generateEDSFile(dirpath, filename, o, (err, dataURL) => {
       if(err) {
