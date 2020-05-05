@@ -16,7 +16,7 @@ const utils = require('../utils.js');
 const validatorUtils = require('../../../validators/common/utils.js');
 const Plate = require('./plate.js');
 const Plot = require('./plot.js');
-const eds = require('../../../lib/eds-handler');
+const eds = require('eds-handler');
 
 const negPosNames = ['NTC', 'POS'];
 
