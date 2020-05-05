@@ -11,8 +11,8 @@ for(let i=65; i <= 90; i++) {
 function findNextFreeWell(rows, cols, occupied) {
   var r, c, key;
 
-  for(r=1; r <= rows; r++) {
-    for(c=1; c <= cols; c++) {
+  for(c=1; c <= cols; c++) {
+    for(r=1; r <= rows; r++) {
       key = rowNames[r-1]+c.toString();
       if(!occupied[key]) return key;
     }
