@@ -59,7 +59,7 @@ class PrintPlateLabel extends Component {
       this.labelMaker.drawLabel('labelPreview', startCode, copies, prefix);
 
       var imageData = this.labelMaker.getDataURL();
-      app.actions.printLabel(imageData, this.state.totalCopies, function(err) {
+      app.actions.printLabel('qlPrinter', imageData, this.state.totalCopies, function(err) {
         if(err) return app.notify(err, 'error');
 
         app.notify("Printing", 'success');
