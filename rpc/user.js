@@ -38,18 +38,14 @@ module.exports = function(settings, labDeviceServer, dmScanner, labCore, adminCo
       });
     },
 
-    printLabelAndIncrement: function(userData, remoteIP, imageData, toInc) {
-      // TODO implement
-    },
-    
-    printLabel: function(userData, remoteIP, imageData, copies, cb) {
+    printLabel: function(userData, remoteIP, printerType, imageData, copies, cb) {
       if(!imageData) return cb(new Error("Image data missing"));
       
       var mtch = imageData.match(/^data:image\/png;base64,(.*)/)
       if(!mtch) return cb(new Error("Image data not in data:image/png;base64 format"));
       
       var imageBuffer = new Buffer.from(mtch[1], 'base64');
-      return labDeviceServer.printWherever(imageBuffer, copies, cb);
+      return labDeviceServer.printWherever(printerType, imageBuffer, copies, cb);
     },
     
     getPhysical: function(userData, remoteIP, code, cb) {

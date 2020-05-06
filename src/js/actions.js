@@ -72,8 +72,8 @@ module.exports = function() {
       app.remote.savePhysical(labelData, imageData, doPrint, cb);
     },
 
-    printLabel(imageData, copies, cb) {
-      app.remote.printLabel(imageData, copies, cb);
+    printLabel(printerType, imageData, copies, cb) {
+      app.remote.printLabel(printerType, imageData, copies, cb);
     },
     
     login: function(username, password, cb) {

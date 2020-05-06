@@ -5,15 +5,15 @@ import linkState from 'linkstate';
 
 import Container from '@material-ui/core/Container';
 
-var PlateLabelMaker = require('../plate_labelmaker.js');
+var TubeLabelMaker = require('../tube_labelmaker.js');
 var settings = require('../../../settings.web.js');
 
-class PrintPlateLabel extends Component {
+class PrintTubeLabel extends Component {
   
   constructor(props) {
     super(props);
 
-    this.labelMaker = new PlateLabelMaker({
+    this.labelMaker = new TubeLabelMaker({
     });
 
     this.setState({
@@ -34,7 +34,7 @@ class PrintPlateLabel extends Component {
     this.labelMaker.drawLabel('labelPreview', this.state.customCode);
 
     var imageData = this.labelMaker.getDataURL();
-    app.actions.printLabel('qlPrinter', imageData, this.state.totalCopies, function(err) {
+    app.actions.printLabel('dymoPrinter', imageData, this.state.totalCopies, function(err) {
       if(err) return app.notify(err, 'error');
 
       app.notify("Printing", 'success');
@@ -56,7 +56,7 @@ class PrintPlateLabel extends Component {
 
       if(err) return app.actions.notify(err, 'error');
 
-      this.labelMaker.drawLabel('labelPreview', startCode, copies, prefix);
+      this.labelMaker.drawLabel('labelPreview', prefix + startCode);
 
       var imageData = this.labelMaker.getDataURL();
       app.actions.printLabel(imageData, this.state.totalCopies, function(err) {
@@ -83,26 +83,6 @@ class PrintPlateLabel extends Component {
     })
   }
   
-  updateLabelCopies(e) {
-    var copies = e.target.value;
-
-    if(copies !== '') {
-      copies = parseInt(copies);
-      if(copies > 15) copies = 15;
-      if(copies < 1) copies = 1;
-      this.setState({
-        copies: copies
-      })
-    }
-    if(copies) {
-      var numUniqueCodes = this.labelMaker.drawLabel('labelPreview', 1, copies);
-      
-      this.setState({
-        numUniqueCodes: numUniqueCodes
-      })
-    }
-  }
-
   componentDidUpdate(prevProps) {
     prevProps = prevProps || {}
     if(this.props.customCode
@@ -113,46 +93,28 @@ class PrintPlateLabel extends Component {
   }
   
   componentDidMount() {
-    var numUniqueCodes = this.labelMaker.drawLabel('labelPreview', 1, this.state.copies);
-    
-    this.setState({
-      numUniqueCodes: numUniqueCodes
-    });
+    this.labelMaker.drawLabel('labelPreview', 1);
+
     this.componentDidUpdate();
   }
 
 
   
 	render() {
-
-    var warning = '';
-    if(this.state.customCode) {
-      warning = (
-          <p><b>Warning:</b> Only use the custom barcode feature when re-printing destroyed or lost barcode stickers or risk having two different items labeled with the same code.</p>
-      );
-    }
-
-    var numIdentical = '';
-    numIdentical = (
-        <p>Number of identical barcodes per label (1 to 15): <input type="text" value={this.state.copies} onInput={this.updateLabelCopies.bind(this)} disabled={!!this.state.customCode} /></p>
-    );
-    
     return (
         <Container>
-        <h3>Print plate labels</h3>
-        {numIdentical}
+        <h3>Print tube label</h3>
         <p>Custom barcode: <input type="text" value={this.state.customCode} onInput={this.updateCustomCode.bind(this)} /></p>
         <p>Copies to print: <input type="text" value={this.state.totalCopies} onInput={linkState(this, 'totalCopies')} /></p>
-        {warning}
         <p><input type="button" onClick={this.print.bind(this)} value="Print" /></p>
 
         <h4>Print preview</h4>
-          <div style="width:174px;height:560px;">
-            <canvas id="labelPreview" class="labelPreview" width="174" height="560"></canvas>
+          <div style="width:187px;height:361px;">
+            <canvas id="labelPreview" class="labelPreview" width="187" height="361"></canvas>
         </div>
         </Container>
     )
   }
 }
 
-module.exports = view(PrintPlateLabel);
+module.exports = view(PrintTubeLabel);
