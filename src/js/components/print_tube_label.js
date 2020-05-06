@@ -49,17 +49,17 @@ class PrintTubeLabel extends Component {
       return;
     }
     
-    
     const copies = this.state.copies;
     
-    app.actions.getBarcodes(this.state.numUniqueCodes, function(err, startCode, howMany, prefix) {
-
+    app.actions.getBarcodes(1, function(err, startCode, howMany, prefix) {
       if(err) return app.actions.notify(err, 'error');
 
       this.labelMaker.drawLabel('labelPreview', prefix + startCode);
 
+      const copies = this.state.totalCopies || 1;
+      
       var imageData = this.labelMaker.getDataURL();
-      app.actions.printLabel(imageData, this.state.totalCopies, function(err) {
+      app.actions.printLabel('dymoPrinter', imageData, copies, function(err) {
         if(err) return app.notify(err, 'error');
 
         app.notify("Printing", 'success');
