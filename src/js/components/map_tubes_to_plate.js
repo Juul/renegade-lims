@@ -268,7 +268,10 @@ class EditPlate extends Component {
       wells: wells
     };
 
-    const dirpath = "C:\\somedir"; // TODO get from settings.js
+    //    const dirpath = "C:\\somedir";
+    
+    // TODO get from settings.js
+    const dirpath = "C:\\Applied Biosystems\\7500\\experiments\\Renegade";
     const filename = utils.formatDateTimeYMD(new Date()).replace(/[\s\-]+/g, '_')+'_'+o.barcode.toUpperCase()+'.eds';
     
     app.actions.generateEDSFile(dirpath, filename, o, (err, dataURL) => {
