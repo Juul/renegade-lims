@@ -99,7 +99,6 @@ const labLocal = new LabLocal(localDB, settings.labBarcodePrefix);
 
 labCore.use('objectsByGUID', 1, view(sublevel(labDB, OBJECTS_BY_GUID, {valueEncoding: 'json'}), objectsByGUIDView));
 labCore.use('objectsByBarcode', 1, view(sublevel(labDB, OBJECTS_BY_BARCODE, {valueEncoding: 'json'}), objectsByBarcodeView));
-labCore.use('objectsByBarcode', 1, view(sublevel(labDB, OBJECTS_BY_BARCODE, {valueEncoding: 'json'}), objectsByBarcodeView));
 labCore.use('swabTubesByFormBarcode', 1, view(sublevel(labDB, SWAB_TUBES_BY_FORM_BARCODE, {valueEncoding: 'json'}), swabTubesByFormBarcodeView));
 labCore.use('swabTubesByTimestamp', 1, view(sublevel(labDB, SWAB_TUBES_BY_TIMESTAMP, {valueEncoding: 'json'}), swabTubesByTimestampView));
 labCore.use('swabsByUser', 1, view(sublevel(labDB, SWABS_BY_USER, {valueEncoding: 'json'} ), swabsByUserView));
