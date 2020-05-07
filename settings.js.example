@@ -116,5 +116,13 @@ module.exports = {
     basePath: '/rim-lab-rest', // where the web app is mounted
     secretKey: '<your secret key>',
     synchronizeOrders: 1200 // automatically sync order and sample ID assocications to rimbaud as they come into existance and re-try every this many seconds (only one peer in the renegade-lims network should be doing this)
+  },
+
+  // Settings relating to .eds file generating and parsing
+  eds: {
+    // Generated .eds files should have this SampleVolume
+    // set in tcprotocol.xml
+    sampleVolume: 30.0
   }
+
 };

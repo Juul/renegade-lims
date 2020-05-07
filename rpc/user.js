@@ -124,7 +124,7 @@ module.exports = function(settings, labDeviceServer, dmScanner, labCore, adminCo
     },
 
     generateEDSFile: function(userData, remoteIP, dirpath, filename, data, cb) {
-      eds.generate(dirpath, filename, data, 'nodebuffer', function(err, buf) {
+      eds.generate(dirpath, filename, data, settings.eds, 'nodebuffer', function(err, buf) {
         if(err) return cb(err);
 
         cb(null, 'data:application/zip;base64,'+buf.toString('base64'));
