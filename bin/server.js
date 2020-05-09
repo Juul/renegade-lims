@@ -63,7 +63,9 @@ const USERS_BY_NAME = 'un';
 const argv = minimist(process.argv.slice(2), {
   boolean: [
     'debug',
-    'init' // initialize a new LIMS network
+    'init', // initialize a new LIMS network
+    'introvert',
+    'insecure' // don't authenticate anything. only for testing
   ],
   alias: {
     'd': 'debug', // enable debug output
@@ -406,17 +408,23 @@ function initInbound() {
     key: settings.tlsKey,
     cert: settings.tlsCert,
     requestCert: true,
-    rejectUnauthorized: true,
+    rejectUnauthorized: !argv.insecure,
     enableTrace: !!argv.debug
     
   }, function(socket) {
     console.log("Inbound connection");
     
-    const peer = tlsUtils.getPeerCertEntry(settings.tlsPeers, socket.getPeerCertificate());
+    var peer = tlsUtils.getPeerCertEntry(settings.tlsPeers, socket.getPeerCertificate());
     if(!peer) {
-      console.log("Unknown peer with valid certificate connected");
-      socket.destroy();
-      return;
+      if(!argv.insecure) {
+        console.log("Unknown peer with valid certificate connected");
+        socket.destroy();
+        return;
+      }
+      peer = {
+        type: 'lab',
+        description: "insecure test peer",
+      }
     }
     const peerDesc = beginReplication(peer, socket, true);
 
@@ -446,7 +454,7 @@ function connectToPeerOnce(peer, cb) {
     ca: peer.cert, // only trust this cert
     key: settings.tlsKey,
     cert: settings.tlsCert,
-    rejectUnauthorized: true,
+    rejectUnauthorized: !argv.insecure,
     enableTrace: !!argv.debug,
     checkServerIdentity: function(host, cert) {
       console.log("Checking cert for:", host);
@@ -591,9 +599,9 @@ async function init() {
   tlsUtils.computeCertHashes(settings.tlsPeers);
 
   if(settings.rimbaud && settings.rimbaud.synchronizeOrders) {
-    if(!argv.introvert) {
+//    if(!argv.introvert) {
       rimbaud.startOrderSynchronizer(labCore);
-    }
+//    }
   }
   
   if(settings.host) {
