@@ -271,7 +271,8 @@ class EditPlate extends Component {
     //    const dirpath = "C:\\somedir";
     
     // TODO get from settings.js
-    const dirpath = "C:\\Applied Biosystems\\7500\\experiments\\Renegade";
+    //    const dirpath = "C:\\Applied Biosystems\\7500\\experiments\\Renegade";
+    const dirpath = "C:\\fakedir";
     const filename = utils.formatDateTimeYMD(new Date()).replace(/[\s\-]+/g, '_')+'_'+o.barcode.toUpperCase()+'.eds';
     
     app.actions.generateEDSFile(dirpath, filename, o, (err, dataURL) => {
