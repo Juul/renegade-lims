@@ -36,7 +36,7 @@ const PlotTest = require('./plot_test.js');
 
 // admin
 const Users = require('./admin/users.js');
-const User = require('./admin/user.js');
+const EditUser = require('./edit_user.js');
 
 class Root extends Component {
 
@@ -150,7 +150,8 @@ class Root extends Component {
           <CSV path="/csv" />
         <PlotTest path="/plot-test" />
         <Users path="/admin/users" />
-        <User path="/admin/users/:userID" />
+        <EditUser path="/admin/users/:userID" />
+        <EditUser path="/profile" />
           <NotFound default />
         </Router>
       </div>

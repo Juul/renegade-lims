@@ -34,6 +34,7 @@ const qpcrResultBySampleBarcodeView = require('../views/qpcrResultBySampleBarcod
 const usersByGUIDView = require('../views/usersByGUID.js');
 const usersByNameView = require('../views/usersByName.js');
 
+const antiBruteforce = require('../lib/anti_bruteforce.js');
 const LabLocal = require('../lib/lab_local.js');
 const tlsUtils = require('../lib/tls.js');
 const writer = require('../lib/writer.js');
@@ -625,35 +626,36 @@ async function init() {
 }
 
 
-function login(data, cb) {
+function login(remoteIP, data, cb) {
   
-  console.log("Login attempt:", data);
+//  console.log("Login attempt:", userData);
 
-//  antiBruteforce(settings.attemptsLog, remoteIP, null, function(err) {
-//    if(err) return cb(err);
+  antiBruteforce(settings.attemptsLog, remoteIP, data.username, function(err) {
+    if(err) return cb(err);  
   
-  adminCore.api.usersByName.get(data.username, function(err, users) {
-    if(err) return cb(err);
+    adminCore.api.usersByName.get(data.username, function(err, users) {
+      if(err) return cb(err);
 
-    if(!users.length) {
-      return cb(new Error("No user with that username exists"))
-    }
+      if(!users.length) {
+        return cb(new Error("No user with that username exists"))
+      }
 
-    var user;
-    try {
-      user = userUtils.verifyAll(users, data.password);
-    } catch(err) {
-      return cb(err);
-    }
+      var user;
+      try {
+        user = userUtils.verifyAll(users, data.password);
+      } catch(err) {
+        return cb(err);
+      }
 
-    if(!user) {
-      return cb(new Error("Incorrect password"));
-    }
+      if(!user) {
+        return cb(new Error("Incorrect password"));
+      }
 
-    console.log("Logged in:", user.name);
+      console.log("Logged in:", user.name);
 
-    delete user.password;
-    cb(null, user.id, user);
+      delete user.password;
+      cb(null, user.id, user);
+    });
   });  
 }
 

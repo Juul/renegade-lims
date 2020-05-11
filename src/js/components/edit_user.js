@@ -19,7 +19,14 @@ import Typography from '@material-ui/core/Typography';
 import { makeStyles } from '@material-ui/core/styles';
 import Container from '@material-ui/core/Container';
 
-const Loading = require('../loading.js');
+const Loading = require('./loading.js');
+
+function isAdmin(user) {
+  if(!user || !user.groups || user.groups.indexOf('admin') < 0) {
+    return false
+  }
+  return true;
+}
 
 class User extends Component {
 
@@ -49,7 +56,8 @@ class User extends Component {
   }
 
   componentDidMount() {
-   this.componentDidUpdate();
+    this.props.userID = this.props.userID || app.state.user.id;
+    this.componentDidUpdate();
   }
   
   componentDidUpdate(prevProps) {
@@ -59,12 +67,14 @@ class User extends Component {
     if(prevProps.userID === this.props.userID) return;
     
     app.whenConnected(() => {
+      
       // TODO make this streaming
       app.actions.getUser(this.props.userID, (err, user) => {
         if(err) return app.notify(err, 'error');
         this.setState({
           user: user
         });
+        console.log("User:", user);
       });
     });
   }
@@ -73,9 +83,10 @@ class User extends Component {
     e.preventDefault();
 
     var opts = {};
-    if(this.state.password) {
+    if(this.state.newPassword) {
       opts.password = this.state.password,
-      opts.repeatedPassword = this.state['repeat-password']
+      opts.newPassword = this.state.newPassword
+      opts.repeatedPassword = this.state.repeatedPassword
     }
 
     app.actions.saveUser(this.state.user, opts, (err, user) => {
@@ -85,37 +96,73 @@ class User extends Component {
     })
   }
 
+  toggleAdmin(e) {
+    if(!this.state.user) return;
+    const user = this.state.user;
+    if(!isAdmin(user)) {
+      user.groups.push('admin');
+    } else {
+      if(app.state.user.id === user.id) {
+        var ret = confirm("Are you sure you want to remove your own administrator privileges?");
+        if(!ret) return;
+      }
+      user.groups = user.groups.filter((group) => {if(group !== 'admin') return true}); 
+    }
+    console.log('groups:', user.groups);
+    this.setState({
+      user: user
+    });
+  }
+
   getPasswordField(user) {
 
-    var fields = [(
-            <Grid item xs={12}>
-              <TextField
-                variant="outlined"
-                required
-                fullWidth
-                name="password"
-                label="Password"
-                type="password"
-                id="password"
-                autocomplete="new-password"
-                onInput={linkState(this, 'password')}
-        />
-        </Grid>
-    )];
+    var fields = [];
 
     if(app.state.user && app.state.user.id === user.id) {
+
+      fields.push((
+          <Grid item xs={12}>
+          <TextField
+        variant="outlined"
+        fullWidth
+        name="password"
+        label="Current Password"
+        type="password"
+        id="password"
+        autocomplete="password"
+        onInput={linkState(this, 'password')}
+          />
+          </Grid>
+      ));
+    }
+
+    fields.push((
+        <Grid item xs={12}>
+        <TextField
+      variant="outlined"
+      fullWidth
+      name="new-password"
+      label="New password"
+      type="password"
+      id="new-password"
+      autocomplete="new-password"
+      onInput={linkState(this, 'newPassword')}
+        />
+        </Grid>
+    ));
+    
+    if(isAdmin(user) && app.state.user && app.state.user.id === user.id) {
       fields.push((
             <Grid item xs={12}>
               <TextField
                 variant="outlined"
-                required
                 fullWidth
                 name="repeat-password"
                 label="Repeat password"
                 type="password"
                 id="repeat-password"
                 autocomplete="off"
-        onInput={linkState(this, 'repeat-password')}
+        onInput={linkState(this, 'repeatedPassword')}
         />
         </Grid>
       ));
@@ -127,17 +174,31 @@ class User extends Component {
   render() {
     if(!this.state.user) {
       return (
-        <Loading/>
+        <Container>
+          <Loading/>
+          </Container>
       );
     }
     
     const classes = this.useStyles();
+
+    var title = '';
+    if(app.state.user.id === this.state.user.id) {
+      title = (
+        <span>Profile</span>
+      );
+    } else {
+      title = (
+        <span>Editing user: {this.state.user.name}</span>
+      );
+    }
+
     
     return (
  <Container component="main" maxWidth="xs">
       <div className={classes.paper}>
         <Typography component="h1" variant="h5">
-        Editin user: {this.state.user.name}
+        {title}
         </Typography>
         <form className={classes.form} noValidate onSubmit={this.onFormSubmit.bind(this)}>
           <Grid container spacing={2}>
@@ -167,6 +228,17 @@ class User extends Component {
               />
             </Grid>
         {this.getPasswordField(this.state.user)}
+          <Grid item xs={12}>
+              Is this user an administrator?      
+              <Checkbox
+                variant="outlined"
+                fullWidth
+                id="admin"
+                name="admin"
+                checked={isAdmin(this.state.user)}
+                onInput={this.toggleAdmin.bind(this)}
+              />
+            </Grid>
           </Grid>
           <Button
             type="submit"

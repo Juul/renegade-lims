@@ -97,12 +97,25 @@ module.exports = function(settings, labDeviceServer, dmScanner, labCore, adminCo
         // admin user changing their own user
         } else if(userData.id === user.id) {
           // admin user must repeat their password to change it
-          if(opts.password && (opts.password !== opts.repeatPassword)) {
+          if(opts.newPassword && (opts.newPassword !== opts.repeatedPassword)) {
             return cb(new Error("Repeated password does not match password"));
+          }
+
+          if(opts.newPassword) {
+            console.log("OPTS:", opts);
+            if(!opts.password) {
+              return cb(new Error("You must supply your current password when changing password"));
+            }
+            
+            try {
+            userUtils.verifyUser(user, opts.password);
+            } catch(err) {
+              return cb(err);
+            }
           }
         }
 
-        writer.saveUser(adminCore, user, opts.password, cb);
+        writer.saveUser(adminCore, user, opts.newPassword, cb);
       });
       
     },

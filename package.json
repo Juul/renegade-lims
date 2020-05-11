@@ -33,7 +33,7 @@
     "os-timesync": "^1.0.9",
     "ping": "^0.2.2",
     "routes": "^2.1.0",
-    "rpc-multiauth": "0.0.5",
+    "rpc-multiauth": "0.0.6",
     "rpc-multistream": "^1.0.0",
     "subleveldown": "^4.1.4",
     "through2": "^3.0.1",

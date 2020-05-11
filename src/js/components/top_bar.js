@@ -107,21 +107,6 @@ class Login extends Component {
       
     });
   }
-
-  login() {
-    route('/login');
-  }
-  
-  logout() {
-    app.actions.logout(function(err) {
-      if(err) {
-        app.actions.notify(err, 'error');
-        console.error(err);
-        return;            
-      }
-      route('/login');
-    });
-  }
   
   render() {
     const classes = this.useStyles();
@@ -145,10 +130,29 @@ class Login extends Component {
       handleMobileMenuClose();
     };
 
-    const handleMobileMenuOpen = (event) => {
-      setMobileMoreAnchorEl(event.currentTarget);
+    const handleMobileMenuOpen = (e) => {
+      setMobileMoreAnchorEl(e.currentTarget);
     };
 
+    const profile = (e) => {
+      route('/profile');
+      handleMenuClose();
+      handleMobileMenuClose();
+    };
+
+    const logout = (e) => {
+      app.actions.logout(function(err) {
+        if(err) {
+          app.actions.notify(err, 'error');
+          console.error(err);
+          return;            
+        }
+        route('/login');
+      });
+      handleMenuClose();
+      handleMobileMenuClose();
+    };
+    
     const menuId = 'primary-search-account-menu';
     const renderMenu = (
         <Menu
@@ -160,8 +164,12 @@ class Login extends Component {
       open={isMenuOpen}
       onClose={handleMenuClose}
         >
-        <MenuItem onClick={handleMenuClose}>Profile</MenuItem>
-        <Link onClick={this.logout.bind(this)}>
+        <Link onClick={profile}>
+          <MenuItem onClick={handleMenuClose}>
+            Profile
+          </MenuItem>
+        </Link>
+        <Link onClick={logout}>
           <MenuItem onClick={handleMenuClose}>Log out</MenuItem>
         </Link>
         </Menu>
@@ -178,6 +186,7 @@ class Login extends Component {
       open={isMobileMenuOpen}
       onClose={handleMobileMenuClose}
         >
+        <Link onClick={profile}>
         <MenuItem>
         <IconButton
       aria-label="account of current user"
@@ -189,8 +198,8 @@ class Login extends Component {
         </IconButton>
         <p>Profile</p>
         </MenuItem>
-
-        <Link onClick={this.logout.bind(this)}>
+        </Link>
+        <Link onClick={logout}>
         <MenuItem>
         <IconButton
       aria-label="log out"

@@ -51,7 +51,7 @@ class Signup extends Component {
     e.preventDefault();
 
     const user = {
-      username: this.state.username,
+      name: this.state.username,
       email: this.state.email
     };
     
@@ -61,8 +61,9 @@ class Signup extends Component {
         console.error(err);
         return;
       }
-      console.log("User:", user, token);
-      
+
+      app.actions.notify("Signup successful!", 'success');
+      route('/login');
     });
   }
   

@@ -61,6 +61,23 @@ class Login extends Component {
   
   render() {
     const classes = this.useStyles();
+
+    return (
+    <Container component="main" maxWidth="xs">
+      <CssBaseline />
+      <div className={classes.paper}>
+        <Avatar className={classes.avatar}>
+          <LockOutlinedIcon />
+        </Avatar>
+        <Typography component="h1" variant="h5">
+          Password reset
+        </Typography>
+      </div>
+        <div>
+        <p>For now, please contact an administrator to have your password changed.</p>
+        </div>
+    </Container>
+    );
     
     return (
     <Container component="main" maxWidth="xs">

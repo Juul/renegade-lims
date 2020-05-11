@@ -23,19 +23,27 @@ module.exports = function(settings, labDeviceServer, dmScanner, labCore, adminCo
         return cb(new Error("The server administrator has disabled master password functionality")); 
       }
 
-      if(!user || !user.username || !password || !masterPassword) {
+      if(!user || !user.name || !password || !masterPassword) {
         return cb(new Error("You must supply a username, password and master password"));
       }
 
-      antiBruteforce(settings.attemptsLog, remoteIP, null, function(err) {
-        if(err) return cb(err);
-        
-        if(masterPassword !== settings.masterPassword) {  
-          cb(new Error("Wrong master password"));
-          return;
+      adminCore.api.usersByName.get(user.name, function(err, users) {
+        if(err && !err.notFound) return cb(err);
+        if(users && users.length) {
+          return cb(new Error("Username already taken"));
         }
 
-        writer.saveUser(adminCore, user, password, cb);
+        antiBruteforce(settings.attemptsLog, remoteIP, null, function(err) {
+          if(err) return cb(err);
+          
+          if(masterPassword !== settings.masterPassword) {  
+            cb(new Error("Wrong master password"));
+            return;
+          }
+
+          writer.saveUser(adminCore, user, password, cb);
+        });
+        
       });
     }
   }

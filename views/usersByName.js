@@ -13,6 +13,10 @@ function sortByTimestamp(a, b) {
   return a.ts - b.ts;
 }
 
+function makeKey(name, id) {
+  return name + '!' + id;
+}
+
 module.exports = function(db) {
   return {
     // Called with a batch of log entries to be processed by the view.
@@ -45,7 +49,7 @@ module.exports = function(db) {
             }
           }
           
-          const key = entry.value.name + '!' + entry.value.id
+          const key = makeKey(entry.value.name, entry.value.id);
           
           batch.push({
             type: 'put',
@@ -56,7 +60,7 @@ module.exports = function(db) {
           if(entry.value.changed && entry.value.changed['name']) {
             batch.push({
               type: 'del',
-              key: entry.value.changed['name'],
+              key: makeKey(entry.value.changed['name'], entry.value.id)
             });            
           }
           
