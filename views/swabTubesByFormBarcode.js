@@ -47,7 +47,7 @@ module.exports = function(db) {
             key: entry.value.formBarcode,
             value: entry.value
           });
-          
+
           if(entry.value.changed && entry.value.changed['formBarcode']) {
             batch.push({
               type: 'del',

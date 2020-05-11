@@ -137,7 +137,7 @@ function ensureInitialUser(settings, adminCore, cb) {
     writer.saveUser(adminCore, {
       name: user.name,
       groups: ['admin', 'user']
-    }, user.password, null, true, function(err, user) {
+    }, user.password, function(err, user) {
       if(err) {
         console.error("Failed to create initial user:", err);
         return;
@@ -157,6 +157,10 @@ function initWebserver() {
   
   // methods only available to logged-in users in the 'user' group
   rpcMethods.user = require('../rpc/user.js')(settings, labDeviceServer, dmScanner, labCore, adminCore, labLocal);
+
+  // methods only available to users in the 'admin' group
+  rpcMethods.admin = require('../rpc/admin.js')(settings, labDeviceServer, dmScanner, labCore, adminCore, labLocal);
+  
 
   if(argv.init) {
     console.log("Initializing new renegade-lims network");

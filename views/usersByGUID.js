@@ -39,10 +39,10 @@ module.exports = function(db) {
       const batch = [];
       async.eachSeries(firstPass, function(entry, next) {
 
-        db.get(entry.value.id, function(err, oldEntry) {
-          if(!err && oldEntry) {
+        db.get(entry.value.id, function(err, oldUser) {
+          if(!err && oldUser) {
             // If the db has a newer value already, don't overwrite with this one
-            if(entry.ts < u.monotonicTimestampToTimestamp(oldEntry.value.createdAt)) {
+            if(entry.ts < u.monotonicTimestampToTimestamp(oldUser.createdAt)) {
               return next();
             }
           }

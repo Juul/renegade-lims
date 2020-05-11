@@ -1,10 +1,17 @@
 'use strict';
 
+const async = require('async');
 const through = require('through2');
 const charwise = require('charwise');
 const readonly = require('read-only-stream');
 
+const u = require('./common/utils.js');
+const nicify = require('./common/nicify.js');
 const validateUser = require('../validators/user.js');
+
+function sortByTimestamp(a, b) {
+  return a.ts - b.ts;
+}
 
 module.exports = function(db) {
   return {
@@ -12,21 +19,53 @@ module.exports = function(db) {
     // No further entries are processed by this view until 'next()' is called.
     map: function(entries, next) {
       
-      const batch = [];
-      entries.forEach(function(entry) {
+      const firstPass = [];
+      var entry;
+      for(entry of entries) {
         if(!validateUser(entry)) return next();
-        
-        var key = entry.value.name + '!' + entry.value.id;
 
-        batch.push({
-          type: 'put',
-          key: key,
-          value: entry.value
+        nicify(entry);
+
+        entry.ts = u.monotonicTimestampToTimestamp(entry.value.createdAt);
+        firstPass.push(entry);
+      }
+
+      // Sort entries by creation time so that if we got multiple entries
+      // for the same GUID then the newer will overwrite the older in the view
+      firstPass.sort(sortByTimestamp);
+      
+      const batch = [];
+      async.eachSeries(firstPass, function(entry, next) {
+
+        db.get(entry.value.id, function(err, oldUser) {
+          if(!err && oldUser) {
+            // If the db has a newer value already, don't overwrite with this one
+            if(entry.ts < u.monotonicTimestampToTimestamp(oldUser.createdAt)) {
+              return next();
+            }
+          }
+          
+          const key = entry.value.name + '!' + entry.value.id
+          
+          batch.push({
+            type: 'put',
+            key: key,
+            value: entry.value
+          });
+
+          if(entry.value.changed && entry.value.changed['name']) {
+            batch.push({
+              type: 'del',
+              key: entry.value.changed['name'],
+            });            
+          }
+          
+          next();
         });
-      })
-
-      if(!batch.length) return next();
-      db.batch(batch, {valueEncoding: 'json'}, next);
+      }, function() {
+        if(!batch.length) return next();
+        db.batch(batch, {valueEncoding: 'json'}, next);
+      });
     },
     
     api: {
@@ -43,10 +82,10 @@ module.exports = function(db) {
         
         this.ready(function() { // wait for all views to catch up
           const res = [];
-          var v = db.createValueStream(opts)
+          var v = db.createReadStream(opts)
           //          v.pipe(through.obj(function(obj, enc, next) {
           v.on('data', function(o) {
-            res.push(o);
+            res.push(o.value);
           })
           v.on('end', function() {
             cb(null, res);

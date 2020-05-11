@@ -67,15 +67,44 @@ module.exports = function(settings, labDeviceServer, dmScanner, labCore, adminCo
       dmScanner.registerCallback(cb);
     },
 
-    saveUser: function(userData, remoteIP, user, password, cb) {
-      // TODO check that currently logged in user id matches this user id
-      // or that user is in admin group
-      // TODO require original password or reset token if changing password
-      if(typeof password === 'function') {
-        cb = password;
-        password = null;
+    saveUser: function(userData, remoteIP, user, opts, cb) {
+      if(typeof opts === 'function') {
+        cb = opts;
+        opts = {};
       }
-      writer.saveUser(adminCore, user, password, cb);
+      opts = opts || {};
+
+      adminCore.api.usersByGUID.get(user.id, function(err, prevUser) {
+        if(err) return cb(err);
+  
+        if(userData.groups.indexOf('admin') < 0) {
+          if(userData.id !== user.id) {
+            return cb(new Error("You can only change your own user"));
+          }
+          
+          if(!opts.password) return cb(new Error("Missing password"));
+                  
+          try {
+            userUtils.verifyUser(user, opts.password);
+          } catch(err) {
+            return cb(err);
+          }
+          
+          if(!user) {
+            return cb(new Error("Incorrect password"));
+          }
+
+        // admin user changing their own user
+        } else if(userData.id === user.id) {
+          // admin user must repeat their password to change it
+          if(opts.password && (opts.password !== opts.repeatPassword)) {
+            return cb(new Error("Repeated password does not match password"));
+          }
+        }
+
+        writer.saveUser(adminCore, user, opts.password, cb);
+      });
+      
     },
 
     saveSwabTube: function(userData, remoteIP, tube, cb) {

@@ -18,7 +18,6 @@ app.error = function(err) {
 var whenConnectedCallbacks = [];
 app.whenConnected = function(cb) {
   if(app.remote) return cb();
-    
   whenConnectedCallbacks.push(cb);
 };
 

@@ -81,7 +81,6 @@ module.exports = function() {
     },
 
     signup: function(user, password, masterPassword, cb) {
-      console.log("SIGNING UP!");
       app.remote.signup(user, password, masterPassword, cb);
     },
 
@@ -129,6 +128,24 @@ module.exports = function() {
     // TODO remove debug function
     increase: function() {
       app.state.count++;
-    }
+    },
+
+
+    // TODO move admin actions to different file
+    // Admin actions below
+
+    // Get all users sorted by username
+    getUsers: function(cb) {
+      app.remote.getUsers(cb);
+    },
+
+    getUser: function(id, cb) {
+      app.remote.getUser(id, cb);
+    },
+
+    saveUser: function(user, opts, cb) {
+      app.remote.saveUser(user, opts, cb);
+    },
+    
   }
 }

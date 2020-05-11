@@ -34,6 +34,10 @@ const AnalyzeQPCR = require('./analyze_qpcr.js');
 const CSV = require('./csv.js');
 const PlotTest = require('./plot_test.js');
 
+// admin
+const Users = require('./admin/users.js');
+const User = require('./admin/user.js');
+
 class Root extends Component {
 
   constructor() {
@@ -144,7 +148,9 @@ class Root extends Component {
           <PrintTest path="/print-test" />
           <AnalyzeQPCR path="/analyze-qpcr" />
           <CSV path="/csv" />
-          <PlotTest path="/plot-test" />
+        <PlotTest path="/plot-test" />
+        <Users path="/admin/users" />
+        <User path="/admin/users/:userID" />
           <NotFound default />
         </Router>
       </div>
