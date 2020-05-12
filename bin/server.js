@@ -421,7 +421,7 @@ function initInbound() {
     enableTrace: !!argv.debug
     
   }, function(socket) {
-    console.log("Inbound connection");
+    console.log("Client connection secured");
     
     var peer = tlsUtils.getPeerCertEntry(settings.tlsPeers, socket.getPeerCertificate());
     if(!peer) {
@@ -440,12 +440,19 @@ function initInbound() {
     console.log("Peer connected:", peerDesc);
   });
 
+  server.on('connection', (socket) => {
+    console.log("Client connecting from:", socket.remoteAddress);
+  });
+  
   server.on('clientError', (err, socket) => {
-    console.error("Client error:", socket.remoteAddress, err);
+    console.error("Client error:", socket.remoteAddress || "Unknown client host/IP", err);
   });
   
   server.on('tlsClientError', (err, socket) => {
-    console.error("Client failed to authenticate:", socket.remoteAddress, err);
+    // TODO
+    // We need a way to figure out which client these errors are for but
+    // socket.remoteAddress is unset by the time this error is emitted
+    console.error("Client failed to authenticate:", socket.authorizationError || "Unknown error type", err);
   });
   
   console.log("Replication server listening on", settings.host+':'+settings.port);

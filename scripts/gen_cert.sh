@@ -1,6 +1,7 @@
 #!/bin/bash
 
 TLSDIR=$(dirname $0)/../tls
+EXPIRATION_DAYS=365 # How many days from now do generated certs expire?
 
 if [ "$#" -lt "1" ]; then
     echo "Usage: $0 <hostname>" >&2
@@ -31,7 +32,7 @@ if [ ! "$?" -eq "0" ]; then
     exit 1
 fi
 
-openssl x509 -req -in csr.pem -signkey key.pem -out cert.pem
+openssl x509 -req -in csr.pem -signkey key.pem -days $EXPIRATION_DAYS -out cert.pem
 if [ ! "$?" -eq "0" ]; then
     echo "Failed to generate certificate" >&2
     exit 1
