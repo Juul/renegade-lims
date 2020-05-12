@@ -26,7 +26,7 @@ module.exports = function(settings, labDeviceServer, dmScanner, labCore, adminCo
       if(!user || !user.name || !password || !masterPassword) {
         return cb(new Error("You must supply a username, password and master password"));
       }
-
+      
       adminCore.api.usersByName.get(user.name, function(err, users) {
         if(err && !err.notFound) return cb(err);
         if(users && users.length) {

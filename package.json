@@ -37,6 +37,7 @@
     "routes": "^2.1.0",
     "rpc-multiauth": "0.0.6",
     "rpc-multistream": "^1.0.0",
+    "sane-email-validation": "^3.0.1",
     "subleveldown": "^4.1.4",
     "through2": "^3.0.1",
     "uuid": "^7.0.2",
