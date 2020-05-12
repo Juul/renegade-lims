@@ -26,10 +26,6 @@ module.exports = function(settings, labDeviceServer, dmScanner, labCore, adminCo
         cb(null, users);
       });
       stream.on('error', cb);
-    },
-    
-    getUser: function(userData, remoteIP, id, cb) {
-      adminCore.api.usersByGUID.get(id, cb);
     }
     
   };

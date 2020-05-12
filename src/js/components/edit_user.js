@@ -193,6 +193,22 @@ class User extends Component {
       );
     }
 
+    var adminCheckbox = '';
+    if(isAdmin(app.state.user)) {
+      adminCheckbox = (
+              <Grid item xs={12}>
+              Is this user an administrator?      
+              <Checkbox
+                variant="outlined"
+                fullWidth
+                id="admin"
+                name="admin"
+                checked={isAdmin(this.state.user)}
+                onInput={this.toggleAdmin.bind(this)}
+              />
+          </Grid>
+      );
+    }
     
     return (
  <Container component="main" maxWidth="xs">
@@ -228,17 +244,7 @@ class User extends Component {
               />
             </Grid>
         {this.getPasswordField(this.state.user)}
-          <Grid item xs={12}>
-              Is this user an administrator?      
-              <Checkbox
-                variant="outlined"
-                fullWidth
-                id="admin"
-                name="admin"
-                checked={isAdmin(this.state.user)}
-                onInput={this.toggleAdmin.bind(this)}
-              />
-            </Grid>
+      {adminCheckbox}
           </Grid>
           <Button
             type="submit"

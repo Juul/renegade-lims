@@ -67,6 +67,15 @@ module.exports = function(settings, labDeviceServer, dmScanner, labCore, adminCo
       dmScanner.registerCallback(cb);
     },
 
+    getUser: function(userData, remoteIP, id, cb) {
+      if(userData.groups.indexOf('admin') < 0) {
+        if(id !== userData.id) {
+          return cb(new Error("You can only edit your own profile"));
+        }
+      }
+      adminCore.api.usersByGUID.get(id, cb);
+    },
+    
     saveUser: function(userData, remoteIP, user, opts, cb) {
       if(typeof opts === 'function') {
         cb = opts;
@@ -89,9 +98,9 @@ module.exports = function(settings, labDeviceServer, dmScanner, labCore, adminCo
           } catch(err) {
             return cb(err);
           }
-          
-          if(!user) {
-            return cb(new Error("Incorrect password"));
+
+          if(user.groups && user.groups.indexOf('admin') >= 0) {
+            return cb(new Error("You can't grant yourself admin privileges"));
           }
 
         // admin user changing their own user
@@ -102,7 +111,6 @@ module.exports = function(settings, labDeviceServer, dmScanner, labCore, adminCo
           }
 
           if(opts.newPassword) {
-            console.log("OPTS:", opts);
             if(!opts.password) {
               return cb(new Error("You must supply your current password when changing password"));
             }
