@@ -440,12 +440,12 @@ function initInbound() {
     console.log("Peer connected:", peerDesc);
   });
 
-  server.on('clientError', (err) => {
-    console.error("Client error:", err);
+  server.on('clientError', (err, socket) => {
+    console.error("Client error:", socket.remoteAddress, err);
   });
   
-  server.on('tlsClientError', (err) => {
-    console.error("Client failed to authenticate:", err);
+  server.on('tlsClientError', (err, socket) => {
+    console.error("Client failed to authenticate:", socket.remoteAddress, err);
   });
   
   console.log("Replication server listening on", settings.host+':'+settings.port);
