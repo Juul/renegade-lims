@@ -40,6 +40,7 @@ const tlsUtils = require('../lib/tls.js');
 const writer = require('../lib/writer.js');
 const userUtils = require('../lib/user.js');
 const ntpTester = require('../lib/ntp_tester.js');
+const migration = require('../lib/migration.js');
 const LabDeviceServer = require('../lib/labdevice_server.js');
 const DataMatrixScanner = require('../lib/datamatrix_scanner.js');
 const settings = require('../settings.js');
@@ -66,7 +67,8 @@ const argv = minimist(process.argv.slice(2), {
     'debug',
     'init', // initialize a new LIMS network
     'introvert',
-    'insecure' // don't authenticate anything. only for testing
+    'insecure', // don't authenticate anything. only for testing
+    'migrate'
   ],
   alias: {
     'd': 'debug', // enable debug output
@@ -96,9 +98,11 @@ const adminCore = kappa(null, {multifeed: adminMulti});
 const db = level(path.join(settings.dataPath, 'db'), {valueEncoding: 'json'});
 const labDB = sublevel(db, 'l', {valueEncoding: 'json'});
 const adminDB = sublevel(db, 'a', {valueEncoding: 'json'});
-const localDB = sublevel(db, 'lo', {valueEncoding: 'json'}); // never replicated
-const labLocal = new LabLocal(localDB, settings.labBarcodePrefix);
 
+const oldLocalDB = sublevel(db, 'lo', {valueEncoding: 'json'});
+const localDBPath = path.join(settings.dataPath, 'local_db');
+const localDB = level(localDBPath, {valueEncoding: 'json'}); // never replicated
+const labLocal = new LabLocal(localDB, settings.labBarcodePrefix);
 
 labCore.use('objectsByGUID', 1, view(sublevel(labDB, OBJECTS_BY_GUID, {valueEncoding: 'json'}), objectsByGUIDView));
 labCore.use('objectsByBarcode', 1, view(sublevel(labDB, OBJECTS_BY_BARCODE, {valueEncoding: 'json'}), objectsByBarcodeView));
@@ -539,6 +543,17 @@ function initOutbound() {
 
 async function init() {
 
+  if(argv.migrate) {
+    // Copy the contents of the old localDB sublevel into
+    // an a stand-alone leveldb instance
+    migration.ensureDBCopy(oldLocalDB, localDB, localDBPath, function(err) {
+      if(err) return console.error("Migration failed:", err);
+
+      console.log("Migration completed");
+    })
+    return;
+  }
+  
   if(argv.dump) {
     const csv = require('../lib/csv.js');
     if(argv.dump === 'plates') {
@@ -604,9 +619,9 @@ async function init() {
   tlsUtils.computeCertHashes(settings.tlsPeers);
 
   if(settings.rimbaud && settings.rimbaud.synchronizeOrders) {
-//    if(!argv.introvert) {
+    if(!argv.introvert) {
       rimbaud.startOrderSynchronizer(labCore);
-//    }
+    }
   }
   
   if(settings.host) {

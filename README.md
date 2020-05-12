@@ -195,6 +195,16 @@ chmod g+rx /etc/letsencrypt/archive/<your_hostname>
 chmod g+r /etc/letsencrypt/live/<your_hostname>/privkey.pem
 ```
 
+# Flushing views
+
+To flush the views stop renegade-lims and run:
+
+```
+npm run flush
+```
+
+The views will be rebuilt when renegade-lims is restarted.
+
 # Credit
 
 This project builds upon the work of many talented hackers and would not be possible at all without the excellent work of Kira a.k.a [noffle](https://github.com/noffle) on [kappa-core](https://www.npmjs.com/package/kappa-core), [kappa-view](https://www.npmjs.com/package/kappa-view) and [multifeed](https://www.npmjs.com/package/multifeed) developed in part for [Mapeo](https://www.digital-democracy.org/mapeo/). Additional thanks to Kira for answering questions and guiding me directly! Her work in turn builds on [hypercore](https://www.npmjs.com/package/hypercore) developed by Mathias Buus a.k.a [mafintosh](https://github.com/mafintosh/) for the [dat](https://dat.foundation/) project.
