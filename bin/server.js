@@ -172,18 +172,6 @@ function initWebserver() {
     ensureInitialUser(settings, adminCore);
   }
   
-  var rpcMethodsAuth = auth({
-    userDataAsFirstArgument: true, 
-    secret: settings.loginToken.secret,
-    login: login
-  }, rpcMethods, function(userdata, namespace, functionName, cb) {
-    if(!namespace) return cb();
-    if(!userdata.groups || userdata.groups.indexOf(namespace) < 0) {
-      return cb(new Error("User tried to access function in the '"+namespace+"' namespace but is not in the '"+namespace+"' group"));
-    }
-    cb();
-  });
-
   var userCookieAuth = auth({
     secret: settings.loginToken.secret,
     cookie: {
@@ -279,8 +267,17 @@ function initWebserver() {
       console.error("WebSocket stream error:", err);
     });
 
-    stream.on('end', function() {
 
+    var rpcMethodsAuth = auth({
+      userDataAsFirstArgument: true, 
+      secret: settings.loginToken.secret,
+      login: login
+    }, rpcMethods, function(userdata, namespace, functionName, cb) {
+      if(!namespace) return cb();
+      if(!userdata.groups || userdata.groups.indexOf(namespace) < 0) {
+        return cb(new Error("User tried to access function in the '"+namespace+"' namespace but is not in the '"+namespace+"' group"));
+      }
+      cb();
     });
 
     // initialize the rpc server on top of the websocket stream
