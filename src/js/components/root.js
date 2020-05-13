@@ -24,7 +24,7 @@ const TubeIntake = require('./tube_intake.js')
 const CreatePlate = require('./create_plate.js')
 const MapTubesToPlate = require('./map_tubes_to_plate.js')
 const Scan = require('./scan.js')
-const PrintPlateLabel = require('./print_plate_label.js')
+const PrintOldMultiLabel = require('./print_old_multilabel.js')
 const PrintTubeLabel = require('./print_tube_label.js')
 const PrintTest = require('./print_test.js')
 const NotFound = require('./not_found.js')
@@ -143,7 +143,7 @@ class Root extends Component {
           <MapTubesToPlate path="/map-tubes-to-plate/:barcode?" />
           <Plate path="/plate-test" />
           <Scan path="/scan" />
-        <PrintPlateLabel path="/print-plate-label/:customCode?" />
+        <PrintOldMultiLabel path="/print-old-multilabel/:customCode?" />
         <PrintTubeLabel path="/print-tube-label/:customCode?" />
           <PrintTest path="/print-test" />
           <AnalyzeQPCR path="/analyze-qpcr" />

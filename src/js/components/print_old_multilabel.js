@@ -8,7 +8,7 @@ import Container from '@material-ui/core/Container';
 var LabelMaker = require('../labelmaker.js');
 var settings = require('../../../settings.web.js');
 
-class PrintPlateLabel extends Component {
+class PrintOldMultiLabel extends Component {
   
   constructor(props) {
     super(props);
@@ -173,4 +173,4 @@ class PrintPlateLabel extends Component {
   }
 }
 
-module.exports = view(PrintPlateLabel);
+module.exports = view(PrintOldMultiLabel);
