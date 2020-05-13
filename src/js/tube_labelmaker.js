@@ -1,7 +1,7 @@
 
 const bwipjs = require('bwip-js');
 
-function PlateLabelMaker(opts) {
+function TubeLabelMaker(opts) {
   
   opts = opts || {};
   
@@ -139,4 +139,4 @@ function PlateLabelMaker(opts) {
 
 }
 
-module.exports = PlateLabelMaker;
+module.exports = TubeLabelMaker;

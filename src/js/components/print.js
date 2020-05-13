@@ -2,7 +2,7 @@
 import { h, Component } from 'preact';
 import { view } from 'z-preact-easy-state';
 
-var LabelMaker = require('../labelmaker.js');
+var LabelMakerFancy = require('../labelmaker_fancy.js');
 var settings = require('../../../settings.web.js');
 
 module.exports = class Print extends Component {
@@ -27,7 +27,7 @@ module.exports = class Print extends Component {
     this.keepScanning = true;
     this.enableDM = false;
 
-    this.labelMaker = new LabelMaker({
+    this.labelMaker = new LabelMakerFancy({
       symbolPath: settings.symbolPath,
       lineMargins: {
         2: 15

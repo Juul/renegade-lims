@@ -5,7 +5,7 @@ import linkState from 'linkstate';
 
 import Container from '@material-ui/core/Container';
 
-var PlateLabelMaker = require('../plate_labelmaker.js');
+var LabelMaker = require('../multi_labelmaker.js');
 var settings = require('../../../settings.web.js');
 
 class PrintPlateLabel extends Component {
@@ -13,7 +13,20 @@ class PrintPlateLabel extends Component {
   constructor(props) {
     super(props);
 
-    this.labelMaker = new PlateLabelMaker({
+    this.labelMaker = new LabelMaker({
+      labelWidth: 336,
+      labelHeight: 1083,
+      barcodesPerLabel: 15,
+      barcodeToBarcodeSpacing: 65,
+      yOffset: 100,
+      
+      // bwip options:
+      scale:       3,
+      height:      3,
+      includetext: true,
+      textsize: 8,
+      textxalign:  'center',
+      textyoffset: 1,
     });
 
     this.setState({
@@ -56,7 +69,10 @@ class PrintPlateLabel extends Component {
 
       if(err) return app.actions.notify(err, 'error');
 
-      this.labelMaker.drawLabel('labelPreview', startCode, copies, prefix);
+      this.labelMaker.drawLabel('labelPreview', startCode, {
+        numberOfEach: howMany,
+        barcodePrefix: prefix
+      });
 
       var imageData = this.labelMaker.getDataURL();
       app.actions.printLabel('qlPrinter', imageData, this.state.totalCopies, function(err) {
@@ -95,7 +111,9 @@ class PrintPlateLabel extends Component {
       })
     }
     if(copies) {
-      var numUniqueCodes = this.labelMaker.drawLabel('labelPreview', 1, copies);
+      var numUniqueCodes = this.labelMaker.drawLabel('labelPreview', 1, {
+        numberOfEach: copies
+      });
       
       this.setState({
         numUniqueCodes: numUniqueCodes

@@ -5,7 +5,7 @@ import linkState from 'linkstate';
 
 import Container from '@material-ui/core/Container';
 
-var TubeLabelMaker = require('../tube_labelmaker.js');
+var LabelMaker = require('../multi_labelmaker.js');
 var settings = require('../../../settings.web.js');
 
 class PrintTubeLabel extends Component {
@@ -13,8 +13,20 @@ class PrintTubeLabel extends Component {
   constructor(props) {
     super(props);
 
-    this.labelMaker = new TubeLabelMaker({
+    this.labelMaker = new LabelMaker({
+      labelWidth: 560,
+      labelHeight: 1083,
+      yOffset: 450,
+      
+      // bwip options:
+      scale:       5.8,
+      height:      10,
+      includetext: true,
+      textsize: 15,
+      textxalign:  'center',
+      textyoffset: 5,
     });
+    
 
     this.setState({
       copies: 1, // copies of each barcode per label,
