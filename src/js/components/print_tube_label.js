@@ -5,7 +5,7 @@ import linkState from 'linkstate';
 
 import Container from '@material-ui/core/Container';
 
-var LabelMaker = require('../multi_labelmaker.js');
+var LabelMaker = require('../labelmaker.js');
 var settings = require('../../../settings.web.js');
 
 class PrintTubeLabel extends Component {
