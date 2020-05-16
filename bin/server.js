@@ -12,27 +12,12 @@ const websocket = require('websocket-stream');
 const rpc = require('rpc-multistream'); // rpc and stream multiplexing
 const auth = require('rpc-multiauth'); // authentication
 const multiplex = require('multiplex');
-const multifeed = require('multifeed');
-const kappa = require('kappa-core');
-const view = require('kappa-view');
-const level = require('level');
 const sublevel = require('subleveldown');
+
+const level = require('level');
 const router = require('routes')(); // server side router
-const backoff = require('backoff');
 const ecstatic = require('ecstatic');
 const minimist = require('minimist');
-
-const objectsByGUIDView = require('../views/objectsByGUID.js');
-const objectsByBarcodeView = require('../views/objectsByBarcode.js');
-const swabTubesByFormBarcodeView = require('../views/swabTubesByFormBarcode.js');
-const swabTubesByTimestampView = require('../views/swabTubesByTimestamp.js');
-const swabsByTimeView = require('../views/swabsByTimestamp.js');
-const swabsByUserView = require('../views/swabsByUsername.js');
-const platesByTimestampView = require('../views/platesByTimestamp.js');
-const qpcrResultsByTimestampView = require('../views/qpcrResultsByTimestamp.js');
-const qpcrResultBySampleBarcodeView = require('../views/qpcrResultBySampleBarcode.js');
-const usersByGUIDView = require('../views/usersByGUID.js');
-const usersByNameView = require('../views/usersByName.js');
 
 const antiBruteforce = require('../lib/anti_bruteforce.js');
 const LabLocal = require('../lib/lab_local.js');
@@ -47,18 +32,8 @@ const settings = require('../settings.js');
 
 const rimbaud = require('../lib/rimbaud.js')(settings);
 
-const OBJECTS_BY_GUID = 'og'; // everything by GUID
-const OBJECTS_BY_BARCODE = 'ob'; // everything by barcode
-const SWAB_TUBES_BY_FORM_BARCODE = 'sfb';
-const SWAB_TUBES_BY_TIMESTAMP = 'stt';
-const QPCR_RESULTS_BY_TIMESTAMP = 'qrt';
-const QPCR_RESULT_BY_SAMPLE_BARCODE = 'qrsb';
-const SWABS_BY_TIME = 'st';
-const SWABS_BY_USER = 'su';
-const PLATES_BY_TIME = 'pt';
 
-const USERS_BY_GUID = 'ug';
-const USERS_BY_NAME = 'un';
+const limsCore = require('renegade-lims-core');
 
 // ------------------
 
@@ -87,41 +62,12 @@ fs.ensureDirSync(settings.dataPath, {
   mode: 0o2750
 });
 
-const multifeedPath = path.join(settings.dataPath, 'lab_feed');
-const labMulti = multifeed(multifeedPath, {valueEncoding: 'json'})
-const labCore = kappa(null, {multifeed: labMulti});
-
-const multifeedAdminPath = path.join(settings.dataPath, 'admin_feed');
-const adminMulti = multifeed(multifeedAdminPath, {valueEncoding: 'json'})
-const adminCore = kappa(null, {multifeed: adminMulti});
-
 const db = level(path.join(settings.dataPath, 'db'), {valueEncoding: 'json'});
-const labDB = sublevel(db, 'l', {valueEncoding: 'json'});
-const adminDB = sublevel(db, 'a', {valueEncoding: 'json'});
 
 const oldLocalDB = sublevel(db, 'lo', {valueEncoding: 'json'});
 const localDBPath = path.join(settings.dataPath, 'local_db');
 const localDB = level(localDBPath, {valueEncoding: 'json'}); // never replicated
 const labLocal = new LabLocal(localDB, settings.labBarcodePrefix);
-
-labCore.use('objectsByGUID', 1, view(sublevel(labDB, OBJECTS_BY_GUID, {valueEncoding: 'json'}), objectsByGUIDView));
-labCore.use('objectsByBarcode', 1, view(sublevel(labDB, OBJECTS_BY_BARCODE, {valueEncoding: 'json'}), objectsByBarcodeView));
-labCore.use('swabTubesByFormBarcode', 1, view(sublevel(labDB, SWAB_TUBES_BY_FORM_BARCODE, {valueEncoding: 'json'}), swabTubesByFormBarcodeView));
-labCore.use('swabTubesByTimestamp', 1, view(sublevel(labDB, SWAB_TUBES_BY_TIMESTAMP, {valueEncoding: 'json'}), swabTubesByTimestampView));
-labCore.use('swabsByUser', 1, view(sublevel(labDB, SWABS_BY_USER, {valueEncoding: 'json'} ), swabsByUserView));
-labCore.use('platesByTimestamp', 1, view(sublevel(labDB, SWABS_BY_TIME, {valueEncoding: 'json'} ), platesByTimestampView));
-labCore.use('qpcrResultsByTimestamp', 1, view(sublevel(labDB, QPCR_RESULTS_BY_TIMESTAMP, {valueEncoding: 'json'} ), qpcrResultsByTimestampView));
-labCore.use('qpcrResultBySampleBarcode', 1, view(sublevel(labDB, QPCR_RESULT_BY_SAMPLE_BARCODE, {valueEncoding: 'json'} ), qpcrResultBySampleBarcodeView));
-
-adminCore.use('usersByGUID', 1, view(sublevel(adminDB, USERS_BY_GUID, {valueEncoding: 'json'} ), usersByGUIDView));
-adminCore.use('usersByName', 1, view(sublevel(adminDB, USERS_BY_NAME, {valueEncoding: 'json'} ), usersByNameView));
-
-
-// Wait for multifeeds to be ready
-// before proceeding with initialization
-labMulti.ready(function() {
-  adminMulti.ready(init);
-});
 
 function ensureInitialUser(settings, adminCore, cb) {
   cb = cb || function() {};
@@ -133,13 +79,13 @@ function ensureInitialUser(settings, adminCore, cb) {
 
   console.log("Attempting to create initial user:", user.name);
   
-  adminCore.api.usersByName.get(user.name, function(err, users) {
+  core.adminCore.api.usersByName.get(user.name, function(err, users) {
     if(!err && users && users.length) {
       console.log("User", user.name, "already exists");
       return cb();
     }
     
-    writer.saveUser(adminCore, {
+    writer.saveUser(core.adminCore, {
       name: user.name,
       groups: ['admin', 'user']
     }, user.password, function(err, user) {
@@ -158,18 +104,18 @@ function initWebserver() {
 
   const dmScanner = startDataMatrixScanner();
   
-  var rpcMethods = require('../rpc/public.js')(settings, labDeviceServer, dmScanner, labCore, adminCore);
+  var rpcMethods = require('../rpc/public.js')(settings, labDeviceServer, dmScanner, core.labCore, core.adminCore);
   
   // methods only available to logged-in users in the 'user' group
-  rpcMethods.user = require('../rpc/user.js')(settings, labDeviceServer, dmScanner, labCore, adminCore, labLocal);
+  rpcMethods.user = require('../rpc/user.js')(settings, labDeviceServer, dmScanner, core.labCore, core.adminCore, labLocal);
 
   // methods only available to users in the 'admin' group
-  rpcMethods.admin = require('../rpc/admin.js')(settings, labDeviceServer, dmScanner, labCore, adminCore, labLocal);
+  rpcMethods.admin = require('../rpc/admin.js')(settings, labDeviceServer, dmScanner, core.labCore, core.adminCore, labLocal);
   
 
   if(argv.init) {
     console.log("Initializing new renegade-lims network");
-    ensureInitialUser(settings, adminCore);
+    ensureInitialUser(settings, core.adminCore);
   }
   
   var userCookieAuth = auth({
@@ -350,200 +296,6 @@ function labDeviceConnection(peer, socket, peerDesc) {
   return peerDesc;
 }
 
-function beginReplication(peer, socket, isInitiator) {
-
-  const peerDesc = {
-    type: peer.type,
-    host: (peer.connect) ? peer.connect.host : socket.remoteAddress,
-    port: socket.remotePort
-  }
-  
-  if(peer.type === 'lab-device') {
-
-    return labDeviceConnection(peer, socket, peerDesc);
-  }
-  
-  var labReadAllowed = false;
-  var adminWriteAllowed = false;
-  
-  if(peer.type === 'field') {
-
-    labReadAllowed = false;
-    adminWriteAllowed = false;
-    
-  } else if(peer.type === 'lab' || peer.type === 'server') {
-    
-    labReadAllowed = true;
-    adminWriteAllowed = true;
-    
-  } else { // not a recognized certificate for any type of device
-    console.log("Connection from unknown peer type with a valid certificate");
-    socket.destroy();
-    return;
-  }
-
-  console.log("peer is of type:", peer.type)
-  
-  const mux = multiplex();
-  const labStream = mux.createSharedStream('labStream');
-  const adminStream = mux.createSharedStream('adminStream');
-
-  socket.pipe(mux).pipe(socket);
-
-  labStream.pipe(labMulti.replicate(isInitiator, {
-    download: true,
-    upload: labReadAllowed,
-    live: true
-  })).pipe(labStream);
-  
-  adminStream.pipe(adminMulti.replicate(isInitiator, {
-    download: adminWriteAllowed,
-    upload: true,
-    live: true
-  })).pipe(adminStream);
-
-  return peerDesc;
-}
-
-function initInbound() {
-
-  const peerCerts = tlsUtils.getPeerCerts(settings.tlsPeers);
-
-  var server = tls.createServer({
-    ca: peerCerts,
-    key: settings.tlsKey,
-    cert: settings.tlsCert,
-    requestCert: true,
-    rejectUnauthorized: !argv.insecure,
-    enableTrace: !!argv.debug
-    
-  }, function(socket) {
-    console.log("Client connection secured");
-    
-    var peer = tlsUtils.getPeerCertEntry(settings.tlsPeers, socket.getPeerCertificate());
-    if(!peer) {
-      if(!argv.insecure) {
-        console.log("Unknown peer with valid certificate connected");
-        socket.destroy();
-        return;
-      }
-      peer = {
-        type: 'lab',
-        description: "insecure test peer",
-      }
-    }
-    const peerDesc = beginReplication(peer, socket, true);
-
-    console.log("Peer connected:", peerDesc);
-  });
-
-  server.on('connection', (socket) => {
-    console.log("Client connecting from:", socket.remoteAddress);
-  });
-  
-  server.on('clientError', (err, socket) => {
-    console.error("Client error:", socket.remoteAddress || "Unknown client host/IP", err);
-  });
-  
-  server.on('tlsClientError', (err, socket) => {
-    // TODO
-    // We need a way to figure out which client these errors are for but
-    // socket.remoteAddress is unset by the time this error is emitted
-    console.error("Client failed to authenticate:", socket.authorizationError || "Unknown error type", err);
-  });
-  
-  console.log("Replication server listening on", settings.host+':'+settings.port);
-  
-  server.listen({
-    host: settings.host,
-    port: settings.port
-  });
-}
-
-function connectToPeerOnce(peer, cb) {
-  
-  console.log("Connecting to peer:", peer.connect.host + ':' + peer.connect.port);
-  const socket = tls.connect(peer.connect.port, peer.connect.host, {
-    ca: peer.cert, // only trust this cert
-    key: settings.tlsKey,
-    cert: settings.tlsCert,
-    rejectUnauthorized: !argv.insecure,
-    enableTrace: !!argv.debug,
-    checkServerIdentity: function(host, cert) {
-      console.log("Checking cert for:", host);
-      const res = tls.checkServerIdentity(host, cert);
-      console.log("  result:", (res === undefined) ? "success" : "certificate invalid");
-      return res;
-    }
-  })
-  
-  socket.on('secureConnect', function() {
-    cb();
-    console.log("Connected to peer:", peer.connect.host + ':' + peer.connect.port);
-
-    beginReplication(peer, socket, false);
-  });
-
-  socket.on('close', function() {
-    console.log("Disconnected from peer:", peer.connect.host + ':' + peer.connect.port);
-    cb(true);
-  });
-  
-  socket.on('error', function(err) {
-    console.error(err);
-  });
-}
-
-function connectToPeer(peer) {
-  if(!peer.connect.port || !peer.connect.host) return;
-
-  // Retry with increasing back-off 
-  var back = backoff.fibonacci({
-    randomisationFactor: 0,
-    initialDelay: 3 * 1000, // 3 seconds
-    maxDelay: 30 * 1000
-  });
-
-  var count = 0;
-  function tryConnect() {
-    connectToPeerOnce(peer, function(disconnected) {
-      if(disconnected) {
-        if(count > 0) {
-          back.backoff();
-          return;
-        }
-        process.nextTick(tryConnect);
-        count++;
-      } else {
-        count = 0;
-        back.reset();
-      }
-    });
-  }
-  
-  tryConnect();
-  
-  back.on('backoff', function(number, delay) {
-    console.log("Retrying in", Math.round(delay / 1000), "seconds");
-  });
-
-
-  back.on('ready', function(number, delay) {
-    tryConnect();
-  });
-  
-}
-
-function initOutbound() {
-  if(!settings.tlsPeers) return;
-  
-  var peer;
-  for(peer of settings.tlsPeers) {
-    if(!peer.connect) continue;
-    connectToPeer(peer);
-  }
-
-}
 
 async function init() {
 
@@ -557,18 +309,30 @@ async function init() {
     })
     return;
   }
+
+  if(argv.introvert) {
+    settins.introvert = true;
+  }
+
+  if(argv.insecure) {
+    settins.insecure = true;
+  }
+
+  if(argv.debug) {
+    settins.debug = true;
+  }
   
   if(argv.dump) {
     const csv = require('../lib/csv.js');
     if(argv.dump === 'plates') {
-      csv.getPlates(labCore, (err, data) => {
+      csv.getPlates(core.labCore, (err, data) => {
         if(err) return console.error(err);
 
         process.stdout.write(data);
         process.exit(0);
       })
     } else if(argv.dump === 'platesw') {
-      csv.getPlatesWrong(labCore, (err, data) => {
+      csv.getPlatesWrong(core.labCore, (err, data) => {
         if(err) return console.error(err);
 
         process.stdout.write(data);
@@ -576,21 +340,21 @@ async function init() {
       })
       
     } else if(argv.dump === 'samples') {
-      csv.getSamples(labCore, (err, data) => {
+      csv.getSamples(core.labCore, (err, data) => {
         if(err) return console.error(err);
 
         process.stdout.write(data);
         process.exit(0);
       })
     } else if(argv.dump === 'samplesw') {
-      csv.getSamplesWrong(labCore, (err, data) => {
+      csv.getSamplesWrong(core.labCore, (err, data) => {
         if(err) return console.error(err);
 
         process.stdout.write(data);
         process.exit(0);
       })
     } else if(argv.dump === 'all') {
-      csv.getAll(labCore, (err, data) => {
+      csv.getAll(core.labCore, (err, data) => {
         if(err) return console.error(err);
 
         process.stdout.write(data);
@@ -598,7 +362,7 @@ async function init() {
       })
       
     } else if(argv.dump === 'results') {
-      csv.getQpcrResults(labCore, (err, data) => {
+      csv.getQpcrResults(core.labCore, (err, data) => {
         if(err) return console.error(err);
 
         process.stdout.write(data);
@@ -624,24 +388,15 @@ async function init() {
 
   if(settings.rimbaud && settings.rimbaud.synchronizeOrders) {
     if(!argv.introvert) {
-      rimbaud.startOrderSynchronizer(labCore);
+      rimbaud.startOrderSynchronizer(core.labCore);
     }
   }
-  
-  if(settings.host) {
-    initInbound();
-  }
 
-  if(!argv.introvert) {
-    initOutbound();
-  } else {
-    console.log("Introvert mode enabled. Ignoring settings.tlsPeers");
-  }
-  
+
+    
   if(settings.webHost) {
     initWebserver();
   }
-  
 }
 
 
@@ -652,7 +407,7 @@ function login(remoteIP, data, cb) {
   antiBruteforce(settings.attemptsLog, remoteIP, data.username, function(err) {
     if(err) return cb(err);  
   
-    adminCore.api.usersByName.get(data.username, function(err, users) {
+    core.adminCore.api.usersByName.get(data.username, function(err, users) {
       if(err) return cb(err);
 
       if(!users.length) {
@@ -705,3 +460,16 @@ function startPeriodicTimeCheck() {
     }
   });
 }
+
+
+var core;
+limsCore.init(db, settings, function(err, o) {
+  if(err) {
+    console.error("Failed to start lims core:", err)
+    process.exit(1);
+  }
+
+  core = o;
+
+  init();
+});
