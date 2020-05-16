@@ -311,15 +311,15 @@ async function init() {
   }
 
   if(argv.introvert) {
-    settins.introvert = true;
+    settings.introvert = true;
   }
 
   if(argv.insecure) {
-    settins.insecure = true;
+    settings.insecure = true;
   }
 
   if(argv.debug) {
-    settins.debug = true;
+    settings.debug = true;
   }
   
   if(argv.dump) {
@@ -472,4 +472,10 @@ limsCore.init(db, settings, function(err, o) {
   core = o;
 
   init();
+}, function(peer, peerDesc, socket) {
+  
+  if(peer.type === 'lab-device') {
+    labDeviceConnection(peer, socket, peerDesc);
+  }
+  
 });
