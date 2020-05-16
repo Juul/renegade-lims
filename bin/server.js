@@ -27,6 +27,7 @@ const userUtils = require('../lib/user.js');
 const ntpTester = require('../lib/ntp_tester.js');
 const migration = require('../lib/migration.js');
 const LabDeviceServer = require('../lib/labdevice_server.js');
+const DecapperServer = require('../lib/decapper_server.js');
 const DataMatrixScanner = require('../lib/datamatrix_scanner.js');
 const settings = require('../settings.js');
 
@@ -53,6 +54,7 @@ const argv = minimist(process.argv.slice(2), {
 });
 
 const labDeviceServer = new LabDeviceServer();
+const decapperServer = new DecapperServer();
 
 if(!settings.attemptsLog) {
   console.log("Warning: settings.attemptsLog is not set. Login and signup brute forcing prevention is disabled.");
@@ -476,6 +478,14 @@ limsCore.init(db, settings, function(err, o) {
   
   if(peer.type === 'lab-device') {
     labDeviceConnection(peer, socket, peerDesc);
+    
+  } else if(peer.type === 'decapper') {
+
+    console.log("DeCapper connected:", peer)
+    decapperServer.clientConnected(socket);
+                
+  } else {
+    console.error("Unknown peer type:", peer.type);
   }
   
 });

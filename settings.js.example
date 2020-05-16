@@ -54,6 +54,11 @@ module.exports = {
       description: "label printer",
       cert: fs.readFileSync('tls/peers/lab-device.localhost.pem')
     },
+    {
+      type: 'decapper', // lab devices have no database access at all
+      description: "Hamilton DeCapper",
+      cert: fs.readFileSync('tls/peers/decapper.localhost.pem')
+    }
   ],
   
   loginToken: {
