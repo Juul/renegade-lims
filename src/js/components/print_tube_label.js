@@ -1,4 +1,6 @@
 'use strict';
+
+const async = require('async');
 import { h, Component } from 'preact';
 import { view } from 'z-preact-easy-state';
 import linkState from 'linkstate';
@@ -29,8 +31,8 @@ class PrintTubeLabel extends Component {
     
 
     this.setState({
-      copies: 1, // copies of each barcode per label,
-      totalCopies: 1 // how many of these labels to print
+      copies: 1, // copies of each (identical) barcode to print
+      number: 1 // how many consecutively numbered barcodes to print
     });
   }
   
@@ -45,12 +47,33 @@ class PrintTubeLabel extends Component {
 
     this.labelMaker.drawLabel('labelPreview', this.state.customCode);
 
+    const copies = this.state.copies || 1;
+    
     var imageData = this.labelMaker.getDataURL();
-    app.actions.printLabel('dymoPrinter', imageData, this.state.totalCopies, function(err) {
+    app.actions.printLabel('dymoPrinter', imageData, copies, function(err) {
       if(err) return app.notify(err, 'error');
 
       app.notify("Printing", 'success');
     })
+  }
+
+  doPrint(copies, cb) {
+    console.log("doPrint:", copies);
+    app.actions.getBarcodes(1, function(err, startCode, howMany, prefix) {
+      if(err) return cb(err);
+      console.log("Got code:", startCode, howMany);
+
+      this.labelMaker.drawLabel('labelPreview', prefix + startCode);
+      
+      var imageData = this.labelMaker.getDataURL();
+      app.actions.printLabel('dymoPrinter', imageData, copies, (err) => {
+        if(err) return cb(err);
+
+        console.log("printed");
+        cb();
+      })
+      
+    }.bind(this));  
   }
   
   print(e) {
@@ -60,26 +83,52 @@ class PrintTubeLabel extends Component {
       this.printCustom();
       return;
     }
+
+    const number = parseInt(this.state.number || 1);
+    const copies = parseInt(this.state.copies || 1);
+
+    console.log("DO PRINT", this.state);
+    if(number > 1) {
+      this.printMany(number, copies);
+      return;
+    }
     
-    const copies = this.state.copies;
-    
-    app.actions.getBarcodes(1, function(err, startCode, howMany, prefix) {
-      if(err) return app.actions.notify(err, 'error');
+    this.doPrint(copies, function(err) {
+      if(err) return app.notify(err, 'error');
 
-      this.labelMaker.drawLabel('labelPreview', prefix + startCode);
-
-      const copies = this.state.totalCopies || 1;
-      
-      var imageData = this.labelMaker.getDataURL();
-      app.actions.printLabel('dymoPrinter', imageData, copies, function(err) {
-        if(err) return app.notify(err, 'error');
-
-        app.notify("Printing", 'success');
-      })
-      
-    }.bind(this));  
+      app.notify("Printing", 'success');
+    });
   }
 
+  printMany(number, copies) {    
+    
+    copies = parseInt(copies);
+    if(!(copies >= 1 && copies <= 10)) {
+      app.notify("Number of copies must be between 1 and 10", 'error');
+      return;
+    }
+    number = parseInt(number);
+    if(!(number >= 1 && number <= 50)) {
+      app.notify("Number of labels must be between 1 and 50", 'error');
+      return;
+    }
+    const total = copies * number;
+    if(total > 50) {
+      app.notify("", 'error');
+      return;
+    }
+    
+    async.times(number, (n, next) => {
+      this.doPrint(copies, next);
+    }, function(err) {
+      if(err) {
+        app.notify(err, 'error');
+        retur;
+      }
+      app.notify("Sent "+number+" labels to printer", 'success');
+    })
+  }
+  
   updateCustomCode(eventOrCode) {
     var customCode;
     if(typeof eventOrCode === 'object' && eventOrCode.target) {
@@ -117,7 +166,8 @@ class PrintTubeLabel extends Component {
         <Container>
         <h3>Print tube label</h3>
         <p>Custom barcode: <input type="text" value={this.state.customCode} onInput={this.updateCustomCode.bind(this)} /></p>
-        <p>Copies to print: <input type="text" value={this.state.totalCopies} onInput={linkState(this, 'totalCopies')} /></p>
+        <p>Number of identical copies to print: <input type="text" value={this.state.copies} onInput={linkState(this, 'copies')} /></p>
+        <p>How many consecutively numbered labels to print: <input type="text" value={this.state.number} onInput={linkState(this, 'number')} /></p>
         <p><input type="button" onClick={this.print.bind(this)} value="Print" /></p>
 
         <h4>Print preview</h4>

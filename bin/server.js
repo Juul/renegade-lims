@@ -25,7 +25,6 @@ const tlsUtils = require('../lib/tls.js');
 const writer = require('../lib/writer.js');
 const userUtils = require('../lib/user.js');
 const ntpTester = require('../lib/ntp_tester.js');
-const migration = require('../lib/migration.js');
 const LabDeviceServer = require('../lib/labdevice_server.js');
 const DecapperServer = require('../lib/decapper_server.js');
 const DataMatrixScanner = require('../lib/datamatrix_scanner.js');
@@ -44,7 +43,8 @@ const argv = minimist(process.argv.slice(2), {
     'init', // initialize a new LIMS network
     'introvert',
     'insecure', // don't authenticate anything. only for testing
-    'migrate'
+    'migrate',
+    'local-db-dump'
   ],
   alias: {
     'd': 'debug', // enable debug output
@@ -66,7 +66,6 @@ fs.ensureDirSync(settings.dataPath, {
 
 const db = level(path.join(settings.dataPath, 'db'), {valueEncoding: 'json'});
 
-const oldLocalDB = sublevel(db, 'lo', {valueEncoding: 'json'});
 const localDBPath = path.join(settings.dataPath, 'local_db');
 const localDB = level(localDBPath, {valueEncoding: 'json'}); // never replicated
 const labLocal = new LabLocal(localDB, settings.labBarcodePrefix);
@@ -301,17 +300,6 @@ function labDeviceConnection(peer, socket, peerDesc) {
 
 async function init() {
 
-  if(argv.migrate) {
-    // Copy the contents of the old localDB sublevel into
-    // an a stand-alone leveldb instance
-    migration.ensureDBCopy(oldLocalDB, localDB, localDBPath, function(err) {
-      if(err) return console.error("Migration failed:", err);
-
-      console.log("Migration completed");
-    })
-    return;
-  }
-
   if(argv.introvert) {
     settings.introvert = true;
   }
@@ -322,6 +310,57 @@ async function init() {
 
   if(argv.debug) {
     settings.debug = true;
+  }
+
+  if(argv['local-db-dump']) {
+
+//    var rs = oldLocalDB.createReadStream();
+    var rs = localDB.createReadStream();
+    rs.on('data', function(data) {
+      console.log("data:", data);
+    });
+    rs.on('end', function() {
+      console.log("END");
+      process.exit(0);
+    })
+  }
+
+  if(argv['local-db-del']) {
+    let key = argv['local-db-del'];
+    localDB.del(key, function(err) {
+      if(err) {
+        console.error(err);
+        process.exit(1);
+      }
+      console.log("del successful");
+      process.exit(0);
+    })
+  }
+    
+  if(argv['local-db-put']) {
+    let arg = argv['local-db-put'];
+    let m = arg.match(/^([^\:]+):(.*)/);
+    if(!m) {
+      console.error('Usage: --local-db-put "key:value"');
+      process.exit(1);
+    }
+    let key = m[1];
+    let val = m[2];
+    try {
+      val = JSON.parse(val);
+    } catch(e) {
+      console.log("Warning: Value is not valid JSON (was it supposed to be?)");
+    }
+    localDB.put(key, val, function(err) {
+      if(err) {
+        console.error(err);
+        process.exit(1);
+      }
+      console.log("put successful:");
+      console.log("  key:", key);
+      console.log("  val:", val);
+      process.exit(0);
+    })
   }
   
   if(argv.dump) {
