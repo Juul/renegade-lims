@@ -118,7 +118,7 @@ class PrintTubeLabel extends Component {
       return;
     }
     
-    async.times(number, (n, next) => {
+    async.timesSeries(number, (n, next) => {
       this.doPrint(copies, next);
     }, function(err) {
       if(err) {
