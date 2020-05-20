@@ -117,6 +117,10 @@ module.exports = function() {
       app.remote.generateEDSFile(dirpath, filename, data, cb);
     },
 
+    generateTXTFile: function(model, data, cb) {
+      app.remote.generateTXTFile(model, data, cb);
+    },
+    
     getResultsForSampleBarcode: function(barcode, cb) {
       app.remote.getResultsForSampleBarcode(barcode, cb);
     },

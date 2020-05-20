@@ -12,6 +12,7 @@ const userUtils = require('../lib/user.js');
 const writer = require('../lib/writer.js');
 const csv = require('../lib/csv.js');
 const rimbaudAPI = require('../lib/rimbaud.js');
+const qpcrPlateLayoutGenerator = require('../lib/qpcr_plate_layout_generator.js');
 
 
 module.exports = function(settings, labDeviceServer, dmScanner, labCore, adminCore, labLocal) {
@@ -180,6 +181,14 @@ module.exports = function(settings, labDeviceServer, dmScanner, labCore, adminCo
         cb(null, 'data:application/zip;base64,'+buf.toString('base64'));
       })
     },
+
+    generateTXTFile: function(userData, remoteIP, model, plate, cb) {
+      const str = qpcrPlateLayoutGenerator.generate(model, plate);
+      const buf = Buffer.from(str);
+      
+      cb(null, 'data:text/plain;base64,'+buf.toString('base64'));
+    },
+    
 
     getResultsForSampleBarcode: function(userData, remoteIP, barcode, cb) {
       labCore.api.qpcrResultBySampleBarcode.get(barcode, cb);

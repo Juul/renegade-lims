@@ -226,6 +226,66 @@ class EditPlate extends Component {
     });
   }
 
+  downloadTXT() {
+    const model = 'qs6';
+
+    const wells = {};
+    const plate = this.state.plate;
+    const plateWells = plate.wells;
+    var well, wellName;
+    for(wellName in plateWells) {
+      well = plateWells[wellName];
+      if(!well) continue;
+
+      if(well.barcode) {
+        wells[wellName] = well.barcode;
+      } else if(well.special) {
+        console.log(well);
+        if(well.special === 'positiveControl') {
+          wells[wellName] = 'POS';  
+        } else if(well.special === 'negativeControl') {
+          wells[wellName] = 'NTC';
+        } else {
+          continue;
+        }
+      } else {
+        continue;
+      }
+        
+    }
+
+    const resultID = uuid();
+    
+    const o = {
+      barcode: plate.barcode,
+      name: resultID, // Save the result ID as the .eds experiment name
+      description: "Generated on " + utils.formatDateTime(plate.createdAt),
+      wells: wells
+    };
+
+    const filename = utils.formatDateTimeYMD(new Date()).replace(/[\s\-]+/g, '_')+'_'+o.barcode.toUpperCase()+'.txt';
+    
+    app.actions.generateTXTFile(model, o, (err, dataURL) => {
+      if(err) {
+        console.error(err);o
+        app.notify(err, 'error');
+        return;
+      }
+
+      // Convert from base64 DataURL to blob
+      fetch(dataURL).then(res => res.blob()).then((blob) => {
+        
+        FileSaver.saveAs(blob, filename);
+        
+      }).catch((err) => {
+        console.error(err);
+        app.notify(err, 'error');
+        return;
+      });
+    });
+    
+  }
+  
   downloadEDS() {
 
     const wells = {};
@@ -351,7 +411,7 @@ class EditPlate extends Component {
       sampleHtml = (
           <div>
           To place a sample in a well, first scan a sample tube, or manually enter the barcode number with the keyboard and press enter.
-          <p><button onClick={this.downloadEDS.bind(this)}>Download .eds file</button></p>
+          <p><button onClick={this.downloadEDS.bind(this)}>Download ABI 7500 .eds file</button> <button onClick={this.downloadTXT.bind(this)}>Download Qs6 .txt file</button></p>
           </div>
       )
     }
