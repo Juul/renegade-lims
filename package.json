@@ -66,14 +66,15 @@
     "gulp-cssimport": "^7.0.0",
     "gulp-inline-source": "^4.0.0",
     "gulp-sass": "^4.0.2",
-    "renegade-lims-core": "git+https://github.com/renegadebio/renegade-lims-core.git",
     "linkstate": "^1.1.1",
     "preact": "^10.4.0",
     "preact-async-route": "^2.2.1",
     "preact-router": "^3.2.1",
     "qrcode-generator": "^1.4.4",
     "qrcode-reader": "^1.0.4",
+    "renegade-lims-core": "git+https://github.com/renegadebio/renegade-lims-core.git",
     "watchify": "^3.11.1",
+    "xlsx": "^0.16.1",
     "z-preact-easy-state": "^6.0.12"
   },
   "license": "AGPL-3.0"

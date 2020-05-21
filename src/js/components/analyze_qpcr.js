@@ -17,6 +17,7 @@ const validatorUtils = require('../../../validators/common/utils.js');
 const Plate = require('./plate.js');
 const Plot = require('./plot.js');
 const eds = require('eds-handler');
+const qpcrXLSResult = require('../qpcr_result_xls.js');
 
 const negPosNames = ['NTC', 'POS'];
 
@@ -86,11 +87,17 @@ class AnalyzeQPCR extends Component {
     reader.onload = (e) => {
 
       try {
-        this.analyze(e.target.result);
+        if(this.state.file.name.match(/\.eds$/i)) {
+          this.analyzeEDS(e.target.result);
+        } else if(this.state.file.name.match(/\.txt$/i)) {
+          this.analyzeTXT(e.target.result);
+        } else {
+          throw new Error("File must be .eds or .txt");
+        }
         
       } catch(e) {
         console.error(e);
-        app.notify("Failed to parse .eds file", 'error');
+        app.notify("Failed to parse file: " + e, 'error');
         
         this.setState({
           file: undefined,
@@ -344,8 +351,20 @@ class AnalyzeQPCR extends Component {
  
     }
   };
+
+  analyzeTXT(fileData) {
+    qpcrResultXLS.parse(fileData, (err, result) => {
+      if(err) {
+        console.error(err);
+        app.notify(err, 'error');
+        return;
+      }
+
+      console.log("Parsed:", result);
+    });
+  };
   
-  analyze(fileData) {
+  analyzeEDS(fileData) {
     
     eds.parse(fileData, (err, result) => {
       if(err) {
