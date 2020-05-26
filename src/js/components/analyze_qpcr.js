@@ -113,12 +113,12 @@ class AnalyzeQPCR extends Component {
   // Returns a string on error
   // Return false if test came out negative
   // and true if it came out positive
-  calculateWellOutcome(famCtStr, vicCtStr, ctrl) {
+  calculateWellOutcome(famCtStr, vicCtStr, ctrl, isRetest) {
     const undeterminedRegExp = new RegExp(/^\s*undetermined\s*$/i);
         
-    const famCt = parseFloat(famCtStr);
+    var famCt = parseFloat(famCtStr);
     const famCtUn = famCtStr.match(undeterminedRegExp);
-    const vicCt = parseFloat(vicCtStr);
+    var vicCt = parseFloat(vicCtStr);
     const vicCtUn = vicCtStr.match(undeterminedRegExp);
 
     if(!famCtUn && isNaN(famCt)) {
@@ -128,9 +128,17 @@ class AnalyzeQPCR extends Component {
     if(!vicCtUn && isNaN(vicCt)) {
       return "cT for VIC channel was unrecognized value";
     }
+
+    if(famCtUn || famCt >= 40) {
+      famCt = 0;
+    }
+
+    if(vicCtUn || vicCt >= 40) {
+      vicCt = 0;
+    }
     
     if(ctrl === 'negativeControl') {
-      if((famCtUn || famCt === 0) && (vicCtUn || vicCt === 0)) {
+      if(famCt === 0 && vicCt === 0) {
         return false;
       } else {
         return "Plate blank control (negative control) was not blank"
@@ -138,26 +146,34 @@ class AnalyzeQPCR extends Component {
     }
 
     if(ctrl === 'positiveControl') {
-      if(!vicCtUn && vicCt < 32 && !famCtUn && famCt < 32) {
+      if(vicCt > 0 && vicCt <= 35 && famCt > 0 && famCt <= 37) {
         return true;
       } else {
         return "Plate positive control was not positive";
       }
     }
 
-    if(famCtUn || famCt === 0) {
-      if(vicCt < 32) {
-        return false; // test was negative
-      } else {
-        return 'retest';
-      }
-    } else {
-      if(famCt < 38) {
-        return true; // test was positive
+    if(vicCt == 0 || vicCt > 35) {
+      if(isRetest) {
+        return "Internal control failed after retest";
       } else {
         return 'retest';
       }
     }
+
+    if(famCt > 37) {
+      if(isRetest) {
+        return false;
+      } else {
+        return 'retest';
+      }
+    }
+
+    if(famCt > 0 && famCt <= 37) {
+      return true;
+    }
+
+    return false;
   }
 
   // Set the .outcome for each well 
@@ -264,7 +280,7 @@ class AnalyzeQPCR extends Component {
     for(wellName in result.wells) {
       well = result.wells[wellName];
       if(!well.result) continue;
-      
+
       if(well.result.outcome === 'retest') {
         barcodesToCheck.push(well.barcode);
       }
@@ -272,16 +288,15 @@ class AnalyzeQPCR extends Component {
 
     app.actions.getResultsForSampleBarcodes(barcodesToCheck, (err, allSampleResults) => {
       if(err) return cb(err);
-
+      
       var sampleBarcode, sampleResults, sampleResult, well, outcome, prevResults;
       for(sampleBarcode in allSampleResults) {
         sampleResults = allSampleResults[sampleBarcode];
 
         prevResults = [];
         for(sampleResult of sampleResults) {
-          
+
           if(!sampleResult.resultID || sampleResult.resultID === result.id) {
-            console.log("SKIPPING:", result.id);
             // Skip previous results for the same plate and sample barcode
             // since that's just a result from the previous analysis
             // of this exact same plate
@@ -297,12 +312,18 @@ class AnalyzeQPCR extends Component {
           return cb(new Error("Unable to find well for sample: " + sampleResult.barcode));
         }
 
-        if(!well.result || well.result.outcome !== 'retest') {
-          return cb(new Error("Unexpected mismatch between current and previous result"));
+        if(!well.result) {
+          continue;
         }
 
-        outcome = this.calculateRetestOutcome(well, prevResults);
+        // We don't do anything for related to retests for neg/pos control wells
+        if(well.special) {
+          continue;
+        }
 
+        outcome = this.calculateWellOutcome(well.result['FAM']['Ct'], well.result['VIC']['Ct'], null, true);
+        //outcome = this.calculateRetestOutcome(well, prevResults);
+        
         well.result.outcome = outcome;
         well.result.prevResults = prevResults;
       }
@@ -452,6 +473,7 @@ class AnalyzeQPCR extends Component {
     result.plateID = this.state.plate.id;
     result.plateBarcode = this.state.plate.barcode;
     result.edsFileData = this.state.edsFileData;
+    result.protocol = 'bgi'; // or rb-xp
 
     console.log("SAVE:", result);
     app.actions.saveQpcrResult(result, (err) => {
@@ -495,7 +517,7 @@ class AnalyzeQPCR extends Component {
             return;
           }
 
-          app.notify("Saved and reported " + count + " results!", 'success');
+          app.notify("Saved all results and reported " + count + " results!", 'success');
           
         });
       });
