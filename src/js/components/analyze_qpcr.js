@@ -17,7 +17,7 @@ const validatorUtils = require('../../../validators/common/utils.js');
 const Plate = require('./plate.js');
 const Plot = require('./plot.js');
 const eds = require('eds-handler');
-const qpcrXLSResult = require('../qpcr_result_xls.js');
+const qpcrResultXLS = require('../qpcr_result_xls.js');
 
 const negPosNames = ['NTC', 'POS'];
 
@@ -89,10 +89,10 @@ class AnalyzeQPCR extends Component {
       try {
         if(this.state.file.name.match(/\.eds$/i)) {
           this.analyzeEDS(e.target.result);
-        } else if(this.state.file.name.match(/\.txt$/i)) {
-          this.analyzeTXT(e.target.result);
+        } else if(this.state.file.name.match(/\.xlsx?$/i)) {
+          this.analyzeXLS(e.target.result);
         } else {
-          throw new Error("File must be .eds or .txt");
+          throw new Error("File must be .eds or .xlsx");
         }
         
       } catch(e) {
@@ -373,7 +373,7 @@ class AnalyzeQPCR extends Component {
     }
   };
 
-  analyzeTXT(fileData) {
+  analyzeXLS(fileData) {
     qpcrResultXLS.parse(fileData, (err, result) => {
       if(err) {
         console.error(err);
@@ -393,7 +393,7 @@ class AnalyzeQPCR extends Component {
         app.notify(err, 'error');
         return;
       }
-
+      
       if(!result.metadata || !result.metadata.plateName) {
         app.notify(".eds file was missing a result ID", 'error');
         return;
@@ -920,7 +920,7 @@ class AnalyzeQPCR extends Component {
     if(!this.state.file) {
       return (
           <Container>
-          <p>Select .eds file to load</p>
+          <p>Select .eds or .xlsx file to load</p>
           <input type="file" onChange={this.openFile.bind(this)} />
           </Container>
       );
