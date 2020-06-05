@@ -300,20 +300,19 @@ function parse(fileData, cb) {
     var lines = results.split(/\r?\n/);
     
     var metadata = getMetaData(lines);
-//    console.log("metadata:", metadata);
 
     var wells = getWellResults(lines);
-//    console.log("WELLS:", wells);
-    
-    // TODO save results in same format as from EDS
-    // TODO save amplification data in same format as from EDS
 
     const amplificationData = xlsx.utils.sheet_to_csv(sheets['Amplification Data']);
     lines = amplificationData.split(/\r?\n/);
 
     getWellRaw(wells, lines, metadata.plateSize);
     
-    console.log(wells);
+    return {
+      metadata,
+      wells
+    };
+    
   } catch(e) {
     return cb(e);
   }

@@ -86,14 +86,28 @@ class AnalyzeQPCR extends Component {
     
     reader.onload = (e) => {
 
+      var parseFunc; 
       try {
         if(this.state.file.name.match(/\.eds$/i)) {
-          this.analyzeEDS(e.target.result);
+          parseFunc = this.parseEDS;;
         } else if(this.state.file.name.match(/\.xlsx?$/i)) {
-          this.analyzeXLS(e.target.result);
+          parseFunc = this.parseXLS;
         } else {
           throw new Error("File must be .eds or .xlsx");
         }
+
+        const fileData = e.target.result;
+        
+        parseFunc(fileData, (err, result) => {
+          if(err) throw err;
+
+          this.setState({
+            analyzing: false,
+            edsFileData: fileData
+          })
+          
+          this.analyze(result);
+        })
         
       } catch(e) {
         console.error(e);
@@ -373,84 +387,72 @@ class AnalyzeQPCR extends Component {
     }
   };
 
-  analyzeXLS(fileData) {
-    qpcrResultXLS.parse(fileData, (err, result) => {
-      if(err) {
-        console.error(err);
-        app.notify(err, 'error');
-        return;
-      }
-
-      console.log("Parsed:", result);
-    });
+  parseXLS(fileData, cb) {
+    try {
+      
+      const result = qpcrResultXLS.parse(fileData);
+      cb(null, result);
+      
+    } catch(e) {
+      return cb(e);
+    }
   };
   
-  analyzeEDS(fileData) {
+  parseEDS(fileData, cb) {
+    eds.parse(fileData, cb);
+  };
+
+  analyze(result) {
+
+    if(!result.metadata || !result.metadata.plateName) {
+      app.notify("File was missing a result ID", 'error');
+      return;
+    }
     
-    eds.parse(fileData, (err, result) => {
+    result.id = result.metadata.plateName;
+    
+    if(!validatorUtils.validateUUID(result.id)) {
+      app.notify("File has invalid result ID", 'error');
+      return;
+    }
+    
+    this.getPlate(result.metadata.barcode, (err, plate) => {
       if(err) {
         console.error(err);
         app.notify(err, 'error');
         return;
       }
-      
-      if(!result.metadata || !result.metadata.plateName) {
-        app.notify(".eds file was missing a result ID", 'error');
-        return;
-      }
-      
-      result.id = result.metadata.plateName;
-      
-      if(!validatorUtils.validateUUID(result.id)) {
-        app.notify(".eds file has invalid result ID", 'error');
-        return;
-      }
 
-      this.setState({
-        analyzing: false,
-        edsFileData: fileData
-      })
-        
-      this.getPlate(result.metadata.barcode, (err, plate) => {
+      // Sets the .outcome for each well
+      this.calculateWellOutcomes(result.wells, plate);
+
+      try {
+        this.postProcessResult(result, plate);
+      } catch(e) {
+        console.error(e);
+        app.notify(e, 'error');
+        return;
+      }
+      
+
+      this.handleRetests(result, plate, (err) => {
         if(err) {
           console.error(err);
           app.notify(err, 'error');
           return;
         }
 
-        // Sets the .outcome for each well
-        this.calculateWellOutcomes(result.wells, plate);
+        console.log("RESULT:", result);
         
-        console.log("PLATE:", JSON.stringify(plate, null, 2));
-
-        try {
-          this.postProcessResult(result, plate);
-        } catch(e) {
-          console.error(e);
-          app.notify(e, 'error');
-          return;
-        }
-        
-
-        this.handleRetests(result, plate, (err) => {
-          if(err) {
-            console.error(err);
-            app.notify(err, 'error');
-            return;
-          }
-
-          console.log("RESULT:", result);
-          
-          this.setState({
-            plate: plate,
-            result: result
-          });
-          
+        this.setState({
+          plate: plate,
+          result: result
         });
+        
       });
     });
   }
-
+  
 
   saveAndReport() {
 
