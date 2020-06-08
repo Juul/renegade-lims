@@ -143,7 +143,7 @@ class Root extends Component {
           <CreatePlate path="/plate-new" />
           <TubeIntake path="/tube-intake/:formBarcode?" />
         <MapTubesToPlate path="/map-tubes-to-plate/:barcode?" />
-          <MapRacksToPlates path="/map-racks-to-plates" />
+          <MapRacksToPlates path="/map-racks-to-plates/:numPlates?" />
           <Plate path="/plate-test" />
           <Scan path="/scan" />
         <PrintOldMultiLabel path="/print-old-multilabel/:customCode?" />

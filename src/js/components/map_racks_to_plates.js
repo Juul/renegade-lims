@@ -122,13 +122,13 @@ class MapRacksToPlates extends Component {
       app.notify("This 96 well plate already exists in the system!", 'error');
       return;
     }
-    if(this.state.racks.length < 4) {
+    if(this.state.racks.length < (this.props.numPlates * 2)) {
       app.notify("You must scan the 48 tube racks before the 96 well plates", 'error');
       return;
     }
 
-    if(this.state.plates.length > 1) {
-      app.notify("You already scanned two 96 well plates", 'error');
+    if(this.state.plates.length >= this.props.numPlates) {
+      app.notify("You already scanned "+this.props.numPlates+" 96 well plate(s)", 'error');
       return;
     }
 
@@ -156,7 +156,7 @@ class MapRacksToPlates extends Component {
           return;
         }
 
-        if(this.state.racks.length < 4) {
+        if(this.state.racks.length < (this.props.numPlates * 2)) {
           app.notify("Rack with barcode '"+barcode+"' not registered in LIMS", 'error');
           return;
         }
@@ -238,10 +238,12 @@ class MapRacksToPlates extends Component {
       wells: this.mapWellsToPlate(this.state.racks.slice(0, 2))
     });
 
-    plates.push({
-      barcode: this.state.plates[1].barcode,
-      wells: this.mapWellsToPlate(this.state.racks.slice(2))
-    });
+    if(this.props.numPlates > 1) {
+      plates.push({
+        barcode: this.state.plates[1].barcode,
+        wells: this.mapWellsToPlate(this.state.racks.slice(2))
+      });
+    }
     
     async.eachSeries(plates, function(plate, next) {
       
@@ -273,7 +275,19 @@ class MapRacksToPlates extends Component {
   
   render() {
 
+    if(!this.props.numPlates) {
+      return (
+          <Container>
+          <h3>Map 48 tube racks to 96 well plates</h3>
+          <ul>
+          <li><Link href="/map-racks-to-plates/1">Map two 48 tube racks to one 96 well plate</Link></li>
+          <li><Link href="/map-racks-to-plates/2">Map four 48 tube racks to two 96 well plates</Link></li>
+          </ul>
+          </Container>
+      );
+    }
 
+    
     var racks = [];
     for(let i=0; i < this.state.racks.length; i++) {
       racks.push(this.getRackMarkup(this.state.racks[i]));
@@ -285,7 +299,7 @@ class MapRacksToPlates extends Component {
     }    
 
     var scanArea = '';
-    if(this.state.racks.length < 4) {
+    if(this.state.racks.length < (this.props.numPlates * 2)) {
       scanArea = this.getScanMarkup("48 tube rack number " + (this.state.racks.length+1));
     } else if(this.state.plates.length < 2) {
       scanArea = this.getScanMarkup("96 well plate number " + (this.state.plates.length+1));
@@ -293,7 +307,7 @@ class MapRacksToPlates extends Component {
 
     var saver = '';
     
-    if(this.state.plates.length > 1) {
+    if(this.state.plates.length >= this.props.numPlates) {
       if(!this.state.saved) {
         saver = (
             <div class="save-area">

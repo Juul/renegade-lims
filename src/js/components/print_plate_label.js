@@ -127,7 +127,7 @@ class PrintPlateLabel extends Component {
 	render() {
     return (
         <Container>
-        <h3>Print tube label</h3>
+        <h3>Print plate label</h3>
         <p>Custom barcode: <input type="text" value={this.state.customCode} onInput={this.updateCustomCode.bind(this)} /></p>
         <p>Copies to print: <input type="text" value={this.state.totalCopies} onInput={linkState(this, 'totalCopies')} /></p>
         <p><input type="button" onClick={this.print.bind(this)} value="Print" /></p>
