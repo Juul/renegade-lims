@@ -54,7 +54,6 @@ const argv = minimist(process.argv.slice(2), {
 });
 
 const labDeviceServer = new LabDeviceServer();
-const decapperServer = new DecapperServer();
 
 if(!settings.attemptsLog) {
   console.log("Warning: settings.attemptsLog is not set. Login and signup brute forcing prevention is disabled.");
@@ -503,6 +502,7 @@ function startPeriodicTimeCheck() {
 }
 
 
+var decapperServer;
 var core;
 limsCore.init(db, settings, function(err, o) {
   if(err) {
@@ -512,6 +512,8 @@ limsCore.init(db, settings, function(err, o) {
 
   core = o;
 
+  decapperServer = new DecapperServer(core);
+  
   init();
 }, function(peer, peerDesc, socket) {
   
