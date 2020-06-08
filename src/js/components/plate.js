@@ -238,15 +238,16 @@ class Plate extends Component {
         );
       } else {
         buttonsHtml = (
-            <p>Click an occupied well for info and options.</p>
+            <span></span>
         )
       }
     }
       
+
     
     return (
       <div>
-      <div id="my-plate" class="plate">
+        <div class={'plate plate-row-'+numRows + ' plate-col-'+numCols + ' ' + (this.props.addClass || '')}>
         {rows}
       </div>
         {buttonsHtml}

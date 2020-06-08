@@ -55,23 +55,59 @@
 
 /* -- PLATE -- */
 
-#my-plate {
-  width: 600px;
-  height: 300px;
-
-}
-  
+ 
 .plate {
   display: grid;
-  grid-template-rows: 0.5fr repeat(8, 1fr);
+/*  grid-template-rows: 0.5fr repeat(8, 1fr); */
   grid-row-gap: 10px;
   background-color: #AAAAAA;
+  width: 600px;
+  height: 300px;
+}
+
+.plate-small-48 {
+  width: 200px;
+  height: 120px;
+  grid-row-gap: 1px;
+  font-size: 10px;
+  margin: 20px; 
+  float: left;
+}
+
+.plate-medium-96 {
+  width: 350px;
+  height: 200px;
+  grid-row-gap: 2px;
+  font-size: 12px;
+  margin: 20px;
+  float: left;
+}
+
+
+.plate-small-48 .row, .plate-small-48 .hrow {
+  grid-column-gap: 1px;
+}
+
+.plate-row-12 {
+  grid-template-rows: 0.5fr repeat(12, 1fr);
+}
+
+.plate-row-8 {
+  grid-template-rows: 0.5fr repeat(8, 1fr);
 }
 
 .plate .row, .plate .hrow {
     display: grid;
-    grid-template-columns: 0.5fr repeat(12, 1fr);
+/*    grid-template-columns: 0.5fr repeat(12, 1fr); */
     grid-column-gap: 10px;
+}
+
+.plate-col-8 .row, .plate-col-8 .hrow {
+   grid-template-columns: 0.5fr repeat(8, 1fr);
+}
+
+.plate-col-12 .row, .plate-col-12 .hrow {
+   grid-template-columns: 0.5fr repeat(12, 1fr);
 }
 
 .plate .hrow .col {
@@ -230,4 +266,26 @@ svg.xy-plot-min {
 
 .loading {
     font-family: sans-serif;
+}
+
+
+/* map_racks_to_plates.js */
+
+.save-area {
+    float: left;
+}
+
+.scan-area {
+    width: 40%;
+}
+
+.rack-area {
+    width: 50%;
+    float: left;
+}
+
+.plate-area {
+    margin-top: -50px;
+    width: 49%;
+    float: left;
 }

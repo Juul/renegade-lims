@@ -11,7 +11,7 @@ const uuid = require('uuid').v4;
 const timestamp = require('monotonic-timestamp');
 const FileSaver = require('file-saver');
 
-const PlatePhysical = require('../physicals/plate.js');
+//const PlatePhysical = require('../physicals/plate.js');
 
 const utils = require('../utils.js');
 const Scan = require('./scan.js');
@@ -372,6 +372,7 @@ class EditPlate extends Component {
           this.newPlate(this.props.barcode);
           return
         }
+        console.log("PLATE:", plate);
         this.gotPlate(plate);
       })
     })    
@@ -415,6 +416,19 @@ class EditPlate extends Component {
           </div>
       )
     }
+
+    var selectedBarcode = '';
+    if(this.state.selectedWell) {
+      let contains = '';
+      if(this.state.plate && this.state.plate.wells && this.state.plate.wells[this.state.selectedWell]) {
+        contains = "contains sample " + this.state.plate.wells[this.state.selectedWell].barcode;
+      }
+      selectedBarcode = (
+          <div>
+          Selected well {this.state.selectedWell} {contains}
+        </div>
+      )
+    }
     
     var main;
     if(!this.props.barcode) {
@@ -443,7 +457,7 @@ class EditPlate extends Component {
           Plate created by: {this.state.plate.createdBy || "Unknown"}
           </p>
           <Plate occupied={this.state.plate.wells} selectedReplicateGroup={(this.state.tube) ? this.state.tube.replicateGroup : ''} selectedWell={this.state.selectedWell} selectFree={!!this.state.tube} placingMode={!!this.state.tube} onSelect={this.onWellSelect.bind(this)} onSave={this.savePlate.bind(this)} onCancel={this.cancelTube.bind(this)} onDelete={this.deleteWell.bind(this)} onhover={this.showWellInfo.bind(this)} />
-
+          {selectedBarcode}
           {ctrlButtons}
           {sampleHtml}
           <Scan onScan={this.tubeScanned.bind(this)} disableWebcam hideText />
