@@ -75,9 +75,9 @@ class MapRacksToPlates extends Component {
     });
 
     // TODO for debug only
-    for(let i=0; i < 4; i++) {
-      this.codeScanned('g'+i);
-    }
+//    for(let i=0; i < 4; i++) {
+//      this.codeScanned('g'+i);
+//    }
   }
 
   getRackMarkup(rack, number) {
@@ -178,9 +178,22 @@ class MapRacksToPlates extends Component {
     });
   }
 
-
-  
+  // this maps:
+  // source: left to right then top to bottom
+  // dest: top to bottom then left to right
   mapTubePositionToWell(posName, rackNumber) {
+    var posIndex = wellNameToIndex(posName, 6, 8);
+    if(rackNumber > 0) {
+      posIndex += 48;
+    }
+
+    return wellIndexToName(posIndex, 8, 12, true)
+  }  
+
+  // this maps:
+  // source: top to bottom then left to right
+  // dest: top to bottom then left to right
+  mapTubePositionToWell_topToBottom(posName, rackNumber) {
     var posIndex = wellNameToIndex(posName, 6, 8, true);
     if(rackNumber > 0) {
       posIndex += 48;

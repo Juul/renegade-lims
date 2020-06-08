@@ -50,7 +50,7 @@ class PrintTubeLabel extends Component {
     const copies = this.state.copies || 1;
     
     var imageData = this.labelMaker.getDataURL();
-    app.actions.printLabel('dymoPrinter', imageData, copies, function(err) {
+    app.actions.printLabel('tube', imageData, copies, function(err) {
       if(err) return app.notify(err, 'error');
 
       app.notify("Printing", 'success');
@@ -58,7 +58,7 @@ class PrintTubeLabel extends Component {
   }
 
   doPrint(copies, cb) {
-    console.log("doPrint:", copies);
+
     app.actions.getBarcodes(1, function(err, startCode, howMany, prefix) {
       if(err) return cb(err);
       console.log("Got code:", startCode, howMany);
@@ -66,7 +66,7 @@ class PrintTubeLabel extends Component {
       this.labelMaker.drawLabel('labelPreview', prefix + startCode);
       
       var imageData = this.labelMaker.getDataURL();
-      app.actions.printLabel('dymoPrinter', imageData, copies, (err) => {
+      app.actions.printLabel('tube', imageData, copies, (err) => {
         if(err) return cb(err);
 
         console.log("printed");

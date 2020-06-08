@@ -52,7 +52,7 @@ class PrintPlateLabel extends Component {
     });
 
     var imageData = this.labelMaker.getDataURL();
-    app.actions.printLabel('dymoPrinter', imageData, this.state.totalCopies, function(err) {
+    app.actions.printLabel('plate', imageData, this.state.totalCopies, function(err) {
       if(err) return app.notify(err, 'error');
 
       app.notify("Printing", 'success');
@@ -79,7 +79,7 @@ class PrintPlateLabel extends Component {
       const copies = this.state.totalCopies || 1;
       
       var imageData = this.labelMaker.getDataURL();
-      app.actions.printLabel('dymoPrinter', imageData, copies, function(err) {
+      app.actions.printLabel('plate', imageData, copies, function(err) {
         if(err) return app.notify(err, 'error');
 
         app.notify("Printing", 'success');

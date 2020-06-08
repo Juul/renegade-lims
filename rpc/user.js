@@ -39,14 +39,14 @@ module.exports = function(settings, labDeviceServer, dmScanner, labCore, adminCo
       });
     },
 
-    printLabel: function(userData, remoteIP, printerType, imageData, copies, cb) {
+    printLabel: function(userData, remoteIP, paperMatch, imageData, copies, cb) {
       if(!imageData) return cb(new Error("Image data missing"));
       
       var mtch = imageData.match(/^data:image\/png;base64,(.*)/)
       if(!mtch) return cb(new Error("Image data not in data:image/png;base64 format"));
       
       var imageBuffer = new Buffer.from(mtch[1], 'base64');
-      return labDeviceServer.printWherever(printerType, imageBuffer, copies, cb);
+      return labDeviceServer.printWherever(paperMatch, imageBuffer, copies, cb);
     },
     
     getPhysical: function(userData, remoteIP, code, cb) {
