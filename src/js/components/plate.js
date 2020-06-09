@@ -157,6 +157,11 @@ class Plate extends Component {
             } else if(occupied[well].special === 'negativeControl') {
               dotClass += ' neg-ctrl';
             }
+
+            if(occupied[well].cssClass) {
+              dotClass += ' ' + occupied[well].cssClass;
+            }
+            
             number = occupied[well].replicateGroup || '';
           }
         }

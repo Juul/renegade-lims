@@ -13,56 +13,9 @@ const FileSaver = require('file-saver');
 const async = require('async');
 
 const utils = require('../utils.js');
+const map = require('../map.js');
 const Scan = require('./scan.js');
 const Plate = require('./plate.js');
-
-// char code for uppercase A
-const aCharCode = 'A'.charCodeAt(0);
-
-function wellRowToNumber(wellRow, numRows) {
-  wellRow = wellRow.toUpperCase();
-  const val = wellRow.charCodeAt(0) - aCharCode;
-  if(val < 0 || val >= numRows) throw new Error("Invalid well row: " + wellRow);
-  return val;
-}
-
-// expects that we're counting from zero
-function wellRowToLetter(wellRow, numRows) {
-  if(wellRow >= numRows) throw new Error("Well row too high");
-  return String.fromCharCode(aCharCode + wellRow);
-}
-
-function wellNameToIndex(wellName, numRows, numCols, topToBottom) {
-  if(typeof wellName !== 'string' || wellName.length < 2 || wellName.length > 3) {
-    throw new Error("Invalid well name: " + wellName);
-  }
-
-  const rowIndex = wellRowToNumber(wellName, numRows);
-  const colIndex = parseInt(wellName.slice(1)) - 1;
-  if(colIndex < 0 || colIndex >= numCols) {
-    throw new Error("Invalid column number: " + colIndex);
-  }
-  
-  if(topToBottom) {
-    return colIndex * numRows + rowIndex;
-  } else {
-    return rowIndex * numCols + colIndex;
-  }
-}
-
-function wellIndexToName(wellIndex, numRows, numCols, topToBottom) {
-  var col, row;
-  if(topToBottom) {
-    col = Math.floor(wellIndex / numRows) + 1;
-    row = (wellIndex % numRows);
-  } else {
-    col = (wellIndex % numCols) + 1;
-    row = Math.floor(wellIndex / numCols);
-  }
-  
-  return wellRowToLetter(row)+col;
-}
-
 
 class MapRacksToPlates extends Component {
   
@@ -138,7 +91,7 @@ class MapRacksToPlates extends Component {
     
     plate = {
       barcode: barcode,
-      positions: 96,
+      size: 96,
       wells: []
     };
 
@@ -184,24 +137,24 @@ class MapRacksToPlates extends Component {
   // source: left to right then top to bottom
   // dest: top to bottom then left to right
   mapTubePositionToWell(posName, rackNumber) {
-    var posIndex = wellNameToIndex(posName, 6, 8);
+    var posIndex = map.wellNameToIndex(posName, 6, 8);
     if(rackNumber > 0) {
       posIndex += 48;
     }
 
-    return wellIndexToName(posIndex, 8, 12, true)
+    return map.wellIndexToName(posIndex, 8, 12, true)
   }  
 
   // this maps:
   // source: top to bottom then left to right
   // dest: top to bottom then left to right
   mapTubePositionToWell_topToBottom(posName, rackNumber) {
-    var posIndex = wellNameToIndex(posName, 6, 8, true);
+    var posIndex = map.wellNameToIndex(posName, 6, 8, true);
     if(rackNumber > 0) {
       posIndex += 48;
     }
 
-    return wellIndexToName(posIndex, 8, 12, true)
+    return map.wellIndexToName(posIndex, 8, 12, true)
   }
   
   mapWellsToPlate(racks) {

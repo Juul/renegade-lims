@@ -74,6 +74,15 @@
   float: left;
 }
 
+.plate-small-96 {
+  width: 200px;
+  height: 150px;
+  grid-row-gap: 1px;
+  font-size: 10px;
+  margin: 20px; 
+  float: left;
+}
+
 .plate-medium-96 {
   width: 350px;
   height: 200px;
@@ -83,9 +92,38 @@
   float: left;
 }
 
+.plate-medium-384 {
+  grid-row-gap: 2px;
+  font-size: 10px;
+  margin: 20px;
+  margin-left: 0;
+  float: left;
+}
+
+.plate-medium-384 .row .hcol {
+    width: 10px;
+}
+
+.plate .row, .plate .hrow {
+    display: grid;
+/*    grid-template-columns: 0.5fr repeat(12, 1fr); */
+    grid-column-gap: 10px;
+}
+
+.plate-medium-384 .row, .plate-medium-384 .hrow {
+  grid-column-gap: 2px;
+}
+
+.plate-small-96 .row, .plate-small-96 .hrow {
+  grid-column-gap: 1px;
+}
 
 .plate-small-48 .row, .plate-small-48 .hrow {
   grid-column-gap: 1px;
+}
+
+.plate-row-16 {
+  grid-template-rows: 0.5fr repeat(16, 1fr);
 }
 
 .plate-row-12 {
@@ -96,11 +134,7 @@
   grid-template-rows: 0.5fr repeat(8, 1fr);
 }
 
-.plate .row, .plate .hrow {
-    display: grid;
-/*    grid-template-columns: 0.5fr repeat(12, 1fr); */
-    grid-column-gap: 10px;
-}
+
 
 .plate-col-8 .row, .plate-col-8 .hrow {
    grid-template-columns: 0.5fr repeat(8, 1fr);
@@ -108,6 +142,10 @@
 
 .plate-col-12 .row, .plate-col-12 .hrow {
    grid-template-columns: 0.5fr repeat(12, 1fr);
+}
+
+.plate-col-24 .row, .plate-col-24 .hrow {
+   grid-template-columns: 0.5fr repeat(24, 1fr);
 }
 
 .plate .hrow .col {
@@ -132,6 +170,22 @@
     margin-right: auto;
     border-radius: 50%;
     background-color: #444444;
+}
+
+.col div.red {
+    background-color: red;
+}
+
+.col div.green {
+    background-color: green;
+}
+
+.col div.blue {
+    background-color: blue;
+}
+
+.col div.purple {
+    background-color: purple;
 }
 
 .col .dot:after {
@@ -269,7 +323,7 @@ svg.xy-plot-min {
 }
 
 
-/* map_racks_to_plates.js */
+/* map_racks_to_plates.js and map_96_to_384.js */
 
 .save-area {
     float: left;
@@ -285,6 +339,18 @@ svg.xy-plot-min {
 }
 
 .plate-area {
+    margin-top: -50px;
+    width: 49%;
+    float: left;
+}
+
+
+.plate96-area {
+    width: 50%;
+    float: left;
+}
+
+.plate384-area {
     margin-top: -50px;
     width: 49%;
     float: left;
