@@ -122,10 +122,12 @@ class MapRacksToPlates extends Component {
       app.notify("This 96 well plate already exists in the system!", 'error');
       return;
     }
+      /*
     if(this.state.racks.length < (this.props.numPlates * 2)) {
       app.notify("You must scan the 48 tube racks before the 96 well plates", 'error');
       return;
     }
+*/
 
     if(this.state.plates.length >= this.props.numPlates) {
       app.notify("You already scanned "+this.props.numPlates+" 96 well plate(s)", 'error');
@@ -156,7 +158,7 @@ class MapRacksToPlates extends Component {
           return;
         }
 
-        if(this.state.racks.length < (this.props.numPlates * 2)) {
+        if(this.state.racks.length !== 2 && this.state.racks.length !== 4) {
           app.notify("Rack with barcode '"+barcode+"' not registered in LIMS", 'error');
           return;
         }
@@ -299,12 +301,12 @@ class MapRacksToPlates extends Component {
     }    
 
     var scanArea = '';
-    if(this.state.racks.length < (this.props.numPlates * 2)) {
+    if(this.state.racks.length !== 2 && this.state.racks.length !== 4) {
       scanArea = this.getScanMarkup("48 tube rack number " + (this.state.racks.length+1));
-    } else if(this.state.plates.length < 2) {
+    } else if(this.state.plates.length < this.props.numPlates) {
       scanArea = this.getScanMarkup("96 well plate number " + (this.state.plates.length+1));
     }
-
+    
     var saver = '';
     
     if(this.state.plates.length >= this.props.numPlates) {
