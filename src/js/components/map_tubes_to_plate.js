@@ -260,6 +260,7 @@ class EditPlate extends Component {
       barcode: plate.barcode,
       name: resultID, // Save the result ID as the .eds experiment name
       description: "Generated on " + utils.formatDateTime(plate.createdAt),
+      size: plate.size,
       wells: wells
     };
 

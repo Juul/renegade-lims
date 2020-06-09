@@ -13,7 +13,7 @@ const FileSaver = require('file-saver');
 const async = require('async');
 
 const utils = require('../utils.js');
-const map = require('../map.js');
+const map = require('../../../lib/map.js');
 const Scan = require('./scan.js');
 const Plate = require('./plate.js');
 

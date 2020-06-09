@@ -13,7 +13,7 @@ const FileSaver = require('file-saver');
 const async = require('async');
 
 const utils = require('../utils.js');
-const map = require('../map.js');
+const map = require('../../../lib/map.js');
 const Scan = require('./scan.js');
 const Plate = require('./plate.js');
 
@@ -194,7 +194,6 @@ class Map96to384 extends Component {
     }
 
     for(wellName of negativeControlWells) {
-      console.log("ADDING:", wellName, 'negative')
       wells[wellName] = {
         id: NEG_CTRL_ID,
         special: 'negativeControl',
@@ -221,6 +220,8 @@ class Map96to384 extends Component {
 
     const plate = this.state.plate384;
     plate.wells = this.map96PlatesTo384Plate(this.state.plates96);    
+
+    console.log("SIZE:", plate.size);
     
     app.actions.savePlate(plate, (err) => {
       if(err) {
