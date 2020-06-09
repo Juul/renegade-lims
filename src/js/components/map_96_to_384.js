@@ -17,8 +17,14 @@ const map = require('../map.js');
 const Scan = require('./scan.js');
 const Plate = require('./plate.js');
 
-const colors = ['red', 'green', 'blue', 'purple'];
+const POS_CTRL_ID = "11111111-1111-1111-1111-111111111111";
+const NEG_CTRL_ID = "22222222-2222-2222-2222-222222222222";
+
+const colors = ['orange', 'green', 'pink', 'purple'];
 const numberNames = ['zero', 'one', 'two', 'three', 'four'];
+
+const negativeControlWells = ['A1', 'A2', 'B1', 'B2'];
+const positiveControlWells = ['O23', 'O24', 'P23', 'P24'];
 
 class Map96to384 extends Component {
   
@@ -160,6 +166,7 @@ class Map96to384 extends Component {
 
     return map.wellRowToLetter(rowIndex, 16) + (colIndex+1);
   }
+
   
   map96PlatesTo384Plate(plates96) {
     const wells = {}
@@ -186,6 +193,27 @@ class Map96to384 extends Component {
       plate96Number++;
     }
 
+    for(wellName of negativeControlWells) {
+      console.log("ADDING:", wellName, 'negative')
+      wells[wellName] = {
+        id: NEG_CTRL_ID,
+        special: 'negativeControl',
+        createdAt: timestamp(),
+        createdBy: app.state.user.name,
+        cssClass: 'blue'
+      };
+    }
+
+    for(wellName of positiveControlWells) {
+      wells[wellName] = {
+        id: POS_CTRL_ID,
+        special: 'positiveControl',
+        createdAt: timestamp(),
+        createdBy: app.state.user.name,
+        cssClass: 'red'
+      };
+    }
+    
     return wells;
   }
   
