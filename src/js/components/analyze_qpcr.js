@@ -72,7 +72,15 @@ class AnalyzeQPCR extends Component {
     });
   }
 
-  loadFile() {
+  loadFileRenegade() {
+    this.loadFile('renegade');
+  }
+
+  loadFileBGI() {
+    this.loadFile('bgi');
+  }
+  
+  loadFile(protocol) {
     this.setState({
       analyzing: true
     });
@@ -89,9 +97,9 @@ class AnalyzeQPCR extends Component {
       var parseFunc; 
       try {
         if(this.state.file.name.match(/\.eds$/i)) {
-          parseFunc = this.parseEDS;;
+          parseFunc = this.parseEDS.bind(this);
         } else if(this.state.file.name.match(/\.xlsx?$/i)) {
-          parseFunc = this.parseXLS;
+          parseFunc = this.parseXLS.bind(this);
         } else {
           throw new Error("File must be .eds or .xlsx");
         }
@@ -106,7 +114,7 @@ class AnalyzeQPCR extends Component {
             edsFileData: fileData
           })
           
-          this.analyze(result);
+          this.analyze(result, protocol);
         })
         
       } catch(e) {
@@ -123,11 +131,74 @@ class AnalyzeQPCR extends Component {
     reader.readAsArrayBuffer(this.state.file)
   }
 
+
+  // Returns a string on error
+  // Return false if test came out negative
+  // and true if it came out positive
+  calculateWellOutcomeRenegade(reporterCtStr, intCtrlCtStr, ctrl, isRetest) {
+    const undeterminedRegExp = new RegExp(/^\s*undetermined\s*$/i);
+        
+    var reporterCt = parseFloat(reporterCtStr);
+    const reporterCtUn = reporterCtStr.match(undeterminedRegExp);
+    var intCtrlCt = parseFloat(intCtrlCtStr);
+    const intCtrlCtUn = intCtrlCtStr.match(undeterminedRegExp);
+
+    if(!reporterCtUn && isNaN(reporterCt)) {
+      return "cT for reporter channel was unrecognized value";
+    }
+
+    if(!intCtrlCtUn && isNaN(intCtrlCt)) {
+      return "cT for internal control channel was unrecognized value";
+    }
+
+    if(reporterCtUn || reporterCt >= 40) {
+      reporterCt = 0;
+    }
+
+    if(intCtrlCtUn || intCtrlCt >= 40) {
+      intCtrlCt = 0;
+    }
+    
+    if(ctrl === 'negativeControl') {
+      if(reporterCt === 0 && intrCtrlCt === 0) {
+        return false;
+      } else {
+        return "Plate blank control (negative control) was not blank"
+      }
+    }
+
+    if(ctrl === 'positiveControl') {
+      if(intrCtrlCt > 0 && intrCtrlCt <= 40 && reporterCt > 0 && reporterCt <= 40) {
+        return true;
+      } else {
+        return "Plate positive control was not positive";
+      }
+    }
+
+    if(intCtrlCt == 0 || intCtrlCt > 40) {
+      if(isRetest) {
+        return "Internal control failed after retest";
+      } else {
+        return 'retest';
+      }
+    }
+
+    if(reporterCt == 0 || reporterCt >= 40) {
+      return false;
+    }
+
+    if(reporterCt > 0 && reporterCt < 40) {
+      return true;
+    }
+
+    return "Internal error. Unable to determine result: " + reporterCt + ' | ' + intCtrlCt;
+  }
+
   
   // Returns a string on error
   // Return false if test came out negative
   // and true if it came out positive
-  calculateWellOutcome(famCtStr, vicCtStr, ctrl, isRetest) {
+  calculateWellOutcomeBGI(famCtStr, vicCtStr, ctrl, isRetest) {
     const undeterminedRegExp = new RegExp(/^\s*undetermined\s*$/i);
         
     var famCt = parseFloat(famCtStr);
@@ -191,7 +262,7 @@ class AnalyzeQPCR extends Component {
   }
 
   // Set the .outcome for each well 
-  calculateWellOutcomes(wells, plate) {
+  calculateWellOutcomes(wells, plate, protocol) {
     var plateWells = plate.wells;
 
     var wellName, well, outcome, ctrl;
@@ -202,12 +273,18 @@ class AnalyzeQPCR extends Component {
         ctrl = plateWells[wellName].special;
       }
       
-      if(!well['FAM']) {
-        outcome = "Missing data from FAM channel";
-      } else if(!well['VIC']) {
-        outcome = "Missing data from VIC channel";
+      if(!well['reporter']) {
+        outcome = "Missing data from reporter channel";
+      } else if(!well['intCtrl']) {
+        outcome = "Missing data from internal control channel";
       } else {
-        outcome = this.calculateWellOutcome(well['FAM']['Ct'], well['VIC']['Ct'], ctrl);
+        if(protocol === 'bgi') {
+          outcome = this.calculateWellOutcomeBGI(well['reporter']['Ct'], well['intCtrl']['Ct'], ctrl);
+        } else if(protocol === 'renegade') {
+          outcome = this.calculateWellOutcomeRenegade(well['reporter']['Ct'], well['intCtrl']['Ct'], ctrl);
+        } else {
+          throw new Error("Unknown protocol: " + protocol);
+        }
       }
 
       well.outcome = outcome;
@@ -356,7 +433,7 @@ class AnalyzeQPCR extends Component {
       wellResult = well.result;
       if(!wellResult) continue;
 
-      if(!wellResult['FAM'] || !wellResult['FAM']['Sample Name']) {
+      if(!wellResult['reporter'] || !wellResult['reporter']['Sample Name']) {
         continue;
       }
       
@@ -365,7 +442,7 @@ class AnalyzeQPCR extends Component {
       // Since we're using the qPCR software's "sample name" field
       // to store these barcodes so we can map the results back to their samples.
       // For negative and positive controls these will be 'NTC' or 'POS'
-      const sampleBarcode = wellResult['FAM']['Sample Name'].trim();
+      const sampleBarcode = wellResult['reporter']['Sample Name'].trim();
       
       if(negPosNames.indexOf(sampleBarcode) >= 0) {
         // TODO check for plate layout changes for pos/neg controls
@@ -387,10 +464,57 @@ class AnalyzeQPCR extends Component {
     }
   };
 
+  // Some tests use FAM and VIC and others use FAM and CY5 probes
+  // This function normalizes so instead
+  // they are always called 'reporter' and 'intCtrl'
+  normalizeProbeNames(result) {
+    if(!result || !result.wells) return result;
+
+    var wellName, well;
+    for(wellName in result.wells) {
+      well = result.wells[wellName];
+      
+      if(well.result['FAM']) {
+        well.result.reporter = well.result['FAM'];
+        delete well.result['FAM'];
+      }
+      
+      if(well.result['CY5']) {
+        well.result.intCtrl = well.result['CY5'];
+        delete well.result['CY5'];
+        
+      } else if(well.result['VIC']) {
+        well.result.intCtrl = well.result['VIC'];
+        delete well.result['VIC'];
+        
+      }
+      if(well.raw['FAM']) {
+        well.raw.reporter = well.raw['FAM'];
+        delete well.raw['FAM'];
+      }
+      
+      if(well.raw['CY5']) {
+        well.raw.intCtrl = well.raw['CY5'];
+        delete well.raw['CY5'];
+        
+      } else if(well.raw['VIC']) {
+        well.raw.intCtrl = well.raw['VIC'];
+        delete well.result['VIC'];
+        
+      }
+      
+    }
+    return result;
+  }
+  
   parseXLS(fileData, cb) {
     try {
       
-      const result = qpcrResultXLS.parse(fileData);
+      var result = qpcrResultXLS.parse(fileData);
+      result = this.normalizeProbeNames(result);
+
+      
+      
       cb(null, result);
       
     } catch(e) {
@@ -399,10 +523,16 @@ class AnalyzeQPCR extends Component {
   };
   
   parseEDS(fileData, cb) {
-    eds.parse(fileData, cb);
+    eds.parse(fileData, (err, result) => {
+      if(err) return cb(err);
+
+      result = this.normalizeProbeNames(result);
+
+      cb(null, result);
+    });
   };
 
-  analyze(result) {
+  analyze(result, protocol) {
 
     if(!result.metadata || !result.metadata.plateName) {
       app.notify("File was missing a result ID", 'error');
@@ -424,7 +554,7 @@ class AnalyzeQPCR extends Component {
       }
 
       // Sets the .outcome for each well
-      this.calculateWellOutcomes(result.wells, plate);
+      this.calculateWellOutcomes(result.wells, plate, protocol);
 
       try {
         this.postProcessResult(result, plate);
@@ -844,13 +974,13 @@ class AnalyzeQPCR extends Component {
           <td>{utils.formatDateTime(wellResult.createdAt)}</td>
           <td>{wellResult.plateBarcode}</td>
           <td>
-          <Link onClick={this.showPlotForKey('FAM').bind(this)} data-result={JSON.stringify(wellResult)} style="cursor:pointer">
-              {wellResult.result['FAM']['Ct']}
+          <Link onClick={this.showPlotForKey('reporter').bind(this)} data-result={JSON.stringify(wellResult)} style="cursor:pointer">
+              {wellResult.result['reporter']['Ct']}
             </Link>
           </td>
           <td>
-          <Link onClick={this.showPlotForKey('VIC').bind(this)} data-result={JSON.stringify(wellResult)} style="cursor:pointer">
-          {wellResult.result['VIC']['Ct']}
+          <Link onClick={this.showPlotForKey('intCtrl').bind(this)} data-result={JSON.stringify(wellResult)} style="cursor:pointer">
+          {wellResult.result['intCtrl']['Ct']}
         </Link>
           </td>
           <td>{this.outcomeToText(wellResult.result.outcome)}</td>
@@ -864,8 +994,8 @@ class AnalyzeQPCR extends Component {
         <tr>
         <th>Analyzed at</th>
         <th>Plate</th>
-        <th>FAM Ct</th>
-        <th>VIC Ct</th>
+        <th>Reporter Ct</th>
+        <th>Int ctrl Ct</th>
         <th>Result</th>
         </tr>
         </thead>
@@ -932,7 +1062,8 @@ class AnalyzeQPCR extends Component {
           <Container>
           <p>Ready for analysis: {this.state.file.name}</p>
           <p>Allow discrepancies between plate map and qPCR results? <input type="checkbox" onInput={linkState(this, "allowDiscrepancies")} /></p>
-          <p><button onClick={this.loadFile.bind(this)}>Analyze</button></p>
+          <p><button onClick={this.loadFileRenegade.bind(this)}>Analyze using renegade.bio protocol</button></p>
+          <p><button onClick={this.loadFileBGI.bind(this)}>Analyze using BGI protocol</button></p>
           {plate}
           </Container>
       ); 
@@ -1017,8 +1148,8 @@ class AnalyzeQPCR extends Component {
                 <td><input type="checkbox" onClick={this.toggleResult.bind(this)} value={wellName} disabled={!result.reportable} checked={!!result.reportable && this.state.toggles[wellName]} /></td>
                 <td>{wellName}</td>
                 <td>{(plateMapWell) ? plateMapWell.barcode : "No plate mapping"}</td>
-                <td><Link onClick={this.showPlotForKey('FAM').bind(this)} data-well={wellName} style="cursor:pointer">{(resultWell) ? resultWell['FAM']['Ct'] : "No result"}</Link></td>
-                <td><Link onClick={this.showPlotForKey('VIC').bind(this)} data-well={wellName} style="cursor:pointer">{(resultWell) ? resultWell['VIC']['Ct'] : "No result"}</Link></td>
+                <td><Link onClick={this.showPlotForKey('reporter').bind(this)} data-well={wellName} style="cursor:pointer">{(resultWell) ? resultWell['reporter']['Ct'] : "No result"}</Link></td>
+                <td><Link onClick={this.showPlotForKey('intCtrl').bind(this)} data-well={wellName} style="cursor:pointer">{(resultWell) ? resultWell['intCtrl']['Ct'] : "No result"}</Link></td>
                 <td>?</td>
                 <td>{result.result}</td>
                 <td>{result.msg || ''}</td>
@@ -1046,8 +1177,8 @@ class AnalyzeQPCR extends Component {
             <th>Accept?</th>
             <th>Well</th>
             <th>Sample barcode</th>
-            <th>FAM Ct</th>
-            <th>VIC Ct</th>
+            <th>Reporter Ct</th>
+            <th>Int ctrl Ct</th>
             <th>Re-run count</th>
             <th>Result</th>
             <th>Message</th>
