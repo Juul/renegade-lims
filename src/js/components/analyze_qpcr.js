@@ -585,7 +585,10 @@ class AnalyzeQPCR extends Component {
   
 
   saveAndReport() {
-
+    this.setState({
+      saving: true
+    });
+    
     if(!this.state.result) {
       app.notify("No analyzed results available to save or report.", 'error');
       return;
@@ -617,7 +620,7 @@ class AnalyzeQPCR extends Component {
 
       result.wells = {};
     
-      const wellNames = getWellNames(8, 12);
+      const wellNames = getWellNames(this.state.plate.plateSize);
       for(let wellName of wellNames) {
         if(!this.state.toggles[wellName]) continue;
         
@@ -874,7 +877,7 @@ class AnalyzeQPCR extends Component {
   }
 
   checkAll() {
-    const wellNames = getWellNames(8, 12);
+    const wellNames = getWellNames(this.state.plate.plateSize);
     const toggles = {};
     for(let wellName of wellNames) {
       toggles[wellName] = true;
@@ -886,7 +889,7 @@ class AnalyzeQPCR extends Component {
   }
 
   uncheckAll() {
-    const wellNames = getWellNames(8, 12);
+    const wellNames = getWellNames(this.state.plate.plateSize);
     const toggles = {};
     for(let wellName of wellNames) {
       toggles[wellName] = false;
@@ -1076,6 +1079,18 @@ class AnalyzeQPCR extends Component {
         );
     } else if(this.state.plate) {
 
+      let plateSize = this.state.plate || 96;
+      var plateView = '';
+      if(plateSize === 384) {
+        plateView = (
+            <Plate rows="16" cols="24" occupied={this.state.plate.wells} addClass="plate-large-384" />
+        );
+      } else {
+        plateView = (
+            <Plate rows="8" cols="12" occupied={this.state.plate.wells}  />
+        );
+      }
+      
       plate = (
           <div>
           <h3>Plate layout from LIMS</h3>
@@ -1084,7 +1099,7 @@ class AnalyzeQPCR extends Component {
           <li><b>Created at:</b> {utils.formatDateTime(this.state.plate.createdAt)}</li>
           <li><b>Created by:</b> {this.state.plate.createdBy || 'Unknown'}</li>
           </ul>
-          <Plate occupied={this.state.plate.wells}  />
+          {plateView}
           {results}
         </div>
       );
@@ -1116,7 +1131,8 @@ class AnalyzeQPCR extends Component {
 
         var fail = [];
         var wellResults = [];
-        const wellNames = getWellNames(8, 12);
+        const wellNames = getWellNames(this.state.plate.plateSize);
+
         for(let wellName of wellNames) {
 
           let plateMapWell = this.state.plate.wells[wellName];
@@ -1165,6 +1181,19 @@ class AnalyzeQPCR extends Component {
             ))
           }
         }
+
+        var saveButton = '';
+        if(!this.state.saving) {
+          saveButton = (
+              <div>
+              <p><button onClick={this.saveAndReport.bind(this)} disabled={!this.toReportCount() || fail.length}>Save and report results</button></p>
+              </div>
+          );
+        } else {
+          saveButton = (
+            <div>Saving... This can take a while.</div>
+          );
+        }
         
         results = (
             <div>
@@ -1189,7 +1218,7 @@ class AnalyzeQPCR extends Component {
             {wellResults}
           </tbody>
             </table>
-            <p><button onClick={this.saveAndReport.bind(this)} disabled={!this.toReportCount() || fail.length}>Save and report results</button></p>
+            {saveButton}
             {failMsgs}
           </div>
         )
@@ -1212,7 +1241,18 @@ class AnalyzeQPCR extends Component {
 }
 
 // Generate array of well names
-function getWellNames(numRows, numCols) {
+function getWellNames(plateSize) {
+  plateSize = plateSize || 96;
+
+  var numRows, numCols;
+  if(plateSize === 384) {
+    numRows = 16;
+    numCols = 24;
+  } else {
+    numRows = 8;
+    numCols = 12;
+  }
+  
   var names = [];
   const startLetter = 'A'.charCodeAt(0);
   const endLetter = Math.min(startLetter+numRows - 1, 'Z'.charCodeAt(0));

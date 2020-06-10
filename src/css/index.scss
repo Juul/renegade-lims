@@ -104,6 +104,18 @@
     width: 10px;
 }
 
+.plate-large-384 {
+  height: 400px;
+  grid-row-gap: 5px;
+  font-size: 13px;
+  margin: 20px;
+  margin-left: 0;
+}
+
+.plate-large-384 .row .hcol {
+    width: 10px;
+}
+
 .plate .row, .plate .hrow {
     display: grid;
 /*    grid-template-columns: 0.5fr repeat(12, 1fr); */
@@ -112,6 +124,10 @@
 
 .plate-medium-384 .row, .plate-medium-384 .hrow {
   grid-column-gap: 2px;
+}
+
+.plate-large-384 .row, .plate-large-384 .hrow {
+  grid-column-gap: 5px;
 }
 
 .plate-small-96 .row, .plate-small-96 .hrow {
