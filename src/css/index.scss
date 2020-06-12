@@ -93,9 +93,10 @@
 }
 
 .plate-medium-384 {
+  width: 450px;
+  height: 290px;
   grid-row-gap: 2px;
   font-size: 10px;
-  margin: 20px;
   margin-left: 0;
   float: left;
 }
@@ -370,12 +371,43 @@ svg.xy-plot-min {
 
 
 .plate96-area {
-    width: 50%;
+    margin-top: -50px;    
+    width: 45%;
     float: left;
 }
 
 .plate384-area {
-    margin-top: -50px;
-    width: 49%;
+    width: 54%;
     float: left;
+}
+
+.plate384-container {
+    position: relative;
+    width: 480px;
+    height: 320px;
+    border: 2px solid black;
+}
+
+.plate384-pos-0 > div {
+    position: absolute;
+    bottom: 0;
+    right: 0;
+}
+
+.plate384-pos-1 > div {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+}
+
+.plate384-pos-2 > div {
+    position: absolute;
+    top: 0;
+    right: 0;
+}
+
+.plate384-pos-3 > div {
+    position: absolute;
+    top: 0;
+    left: 0;
 }

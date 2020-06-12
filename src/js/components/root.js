@@ -18,6 +18,7 @@ import { makeStyles } from '@material-ui/core/styles';
 
 const TopBar = require('./top_bar.js')
 const Main = require('./main.js')
+const Admin = require('./admin/index.js')
 const Login = require('./login.js')
 const Plate = require('./plate.js')
 const TubeIntake = require('./tube_intake.js')
@@ -157,6 +158,7 @@ class Root extends Component {
           <AnalyzeQPCR path="/analyze-qpcr" />
           <CSV path="/csv" />
         <PlotTest path="/plot-test" />
+        <Admin path="/admin" />
         <Users path="/admin/users" />
         <EditUser path="/admin/users/:userID" />
         <EditUser path="/profile" />

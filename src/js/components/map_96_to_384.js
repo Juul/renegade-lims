@@ -25,6 +25,12 @@ const numberNames = ['zero', 'one', 'two', 'three', 'four'];
 
 const negativeControlWells = ['A1', 'A2', 'B1', 'B2'];
 const positiveControlWells = ['O23', 'O24', 'P23', 'P24'];
+const humanReadable384Positions = [
+  "bottom right",
+  "bottom left",
+  "top right",
+  "top left"
+];
 
 class Map96to384 extends Component {
   
@@ -42,13 +48,20 @@ class Map96to384 extends Component {
 //    }
   }
 
-  getPlate384Markup(plate, number) {
+  getPlate384Markup(plate, cur96Index) {
+    if(!cur96Index || cur96Index < 0) {
+      cur96Index = 0;
+    }
     const wells = this.map96PlatesTo384Plate(this.state.plates96);
-    
+    const pos = humanReadable384Positions[cur96Index];
+
     return (
-        <div style={'float:left; ' + ((number === 3) ? 'clear:all' : '')}>
-        <div>Plate barcode: {plate.barcode.toUpperCase()}</div>
+        <div>
+        <div>Place 384 well plate in <b style="color:blue">{pos}</b></div>
+        <div>Plate barcode: <u>{plate.barcode.toUpperCase()}</u></div>
+        <div class={'plate384-container plate384-pos-' +  cur96Index}>
         <Plate rows="16" cols="24" occupied={wells} addClass="plate-medium-384" />
+        </div>
         </div>
     );
   }
@@ -257,7 +270,7 @@ class Map96to384 extends Component {
 
     var plate384 = '';
     if(this.state.plate384) {
-      plate384 = this.getPlate384Markup(this.state.plate384);
+      plate384 = this.getPlate384Markup(this.state.plate384, this.state.plates96.length - 1);
   }    
     
     var scanArea = '';
@@ -293,15 +306,16 @@ class Map96to384 extends Component {
       <Container>
         <h3>Map 96 well plate(s) to 384 well plate</h3>
         {scanArea}
+        <div class="plate384-area">
+        <div><b>384 well plate</b></div>
+        {(!!plate384) ? plate384 : "No 384 well plate scanned"}
+        </div>
         <div class="plate96-area">
           <div><b>96 well plates</b></div>
         {(plates96.length) ? plates96 : "No 96 well plates scanned"}
         {saver}
         </div>
-        <div class="plate384-area">
-        <p><b>384 well plate</b></p>
-        {(!!plate384) ? plate384 : "No 384 well plate scanned"}
-        </div>
+      
       </Container>
     );
   }
