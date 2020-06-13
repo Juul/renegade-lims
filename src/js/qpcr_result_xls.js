@@ -113,9 +113,9 @@ function toDate(str) {
 const validPlateSizes = [96, 384];
 
 function getMetaData(lines) {
-  const data = getVals(lines, ['Block Type', 'Experiment Barcode', 'Experiment Name', 'Instrument Serial Number', 'Experiment Run End Time', 'User Name'])
+  const data = getVals(lines, ['Block Type', 'Experiment Barcode', 'Experiment Name', 'Experiment Comment', 'Instrument Serial Number', 'Experiment Run End Time', 'User Name'])
 
-  var m = data['Block Type'].match(/\s+(\d+)-Well\s+/i);
+  var m = data['Block Type'].match(/\s*(\d+)-Well\s+/i);
   if(!m) throw new Error("Unable to detect if this is a 96 or 384 well plate");
   const plateSize = parseInt(m[1]);
   if(validPlateSizes.indexOf(plateSize) < 0) {
@@ -125,7 +125,7 @@ function getMetaData(lines) {
   const o = {
     plateSize: plateSize,
     barcode: data['Experiment Barcode'],
-    plateName: data['Experiment Name'],
+    plateName: data['Experiment Comment'],
     instrumentSerialNumber: data['Instrument Serial Number'],
     operatorName: data['User Name'],
     experimentEndedAt: toDate(data['Experiment Run End Time'])
@@ -271,9 +271,7 @@ function getWellRaw(wells, lines, plateSize) {
     cycle = parseInt(cycle);
     if(isNaN(cycle)) continue;
     cycle--;
-    
-//    console.log("!", well, wellName, cycle, target, reporter, rn);
-    
+        
     if(!wells[wellName]) continue;
 
     if(!wells[wellName].raw) {
@@ -308,10 +306,10 @@ function parse(fileData, cb) {
 
     getWellRaw(wells, lines, metadata.plateSize);
     
-    return {
+    return cb(null, {
       metadata,
       wells
-    };
+    });
     
   } catch(e) {
     return cb(e);

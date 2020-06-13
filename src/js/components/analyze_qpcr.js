@@ -508,18 +508,19 @@ class AnalyzeQPCR extends Component {
   }
   
   parseXLS(fileData, cb) {
-    try {
-      
-      var result = qpcrResultXLS.parse(fileData);
-      result = this.normalizeProbeNames(result);
 
       
-      
+    qpcrResultXLS.parse(fileData, (err, result) => {
+      if(err) return cb(err);
+      try {
+        result = this.normalizeProbeNames(result);
+      } catch(e) {
+        return cb(e);
+      }      
       cb(null, result);
+    });
       
-    } catch(e) {
-      return cb(e);
-    }
+
   };
   
   parseEDS(fileData, cb) {
@@ -538,6 +539,8 @@ class AnalyzeQPCR extends Component {
       app.notify("File was missing a result ID", 'error');
       return;
     }
+
+    console.log("RESULT:", result);
     
     result.id = result.metadata.plateName;
     
