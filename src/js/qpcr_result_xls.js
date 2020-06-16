@@ -290,6 +290,7 @@ function getWellRaw(wells, lines, plateSize) {
 function parse(fileData, cb) {
   try {
 
+    // TODO this takes too long on slow computers
     const x = xlsx.read(fileData, {type: 'array'});
     
     const sheets = x['Sheets'];

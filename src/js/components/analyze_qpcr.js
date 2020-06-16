@@ -1140,7 +1140,7 @@ class AnalyzeQPCR extends Component {
 
         var fail = [];
         var wellResults = [];
-        const wellNames = getWellNames(this.state.plate.plateSize);
+        const wellNames = getWellNames(this.state.plate.size);
 
         for(let wellName of wellNames) {
 
