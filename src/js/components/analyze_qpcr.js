@@ -160,7 +160,7 @@ class AnalyzeQPCR extends Component {
     }
     
     if(ctrl === 'negativeControl') {
-      if(reporterCt === 0 && intrCtrlCt === 0) {
+      if(reporterCt === 0 && intCtrlCt === 0) {
         return false;
       } else {
         return "Plate blank control (negative control) was not blank"
@@ -168,7 +168,7 @@ class AnalyzeQPCR extends Component {
     }
 
     if(ctrl === 'positiveControl') {
-      if(intrCtrlCt > 0 && intrCtrlCt <= 40 && reporterCt > 0 && reporterCt <= 40) {
+      if(intCtrlCt > 0 && intCtrlCt <= 40 && reporterCt > 0 && reporterCt <= 40) {
         return true;
       } else {
         return "Plate positive control was not positive";
@@ -1064,13 +1064,19 @@ class AnalyzeQPCR extends Component {
       );
 
     } else if(!this.state.result) {
+      if(this.state.analyzing) {
+        return (
+            <Container>
+            <p>Analyzing... (this can take ~20 seconds)</p>
+            </Container>
+        );
+      }
       return (
           <Container>
           <p>Ready for analysis: {this.state.file.name}</p>
           <p>Allow discrepancies between plate map and qPCR results? <input type="checkbox" onInput={linkState(this, "allowDiscrepancies")} /></p>
           <p><button onClick={this.loadFileRenegade.bind(this)}>Analyze using renegade.bio protocol</button></p>
           <p><button onClick={this.loadFileBGI.bind(this)}>Analyze using BGI protocol</button></p>
-          {plate}
           </Container>
       ); 
       
@@ -1082,7 +1088,7 @@ class AnalyzeQPCR extends Component {
         );
     } else if(this.state.plate) {
 
-      let plateSize = this.state.plate || 96;
+      let plateSize = this.state.plate.size || 96;
       var plateView = '';
       if(plateSize === 384) {
         plateView = (

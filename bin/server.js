@@ -32,7 +32,6 @@ const settings = require('../settings.js');
 
 const rimbaud = require('../lib/rimbaud.js')(settings);
 
-
 const limsCore = require('renegade-lims-core');
 
 // ------------------

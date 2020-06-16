@@ -52,20 +52,6 @@ Currently there's an issue with the `jsdom` package so you may have to manually:
 npm install jsdom
 ```
 
-## Client only
-
-If you want to enable webcam-based DataMatrix scanning:
-
-```
-sudo apt install streamer dmtx-utils v4l-utils
-```
-
-Then make sure you set `dataMatrixScanner` in `client/settings.js` e.g:
-
-```
-dataMatrixScanner: "/dev/video0"
-```
-
 # Building
 
 The web app needs to be built:
