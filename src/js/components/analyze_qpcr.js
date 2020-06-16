@@ -623,7 +623,7 @@ class AnalyzeQPCR extends Component {
 
       result.wells = {};
     
-      const wellNames = getWellNames(this.state.plate.plateSize);
+      const wellNames = getWellNames(this.state.plate.size);
       for(let wellName of wellNames) {
         if(!this.state.toggles[wellName]) continue;
         
@@ -880,7 +880,7 @@ class AnalyzeQPCR extends Component {
   }
 
   checkAll() {
-    const wellNames = getWellNames(this.state.plate.plateSize);
+    const wellNames = getWellNames(this.state.plate.size);
     const toggles = {};
     for(let wellName of wellNames) {
       toggles[wellName] = true;
@@ -892,7 +892,7 @@ class AnalyzeQPCR extends Component {
   }
 
   uncheckAll() {
-    const wellNames = getWellNames(this.state.plate.plateSize);
+    const wellNames = getWellNames(this.state.plate.size);
     const toggles = {};
     for(let wellName of wellNames) {
       toggles[wellName] = false;
