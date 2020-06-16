@@ -222,7 +222,7 @@ class MapRacksToPlates extends Component {
   getScanMarkup(what) {
     return (
       <div class="scan-area">
-      <p>Scan the {what}</p>
+      <p>Scan the <span style="color:blue">{what}</span></p>
       <Scan onScan={this.codeScanned.bind(this)} disableWebcam disableDataMatrixScanner />
         </div>
     )
@@ -254,11 +254,12 @@ class MapRacksToPlates extends Component {
     }    
 
     var scanArea = '';
-    if(this.state.racks.length !== 2 && this.state.racks.length !== 4) {
-      scanArea = this.getScanMarkup("48 tube rack number " + (this.state.racks.length+1));
-    } else if(this.state.plates.length < this.props.numPlates) {
+    if((this.state.racks.length === 2 && this.state.plates.length === 0) || (this.state.racks.length === 4 && this.state.plates.length < 2)) {
       scanArea = this.getScanMarkup("96 well plate number " + (this.state.plates.length+1));
+    } else if(this.state.racks.length < this.props.numPlates * 2)  {
+      scanArea = this.getScanMarkup("48 tube rack number " + (this.state.racks.length+1));
     }
+  //this.state.plates.length < this.props.numPlates) {
     
     var saver = '';
     
