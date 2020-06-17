@@ -33,7 +33,7 @@ class EditPlate extends Component {
         app.notify(err, 'error');
         return;
       }
-      
+
       this.setState({
         tubeBarcode: code,
         tube: o

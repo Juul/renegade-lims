@@ -43,6 +43,33 @@ class AnalyzeQPCR extends Component {
 //    this.componentDidUpdate();
   }
 
+  checkIfOrdersExist(plate, cb) {
+
+    const wellNames = Object.keys(plate.wells);
+
+    
+    async.eachSeries(wellNames, (wellName, next) => {
+      const well = plate.wells[wellName];
+      if(!well.barcode) return next();
+      
+      const wellBarcode = well.barcode.toLowerCase();
+      //      app.actions.getObject(well.id, (err, obj) => {
+      app.actions.getPhysicalByBarcode(wellBarcode, (err, obj) => {
+        if(err) return next();
+
+        if(obj.formBarcode) {
+          well.formBarcode = obj.formBarcode;
+        }
+
+        next();
+      });
+    }, (err) => {
+      if(err) return cb(err);
+
+      cb(null, plate);
+    });
+  }
+
   getPlate(barcode, cb) {
     app.actions.getPhysicalByBarcode(barcode.toLowerCase(), (err, plate) => {
       if(err) {
@@ -52,7 +79,15 @@ class AnalyzeQPCR extends Component {
         return cb(new Error(err));
       }
 
-      cb(null, plate);
+      console.log("GOT PLATE!:", plate);
+
+      this.checkIfOrdersExist(plate, (err, plate) => {
+        if(err) return cb(err);
+
+        cb(null, plate);
+      });
+      
+//      cb(null, plate);
         
     });
   }
@@ -839,6 +874,14 @@ class AnalyzeQPCR extends Component {
       }
     }
 
+    if(plateMapWell && !plateMapWell.formBarcode) {
+      return {
+        msg: "Unreportable: Sample was never accessioned",
+        reportable: false,
+        result: this.outcomeToText(resultWell.outcome)
+      }
+    }
+    
     if(resultWell.prevResults && resultWell.prevResults.length) {
       if(resultWell.outcome === 'retest') {
         return {
