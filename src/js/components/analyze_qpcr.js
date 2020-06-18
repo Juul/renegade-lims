@@ -671,7 +671,7 @@ class AnalyzeQPCR extends Component {
         
         let res = this.toHumanResult(plateMapWell, resultWell)
         if(!res.reportable) continue;
-        
+
         result.wells[wellName] = resultWell;
       }
 
@@ -724,11 +724,11 @@ class AnalyzeQPCR extends Component {
       return cb();
     }
     
-    app.actions.getObject(well.id, (err, sample) => {
-      if(err) return cb(new Error("Sample not found for well "+wellName));
+//    app.actions.getObject(well.id, (err, sample) => {
+//      if(err) return cb(new Error("Sample not found for well "+wellName));
       
 
-      if(!sample.formBarcode) {
+      if(!well.formBarcode) {
         return cb(new Error("Form/Order ID for well "+wellName+" was not found"));
       }
 
@@ -753,9 +753,9 @@ class AnalyzeQPCR extends Component {
       
       const report = {
         id: result.id,
-        orderID: sample.formBarcode,
-        sampleID: sample.id,
-        sampleBarcode: sample.barcode,
+        orderID: well.formBarcode,
+        sampleID: well.id,
+        sampleBarcode: well.barcode,
         plateID: this.state.plate.id,
         plateBarcode: this.state.plate.barcode,
         well: wellName,
@@ -768,7 +768,7 @@ class AnalyzeQPCR extends Component {
       console.log("Report:", report);
       
       cb(null, report);
-    });
+    
   }
   
 
@@ -776,7 +776,7 @@ class AnalyzeQPCR extends Component {
     if(!result) return cb(new Error("No results to report"));
 
     const reports = [];
-    const wellNames = Object.keys(this.state.plate.wells);
+    const wellNames = Object.keys(result.wells);
     
     async.eachSeries(wellNames, (wellName, next) => {
 
