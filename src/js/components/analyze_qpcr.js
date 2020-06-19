@@ -108,7 +108,7 @@ class AnalyzeQPCR extends Component {
   }
 
   loadFileRenegade() {
-    this.loadFile('renegade');
+    this.loadFile('rb-xp');
   }
 
   loadFileBGI() {
@@ -315,7 +315,7 @@ class AnalyzeQPCR extends Component {
       } else {
         if(protocol === 'bgi') {
           outcome = this.calculateWellOutcomeBGI(well['reporter']['Ct'], well['intCtrl']['Ct'], ctrl);
-        } else if(protocol === 'renegade') {
+        } else if(protocol === 'rb-xp') {
           outcome = this.calculateWellOutcomeRenegade(well['reporter']['Ct'], well['intCtrl']['Ct'], ctrl);
         } else {
           throw new Error("Unknown protocol: " + protocol);
@@ -574,8 +574,6 @@ class AnalyzeQPCR extends Component {
       app.notify("File was missing a result ID", 'error');
       return;
     }
-
-    console.log("RESULT:", result);
     
     result.id = result.metadata.plateName;
     
@@ -610,11 +608,10 @@ class AnalyzeQPCR extends Component {
           return;
         }
 
-        console.log("RESULT:", result);
-        
         this.setState({
           plate: plate,
-          result: result
+          result: result,
+          protocol: protocol
         });
         
       });
@@ -646,9 +643,8 @@ class AnalyzeQPCR extends Component {
     result.plateID = this.state.plate.id;
     result.plateBarcode = this.state.plate.barcode;
     result.edsFileData = this.state.edsFileData;
-    result.protocol = 'bgi'; // or rb-xp
+    result.protocol = this.state.protocol;
 
-    console.log("SAVE:", result);
     app.actions.saveQpcrResult(result, (err) => {
       if(err) {
         console.error(err);
@@ -682,11 +678,15 @@ class AnalyzeQPCR extends Component {
           app.notify("Failed to generate Rimbaud reports: " + err, 'error');
           return;
         }
-        
+
         this.sendRimbaudReports(reports, (err, count) => {
           if(err) {
             console.error(err);
-            app.notify("Failed to report results to Rimbaud: " + err, 'error');
+            const errStr = "Failed to report result to Rimbaud: " + err;
+            if(count) {
+              errStr = "Successfully reported " + count + " results but: " + errStr;
+            }
+            app.notify(errStr, 'error');
             return;
           }
 
@@ -760,6 +760,8 @@ class AnalyzeQPCR extends Component {
         plateBarcode: this.state.plate.barcode,
         well: wellName,
         'cov-2': rimbaudResult,
+        reporterCt: resultWell.result.reporter.Ct,
+        internalControlCt: resultWell.result.intCtrl.Ct,
         protocol: result.protocol,
         analyzedBy: (app.state.user) ? app.state.user.name : 'Unknown',
         reportFormatVersion: '0.0.1'
@@ -801,6 +803,7 @@ class AnalyzeQPCR extends Component {
     if(!reports || !reports.length) return cb(new Error("Nothing to report"));
 
     var count = 0;
+    var errCount = 0;
     
     async.eachSeries(reports, (report, next) => {
 
@@ -808,15 +811,23 @@ class AnalyzeQPCR extends Component {
         results: [report]
       };
       
-      app.actions.rimbaudReportResult(report.orderID, toSend, (err) => {
-        if(err) return cb(err);
-
-        count++;
-
-        next();
+      app.actions.rimbaudReportResult(report.orderID, toSend, (err, res) => {
+        if(err) return next(err);
+        try {
+          res = JSON.parse(res);
+          if(!res.statuses || !res.statuses.length || res.statuses[0] !== 'saved') {
+            return next(new Error("Error reporting order " + report.orderID + ": " + res.statuses[0]));
+          }
+          
+          count++;
+          
+          next();
+        } catch(e) {
+          return next(err);
+        }
       })
     }, (err) => {
-      if(err) return cb(err);
+      if(err) return cb(err, count);
 
       cb(null, count);
     });
