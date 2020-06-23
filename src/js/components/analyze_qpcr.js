@@ -523,21 +523,24 @@ class AnalyzeQPCR extends Component {
         delete well.result['VIC'];
         
       }
-      if(well.raw['FAM']) {
-        well.raw.reporter = well.raw['FAM'];
-        delete well.raw['FAM'];
-      }
+
+      if(well.raw) {
       
-      if(well.raw['CY5']) {
-        well.raw.intCtrl = well.raw['CY5'];
-        delete well.raw['CY5'];
+        if(well.raw['FAM']) {
+          well.raw.reporter = well.raw['FAM'];
+          delete well.raw['FAM'];
+        }
         
-      } else if(well.raw['VIC']) {
-        well.raw.intCtrl = well.raw['VIC'];
-        delete well.result['VIC'];
-        
+        if(well.raw['CY5']) {
+          well.raw.intCtrl = well.raw['CY5'];
+          delete well.raw['CY5'];
+          
+        } else if(well.raw['VIC']) {
+          well.raw.intCtrl = well.raw['VIC'];
+          delete well.result['VIC'];
+          
+        }
       }
-      
     }
     return result;
   }
@@ -966,12 +969,12 @@ class AnalyzeQPCR extends Component {
   }
 
   showPlot(wellName, key, wellResult) {
-
-    const rawData = wellResult.raw[key];
-    if(!rawData) {
-      app.notify("Unable to find raw data for well " + wellName, 'error');
+    if(!wellResult.raw || !wellResult.raw[key]) {
+      app.notify("The analyzed spreadsheet did not include raw data.", 'error');
       return;
     }
+    
+    const rawData = wellResult.raw[key];
 
     var title = "Plot for well " + wellName + " " + key;
     
@@ -984,7 +987,10 @@ class AnalyzeQPCR extends Component {
   }
 
   showPlotForResult(wellResult, key) {
-
+    if(!wellResult.raw || !wellResult.raw[key]) {
+      app.notify("The analyzed spreadsheet did not include raw data.", 'error');
+      return;
+    }
     const rawData = wellResult.raw[key];
     if(!rawData) {
       app.notify("Unable to find raw data for result", 'error');

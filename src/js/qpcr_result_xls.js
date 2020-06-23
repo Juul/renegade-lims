@@ -302,10 +302,12 @@ function parse(fileData, cb) {
 
     var wells = getWellResults(lines);
 
-    const amplificationData = xlsx.utils.sheet_to_csv(sheets['Amplification Data']);
-    lines = amplificationData.split(/\r?\n/);
+    if(sheets['Amplification Data']) {
+      const amplificationData = xlsx.utils.sheet_to_csv(sheets['Amplification Data']);
+      lines = amplificationData.split(/\r?\n/);
 
-    getWellRaw(wells, lines, metadata.plateSize);
+      getWellRaw(wells, lines, metadata.plateSize);
+    }
     
     return cb(null, {
       metadata,
