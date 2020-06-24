@@ -397,7 +397,7 @@ class AnalyzeQPCR extends Component {
   // Check if any of the results that need re-testing
   // have previously been tested
   // and if so, update the .outcome accordingly
-  handleRetests(result, plate, cb) {
+  handleRetests(result, plate, protocol, cb) {
     // The barcodes for samples where we want to check
     // if they've previously been tested 
     const barcodesToCheck = []; 
@@ -447,7 +447,12 @@ class AnalyzeQPCR extends Component {
           continue;
         }
 
-        outcome = this.calculateWellOutcome(well.result['FAM']['Ct'], well.result['VIC']['Ct'], null, true);
+        // TODO don't assume previous result was same protocol
+        if(protocol === 'rb-xp') {
+          outcome = this.calculateWellOutcomeRenegade(well.result.reporter['Ct'], well.result.intCtrl['Ct'], null, true);
+        } else {
+          outcome = this.calculateWellOutcomeBGI(well.result.reporter['Ct'], well.result.intCtrl['Ct'], null, true);
+        }
         //outcome = this.calculateRetestOutcome(well, prevResults);
         
         well.result.outcome = outcome;
@@ -604,7 +609,7 @@ class AnalyzeQPCR extends Component {
       }
       
 
-      this.handleRetests(result, plate, (err) => {
+      this.handleRetests(result, plate, protocol, (err) => {
         if(err) {
           console.error(err);
           app.notify(err, 'error');
