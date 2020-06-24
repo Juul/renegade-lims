@@ -212,7 +212,7 @@ class AnalyzeQPCR extends Component {
 
     if(intCtrlCt == 0 || intCtrlCt > 40) {
       if(isRetest) {
-        return "Internal control failed after retest";
+        return 'inconclusive';
       } else {
         return 'retest';
       }
@@ -845,6 +845,7 @@ class AnalyzeQPCR extends Component {
   outcomeToText(outcome) {
     if(outcome === true) return 'Positive';
     if(outcome === false) return 'Negative';
+    if(outcome === 'inconclusive') return 'Inconclusive';
     if(outcome === 'retest') return 'Retest';
     return outcome;
   }
@@ -907,6 +908,12 @@ class AnalyzeQPCR extends Component {
           reportable: false,
           result: 'failed',
           msg: "Result still undetermined after re-test"
+        }
+      } else if(resultWell.outcome === 'inconclusive') {
+        return {
+          reportable: true,
+          result: this.outcomeToText(resultWell.outcome),
+          msg: "Result is inconclusive after re-test"
         }
       } else {
         return {
