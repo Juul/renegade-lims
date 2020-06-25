@@ -16,28 +16,29 @@ import Toolbar from '@material-ui/core/Toolbar';
 import Typography from '@material-ui/core/Typography';
 import { makeStyles } from '@material-ui/core/styles';
 
-const TopBar = require('./top_bar.js')
-const Main = require('./main.js')
-const Admin = require('./admin/index.js')
-const Login = require('./login.js')
-const Plate = require('./plate.js')
-const TubeIntake = require('./tube_intake.js')
-const CreatePlate = require('./create_plate.js')
-const MapTubesToPlate = require('./map_tubes_to_plate.js')
-const MapRacksToPlates = require('./map_racks_to_plates.js')
-const Map96To384 = require('./map_96_to_384.js')
-const CalculatePCRMasterMix = require('./calculate_pcr_master_mix.js')
-const Scan = require('./scan.js')
-const PrintOldMultiLabel = require('./print_old_multilabel.js')
-const PrintPlateLabel = require('./print_plate_label.js')
-const PrintTubeLabel = require('./print_tube_label.js')
-const PrintTest = require('./print_test.js')
-const NotFound = require('./not_found.js')
-const Signup = require('./signup.js');
+const TopBar = require('./top_bar.js');
+const Main = require('./main.js');
+const Admin = require('./admin/index.js');
+const Login = require('./login.js');
+const Plate = require('./plate.js');
+const TubeIntake = require('./tube_intake.js');
+const CreatePlate = require('./create_plate.js');
+const MapTubesToPlate = require('./map_tubes_to_plate.js');
+const MapRacksToPlates = require('./map_racks_to_plates.js');
+const Map96To384 = require('./map_96_to_384.js');
+const CalculatePCRMasterMix = require('./calculate_pcr_master_mix.js');
+const Scan = require('./scan.js');
+const PrintOldMultiLabel = require('./print_old_multilabel.js');
+const PrintPlateLabel = require('./print_plate_label.js');
+const PrintTubeLabel = require('./print_tube_label.js');
+const PrintTest = require('./print_test.js');
+const NotFound = require('./not_found.js');
+const Signup = require('./signup.js');;
 const PasswordReset = require('./password_reset.js');
 const AnalyzeQPCR = require('./analyze_qpcr.js');
 const CSV = require('./csv.js');
 const PlotTest = require('./plot_test.js');
+const TestLabContainer = require('./test_lab_container.js');
 
 // admin
 const Users = require('./admin/users.js');
@@ -145,23 +146,24 @@ class Root extends Component {
           <Main path="/" />
           <CreatePlate path="/plate-new" />
           <TubeIntake path="/tube-intake/:formBarcode?" />
-        <MapTubesToPlate path="/map-tubes-to-plate/:barcode?" />
-        <MapRacksToPlates path="/map-racks-to-plates/:numPlates?" />
-        <Map96To384 path="/map-96-to-384" />
+          <MapTubesToPlate path="/map-tubes-to-plate/:barcode?" />
+          <MapRacksToPlates path="/map-racks-to-plates/:numPlates?" />
+          <Map96To384 path="/map-96-to-384" />
           <Plate path="/plate-test" />
-        <Scan path="/scan" />
-        <CalculatePCRMasterMix path="/calculate-pcr-master-mix" />
-        <PrintOldMultiLabel path="/print-old-multilabel/:customCode?" />
-        <PrintTubeLabel path="/print-tube-label/:customCode?" />
-        <PrintPlateLabel path="/print-plate-label/:customCode?" />
+          <Scan path="/scan" />
+          <CalculatePCRMasterMix path="/calculate-pcr-master-mix" />
+          <PrintOldMultiLabel path="/print-old-multilabel/:customCode?" />
+          <PrintTubeLabel path="/print-tube-label/:customCode?" />
+          <PrintPlateLabel path="/print-plate-label/:customCode?" />
           <PrintTest path="/print-test" />
           <AnalyzeQPCR path="/analyze-qpcr" />
           <CSV path="/csv" />
-        <PlotTest path="/plot-test" />
-        <Admin path="/admin" />
-        <Users path="/admin/users" />
-        <EditUser path="/admin/users/:userID" />
-        <EditUser path="/profile" />
+          <PlotTest path="/plot-test" />
+          <Admin path="/admin" />
+          <Users path="/admin/users" />
+          <EditUser path="/admin/users/:userID" />
+          <EditUser path="/profile" />
+          <TestLabContainer path="/test/lab-container" />
           <NotFound default />
         </Router>
       </div>

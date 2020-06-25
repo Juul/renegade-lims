@@ -411,3 +411,10 @@ svg.xy-plot-min {
     top: 0;
     left: 0;
 }
+
+/* lab_container.js */
+
+.lab-container {
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+}
+    
