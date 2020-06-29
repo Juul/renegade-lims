@@ -43,7 +43,8 @@ const argv = minimist(process.argv.slice(2), {
     'introvert',
     'insecure', // don't authenticate anything. only for testing
     'migrate',
-    'local-db-dump'
+    'local-db-dump',
+    'list-rimbaud-unsynced'
   ],
   alias: {
     'd': 'debug', // enable debug output
@@ -334,7 +335,7 @@ async function init() {
       process.exit(0);
     })
   }
-    
+  
   if(argv['local-db-put']) {
     let arg = argv['local-db-put'];
     let m = arg.match(/^([^\:]+):(.*)/);
@@ -359,6 +360,18 @@ async function init() {
       console.log("  val:", val);
       process.exit(0);
     })
+  }
+
+  if(argv['list-rimbaud-unsynced']) {
+    rimbaud.listUnsynced(core.labCore, function(err) {
+      if(err) {
+        console.error(err);
+        process.exit(1);
+      }
+      console.log("done");
+      process.exit(0);
+    });
+    return;
   }
   
   if(argv.dump) {

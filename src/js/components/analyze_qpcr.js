@@ -30,6 +30,10 @@ class AnalyzeQPCR extends Component {
     super(props);
 
     this.setState({
+      rimbaudReported: 0,
+      rimbaudToReport: 0,
+      rimbaudErrors: 0,
+      rimbaudErrorMessages: [],
       toggles: {}
     });
   }
@@ -687,10 +691,10 @@ class AnalyzeQPCR extends Component {
           return;
         }
 
-        this.sendRimbaudReports(reports, (err, count) => {
+        this.sendRimbaudReports(reports, (err, count, errors) => {
           if(err) {
             console.error(err);
-            const errStr = "Failed to report result to Rimbaud: " + err;
+            const errStr = "Failed to report results to Rimbaud: " + err;
             if(count) {
               errStr = "Successfully reported " + count + " results but: " + errStr;
             }
@@ -699,6 +703,11 @@ class AnalyzeQPCR extends Component {
           }
 
           app.notify("Saved all results and reported " + count + " results!", 'success');
+          if(errors && errors.length) {
+            this.setState({
+              rimbaudErrorMessages: errors
+            });
+          }
           
         });
       });
@@ -811,16 +820,30 @@ class AnalyzeQPCR extends Component {
     if(!reports || !reports.length) return cb(new Error("Nothing to report"));
 
     var count = 0;
-    var errCount = 0;
+    var errors = [];
     
     async.eachSeries(reports, (report, next) => {
 
       const toSend = {
         results: [report]
       };
+
+      this.setState({
+        rimbaudToReport: reports.length
+      })
       
       app.actions.rimbaudReportResult(report.orderID, toSend, (err, res) => {
-        if(err) return next(err);
+        if(err) {
+          this.setState({
+            rimbaudErrors: this.state.rimbaudErrors + 1
+          });
+          errors.push({
+            orderID: report.orderID,
+            err: err
+          });
+          next();
+          return;
+        }
         try {
           res = JSON.parse(res);
           if(!res.statuses || !res.statuses.length || res.statuses[0] !== 'saved') {
@@ -828,16 +851,28 @@ class AnalyzeQPCR extends Component {
           }
           
           count++;
+
+          this.setState({
+            rimbaudReported: count
+          });
           
           next();
         } catch(e) {
-          return next(err);
+          this.setState({
+            rimbaudErrors: this.state.rimbaudErrors + 1
+          });
+          errors.push({
+            orderID: report.orderID,
+            err: e
+          });
+          next();
+          return;
         }
       })
     }, (err) => {
       if(err) return cb(err, count);
 
-      cb(null, count);
+      cb(null, count, errors);
     });
 
   }
@@ -1110,6 +1145,20 @@ class AnalyzeQPCR extends Component {
       </div>
     );
   }
+
+  formatRimbaudErrors() {
+    var errors = this.state.rimbaudErrorMessages;
+    if(!errors || !errors.length) return '';
+
+    var out = [];
+    for(let error of errors) {
+      const orderID = error.orderID || 'unknown';
+      out.push((
+          <li>Error for order {orderID}: {error.err.toString()}</li>
+      ));
+    }
+    return out;
+  }
   
   render() {
 
@@ -1272,7 +1321,11 @@ class AnalyzeQPCR extends Component {
           );
         } else {
           saveButton = (
-            <div>Saving... This can take a while.</div>
+              <ul>
+              <li>Reported: {this.state.rimbaudReported} of {this.state.rimbaudToReport} results to Rimbaud</li>
+              <li>Failed to report: {this.state.rimbaudErrors}</li>
+              {this.formatRimbaudErrors()}
+              </ul>
           );
         }
         
