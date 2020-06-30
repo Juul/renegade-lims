@@ -14,6 +14,7 @@ const auth = require('rpc-multiauth'); // authentication
 const multiplex = require('multiplex');
 const sublevel = require('subleveldown');
 
+const async = require('async');
 const level = require('level');
 const router = require('routes')(); // server side router
 const ecstatic = require('ecstatic');
@@ -43,7 +44,8 @@ const argv = minimist(process.argv.slice(2), {
     'introvert',
     'insecure', // don't authenticate anything. only for testing
     'migrate',
-    'local-db-dump',
+    'dump-local-db',
+    'dump-hypercores',    
     'list-rimbaud-unsynced'
   ],
   alias: {
@@ -296,6 +298,19 @@ function labDeviceConnection(peer, socket, peerDesc) {
   return peerDesc;
 }
 
+function dumpFeeds(feeds, cb) {
+  async.eachSeries(feeds, function(feed, next) {
+    dumpFeed(feed, next);
+  }, cb);
+}
+
+function dumpFeed(feed, cb) {
+  var stream = feed.createReadStream({encoding: 'utf8'});
+  stream.on('data', function(data) {
+    console.log(data);
+  });
+  stream.on('end', cb);
+}
 
 async function init() {
 
@@ -311,7 +326,12 @@ async function init() {
     settings.debug = true;
   }
 
-  if(argv['local-db-dump']) {
+  if(argv['dump-hypercores']) {
+    let feeds = core.labMulti.feeds();
+    dumpFeeds(feeds);
+  }
+  
+  if(argv['dump-local-db']) {
 
 //    var rs = oldLocalDB.createReadStream();
     var rs = localDB.createReadStream();
