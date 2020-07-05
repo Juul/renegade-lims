@@ -49,6 +49,10 @@ module.exports = function() {
     getSwabTubeByFormBarcode: function(code, cb) {
       app.remote.getSwabTubeByFormBarcode(code, cb);
     },
+
+    getSwabTubesByTimestamp: function(count, cb) {
+      app.remote.getSwabTubesByTimestamp(count, cb);
+    },
     
     gotoPhysicalByBarcode: function(code) {
       app.remote.getPhysicalByBarcode(code, function(err, item) {

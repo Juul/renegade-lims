@@ -21,6 +21,7 @@ const Main = require('./main.js');
 const Admin = require('./admin/index.js');
 const Login = require('./login.js');
 const Plate = require('./plate.js');
+const Accessioned = require('./accessioned.js');
 const TubeIntake = require('./tube_intake.js');
 const CreatePlate = require('./create_plate.js');
 const MapTubesToPlate = require('./map_tubes_to_plate.js');
@@ -145,6 +146,7 @@ class Root extends Component {
           {unprivileged}
           <Main path="/" />
           <CreatePlate path="/plate-new" />
+          <Accessioned path="/accessioned" />
           <TubeIntake path="/tube-intake/:formBarcode?" />
           <MapTubesToPlate path="/map-tubes-to-plate/:barcode?" />
           <MapRacksToPlates path="/map-racks-to-plates/:numPlates?" />

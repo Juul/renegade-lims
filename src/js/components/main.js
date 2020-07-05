@@ -26,6 +26,7 @@ class Main extends Component {
         <li><Link href="/calculate-pcr-master-mix">Calculate PCR Master Mix</Link></li>
         <li><Link href="/print-tube-label">Print tube barcode label</Link></li>
         <li><Link href="/print-plate-label">Print plate barcode label</Link></li>
+        <li><Link href="/accessioned">Show recently accessioned</Link></li>
         <li><Link href="/csv">Export to CSV</Link></li>
           <li><Link href="/scan">Scan (work in progress)</Link></li>
         <li><Link href="/print-test">Print (work in progress)</Link></li>

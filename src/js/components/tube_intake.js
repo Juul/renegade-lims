@@ -103,6 +103,8 @@ class EditPlate extends Component {
   }
 
   cancelBtn() {
+    const decide = confirm("Are you sure you want to abort?");
+    if(!decide) return;
     this.setState({
       tubeBarcode: undefined,
       tube: undefined

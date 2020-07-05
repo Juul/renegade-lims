@@ -3,6 +3,7 @@
 const fs = require('fs');
 const path = require('path');
 
+const through = require('through2');
 const async = require('async');
 const rpc = require('rpc-multistream');
 const timestamp = require('monotonic-timestamp');
@@ -60,6 +61,29 @@ module.exports = function(settings, labDeviceServer, dmScanner, labCore, adminCo
     getSwabTubeByFormBarcode: function(userData, remoteIP, formBarcode, cb) {
       labCore.api.swabTubesByFormBarcode.get(formBarcode, cb);
     },
+
+    getSwabTubesByTimestamp: function(userData, remoteIP, count, cb) {
+
+      const tubes = [];
+      
+      var rs = labCore.api.swabTubesByTimestamp.read();
+
+      var i = 0;
+      rs.on('data', function(data) {
+
+        tubes.push(JSON.parse(data.value));
+        i++;
+        if(i >= count) {
+          rs.destroy();
+          cb(null, tubes)
+        }
+      });
+      rs.on('end', function() {
+        cb(null, tubes);
+      });
+
+      rs.on('error', cb);
+    },    
     
     claimDataMatrixScanner: function(userData, remoteIP, cb) {
       if(!dmScanner) return cb(new Error("No Data Matrix scanner configured"));
