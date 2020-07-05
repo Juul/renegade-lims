@@ -72,7 +72,25 @@ class EditPlate extends Component {
     });
   }
 
+  keypress(e) {
+    if(!this.state.tubeBarcode || !this.props.formBarcode) {
+      return;
+    }
+
+    // enter or space pressed
+    if(e.charCode === 13 || e.charCode === 32) {
+      this.saveBtn();
+    }
+  }
+  
+  initKeyboardCapture() {
+    this.keypressListener = this.keypress.bind(this);
+    document.addEventListener('keypress', this.keypressListener);
+  }
+  
   componentDidMount() {
+    this.initKeyboardCapture();
+
     this.componentDidUpdate();
   }
   
