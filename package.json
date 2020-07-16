@@ -30,7 +30,7 @@
     "ntp-client": "^0.5.3",
     "os-timesync": "^1.0.9",
     "ping": "^0.2.2",
-    "qr-scanner": "^1.1.1",
+    "qr-scanner": "^1.2.0",
     "routes": "^2.1.0",
     "rpc-multiauth": "0.0.6",
     "rpc-multistream": "^1.0.0",
