@@ -233,7 +233,8 @@ class AnalyzeQPCR extends Component {
     return "Internal error. Unable to determine result: " + reporterCt + ' | ' + intCtrlCt;
   }
 
-  
+
+  // Based on CLIN-SOP-081
   // Returns a string on error
   // Return false if test came out negative
   // and true if it came out positive
@@ -286,18 +287,14 @@ class AnalyzeQPCR extends Component {
     }
 
     if(famCt > 37) {
-      if(isRetest) {
-        return false;
-      } else {
-        return 'retest';
-      }
+      return false;
     }
 
     if(famCt > 0 && famCt <= 37) {
       return true;
     }
 
-    return false;
+    throw new Error("Unable to determine BGI result");
   }
 
   // Set the .outcome for each well 

@@ -123,7 +123,7 @@ class PrintTubeLabel extends Component {
     }, function(err) {
       if(err) {
         app.notify(err, 'error');
-        retur;
+        return;
       }
       app.notify("Sent "+number+" labels to printer", 'success');
     })
