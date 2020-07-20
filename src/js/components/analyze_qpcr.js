@@ -286,7 +286,7 @@ class AnalyzeQPCR extends Component {
       }
     }
 
-    if(famCt == 0 && famCt > 37) {
+    if(famCt == 0 || famCt > 37) {
       return false;
     }
 
