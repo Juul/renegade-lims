@@ -69,7 +69,7 @@ function LabelMaker(opts) {
   this.drawBarcodes = function(ctx, startNumber, ofEach, prefix) {
     ofEach = ofEach || 0;
     prefix = prefix || '';
-    console.log("DRAWING:", ofEach);
+
     var y = this.opts.yOffset;
     if(typeof y !== 'number') {
       y = 0;
