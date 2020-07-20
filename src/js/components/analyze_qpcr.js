@@ -286,7 +286,7 @@ class AnalyzeQPCR extends Component {
       }
     }
 
-    if(famCt > 37) {
+    if(famCt == 0 && famCt > 37) {
       return false;
     }
 
@@ -294,7 +294,7 @@ class AnalyzeQPCR extends Component {
       return true;
     }
 
-    throw new Error("Unable to determine BGI result");
+    throw new Error("Unable to determine BGI result: " + famCt + ' | ' + vicCt);
   }
 
   // Set the .outcome for each well 

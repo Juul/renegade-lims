@@ -73,7 +73,7 @@ module.exports = function(settings, labDeviceServer, dmScanner, labCore, adminCo
 
         tubes.push(JSON.parse(data.value));
         i++;
-        if(i >= count) {
+        if(count > 0 && (i >= count)) {
           rs.destroy();
           cb(null, tubes)
         }

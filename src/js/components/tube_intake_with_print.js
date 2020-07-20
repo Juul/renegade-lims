@@ -4,9 +4,12 @@ import { h, Component } from 'preact';
 import {route} from 'preact-router';
 import { view } from 'z-preact-easy-state';
 
+import linkState from 'linkstate';
+
 import Link from '@material-ui/core/Link';
 import Container from '@material-ui/core/Container';
 
+const moment = require('moment');
 const timestamp = require('monotonic-timestamp');
 
 var LabelMaker = require('../labelmaker_with_order_id.js');
@@ -140,6 +143,16 @@ class TubeIntakeWithPrint extends Component {
       return 
     }
 
+    var t = this.state.collectionTime.strip();
+    if(t) {
+      try {
+        t = moment(t, 'MM/DD/YYYY hh:mm');
+      } catch(e) {
+        return cb(new Error("Invalid collection time format"));
+      }
+//      specimenCollectedAt
+    }
+    
     const tube = {
       id: (this.state.tube && this.state.tube.id) ? this.state.tube.id : undefined,
       barcode: tubeBarcode,
@@ -294,7 +307,11 @@ class TubeIntakeWithPrint extends Component {
           <h3>Accession form: {this.props.formBarcode}</h3>
           {formWarning}
           {warning}
-          {tube}
+        {tube}
+          <p>
+          Collection time (optional): <input type="text" onInput={linkState(this, 'collectionTime')} /><br/>
+          <i>Write as e.g: 2/29/2020 14:44</i>
+          </p>
         {saveAndPrint}
           <p>
           <button onClick={this.cancelBtn.bind(this)}>Cancel</button>

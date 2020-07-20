@@ -19,6 +19,7 @@ import { makeStyles } from '@material-ui/core/styles';
 const TopBar = require('./top_bar.js');
 const Main = require('./main.js');
 const Admin = require('./admin/index.js');
+const Dashboard = require('./dashboard.js');
 const Login = require('./login.js');
 const Plate = require('./plate.js');
 const Accessioned = require('./accessioned.js');
@@ -145,7 +146,8 @@ class Root extends Component {
         
         <Router>
           {unprivileged}
-          <Main path="/" />
+        <Main path="/" />
+        <Dashboard path="/dashboard" />
           <CreatePlate path="/plate-new" />
           <Accessioned path="/accessioned" />
           <TubeIntake path="/tube-intake/:formBarcode?" />
