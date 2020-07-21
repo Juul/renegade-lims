@@ -158,13 +158,12 @@ class EditPlate extends Component {
             </div>
         );
       } else {
-        return (
-            <Container>
-            <h3>Accession form: {this.props.formBarcode}</h3>
+        formWarning = (
+            <div>
             <p><b><i>WARNING:</i>This accession form is <i>already</i> associated with a sample tube with barcode '{this.state.existingTube.barcode}'.</b></p>
             <p>Only one sample tube per accession form ID is allowed.</p>
-            <p>If the sample tube lost its barcode you can <Link href={"/print-plate-label/" + this.state.existingTube.barcode}>re-print it here</Link></p>
-            </Container>
+            <p>If the sample tube lost its barcode you can <Link href={"/print-plate-label/" + this.state.existingTube.barcode}>re-print it here.</Link> Otherwise scan a new tube to overwrite.</p>
+            </div>
         );
       }
     }
