@@ -3,6 +3,7 @@
 import { h, Component } from 'preact';
 import {route} from 'preact-router';
 import { view } from 'z-preact-easy-state';
+import linkState from 'linkstate';
 
 import Link from '@material-ui/core/Link';
 import Container from '@material-ui/core/Container';
@@ -211,7 +212,8 @@ class EditPlate extends Component {
       createdAt: timestamp(),
       createdBy: app.state.user.name,
       wells: {},
-      isNew: true
+      isNew: true,
+      size: (this.state.is384) ? 384 : 96
     };
     
     this.setState({
@@ -438,6 +440,7 @@ class EditPlate extends Component {
           <p>Scan plate barcode to begin.</p>
           <Scan onScan={this.plateScanned.bind(this)} disableWebcam disableDataMatrixScanner />
           <p>If your plate does not have a barcode you can <Link href="/print-plate-label">print one here</Link>.</p>
+          <p>Create new plate with 384 wells? <input type="checkbox" onChange={linkState(this, 'is384')} /></p>
         </Container>
       );
     } else if(!this.state.plate) {
@@ -457,7 +460,7 @@ class EditPlate extends Component {
           <br/>
           Plate created by: {this.state.plate.createdBy || "Unknown"}
           </p>
-          <Plate occupied={this.state.plate.wells} selectedReplicateGroup={(this.state.tube) ? this.state.tube.replicateGroup : ''} selectedWell={this.state.selectedWell} selectFree={!!this.state.tube} placingMode={!!this.state.tube} onSelect={this.onWellSelect.bind(this)} onSave={this.savePlate.bind(this)} onCancel={this.cancelTube.bind(this)} onDelete={this.deleteWell.bind(this)} onhover={this.showWellInfo.bind(this)} />
+          <Plate rows={(this.state.plate.size === 384) ? 16 : 8} cols={(this.state.plate.size === 384) ? 24 : 12} addClass={(this.state.plate.size === 384) ? "plate-large-384" : ''} occupied={this.state.plate.wells} selectedReplicateGroup={(this.state.tube) ? this.state.tube.replicateGroup : ''} selectedWell={this.state.selectedWell} selectFree={!!this.state.tube} placingMode={!!this.state.tube} onSelect={this.onWellSelect.bind(this)} onSave={this.savePlate.bind(this)} onCancel={this.cancelTube.bind(this)} onDelete={this.deleteWell.bind(this)} onhover={this.showWellInfo.bind(this)} />
           {selectedBarcode}
           {ctrlButtons}
           {sampleHtml}
