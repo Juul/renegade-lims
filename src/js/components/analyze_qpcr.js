@@ -317,6 +317,7 @@ class AnalyzeQPCR extends Component {
         if(protocol === 'bgi') {
           outcome = this.calculateWellOutcomeBGI(well['reporter']['Ct'], well['intCtrl']['Ct'], ctrl);
         } else if(protocol === 'rb-xp') {
+          console.log(wellName, "reporter", well['reporter'], "intCtrl", well['intCtrl'])
           outcome = this.calculateWellOutcomeRenegade(well['reporter']['Ct'], well['intCtrl']['Ct'], ctrl);
         } else {
           throw new Error("Unknown protocol: " + protocol);
@@ -1291,8 +1292,8 @@ class AnalyzeQPCR extends Component {
                 <td><input type="checkbox" onClick={this.toggleResult.bind(this)} value={wellName} disabled={!result.reportable} checked={!!result.reportable && this.state.toggles[wellName]} /></td>
                 <td>{wellName}</td>
                 <td>{(plateMapWell) ? plateMapWell.barcode : "No plate mapping"}</td>
-                <td><Link onClick={this.showPlotForKey('reporter').bind(this)} data-well={wellName} style="cursor:pointer">{(resultWell) ? resultWell['reporter']['Ct'] : "No result"}</Link></td>
-                <td><Link onClick={this.showPlotForKey('intCtrl').bind(this)} data-well={wellName} style="cursor:pointer">{(resultWell) ? resultWell['intCtrl']['Ct'] : "No result"}</Link></td>
+                <td><Link onClick={this.showPlotForKey('reporter').bind(this)} data-well={wellName} style="cursor:pointer">{(resultWell && resultWell['reporter']) ? resultWell['reporter']['Ct'] : "No result"}</Link></td>
+                <td><Link onClick={this.showPlotForKey('intCtrl').bind(this)} data-well={wellName} style="cursor:pointer">{(resultWell && resultWell['intCtrl']) ? resultWell['intCtrl']['Ct'] : "No result"}</Link></td>
                 <td>?</td>
                 <td>{result.result}</td>
                 <td>{result.msg || ''}</td>
