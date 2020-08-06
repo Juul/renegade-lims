@@ -41,7 +41,7 @@ class TubeIntakePHI extends Component {
 
   // Scanned the physical paper form with accession data 
   formScanned(barcode) {
-    route('/tube-intake-with-print/'+encodeURIComponent(barcode))
+    route('/tube-intake-phi/'+encodeURIComponent(barcode))
   }
 
   tubeScanned(code) {
