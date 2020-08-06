@@ -180,6 +180,12 @@ module.exports = function(settings, labDeviceServer, dmScanner, labCore, adminCo
       cb();
     },
 
+    rimbaudPostOrder: function(userData, remoteIP, sample, cb) {
+      const rimbaud = rimbaudAPI(settings);
+
+      rimbaud.postOrder(sample, cb);
+    },
+    
     rimbaudReportResult: function(userData, remoteIP, orderID, data, cb) {
       const rimbaud = rimbaudAPI(settings);
 

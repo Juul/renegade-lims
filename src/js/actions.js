@@ -100,6 +100,10 @@ module.exports = function() {
     saveQpcrResult: function(result, cb) {
       app.remote.saveQpcrResult(result, cb);
     },
+
+    rimbaudPostOrder(sample, cb) {
+      app.remote.rimbaudPostOrder(sample, cb);
+    },
     
     rimbaudReportResult(orderID, data, cb) {
       app.remote.rimbaudReportResult(orderID, data, cb);
