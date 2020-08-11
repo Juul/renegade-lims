@@ -174,7 +174,10 @@ class Scan extends Component {
         }
         return
       }
-      const id = data.result.toLowerCase();
+      var id = data.result;
+      if(!this.props.doNotLower) {
+        id = id.toLowerCase();
+      }
       if(!this.isUUID(id)) {
         return setTimeout(this.scan.bind(this), delay);
       }
@@ -186,8 +189,9 @@ class Scan extends Component {
   }
 
   keyboardScan(code) {
-
-    var code = code.toLowerCase();
+    if(!this.props.doNotLower) {
+      code = code.toLowerCase();
+    }
 
     if(code.length <= 0){
       return;

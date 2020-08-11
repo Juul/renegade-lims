@@ -30,7 +30,8 @@ class EditPlate extends Component {
       id: props.id,
       plate: undefined,
       selectedWell: undefined,
-      error: undefined
+      error: undefined,
+      doNotLower: false
     });
   }
 
@@ -432,6 +433,10 @@ class EditPlate extends Component {
         </div>
       )
     }
+
+    var doNotLowerHTML = (
+      <p>Do not lowercase? <input type="checkbox" onChange={linkState(this, 'doNotLower')} /></p>
+    );
     
     var main;
     if(!this.props.barcode) {
@@ -463,8 +468,9 @@ class EditPlate extends Component {
           <Plate rows={(this.state.plate.size === 384) ? 16 : 8} cols={(this.state.plate.size === 384) ? 24 : 12} addClass={(this.state.plate.size === 384) ? "plate-large-384" : ''} occupied={this.state.plate.wells} selectedReplicateGroup={(this.state.tube) ? this.state.tube.replicateGroup : ''} selectedWell={this.state.selectedWell} selectFree={!!this.state.tube} placingMode={!!this.state.tube} onSelect={this.onWellSelect.bind(this)} onSave={this.savePlate.bind(this)} onCancel={this.cancelTube.bind(this)} onDelete={this.deleteWell.bind(this)} onhover={this.showWellInfo.bind(this)} />
           {selectedBarcode}
           {ctrlButtons}
-          {sampleHtml}
-          <Scan onScan={this.tubeScanned.bind(this)} disableWebcam hideText />
+        {sampleHtml}
+        {doNotLowerHTML}
+          <Scan onScan={this.tubeScanned.bind(this)} doNotLower={this.state.doNotLower} disableWebcam hideText />
         </Container>
       )
     }
