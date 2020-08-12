@@ -13,11 +13,23 @@ const userUtils = require('../lib/user.js');
 const writer = require('../lib/writer.js');
 const csv = require('../lib/csv.js');
 const rimbaudAPI = require('../lib/rimbaud.js');
+const ligolabAPI = require('../lib/ligolab.js');
 const qpcrPlateLayoutGenerator = require('../lib/qpcr_plate_layout_generator.js');
 
 
 module.exports = function(settings, labDeviceServer, dmScanner, labCore, adminCore, labLocal) {
   return {
+
+    ligoSendScan: function(userData, remoteIP, rackScan, cb) {
+
+      if(!rackScan) return cb(new Error("Attempted to send empty rack scan"));
+      
+      console.log("Sending LigoLab rackScan:", rackScan);
+
+      const ligolab = ligolabAPI(settings);
+
+      ligolab.sendRackScan(rackScan, cb);
+    },
     
     getBarcodes: function(userData, remoteIP, howMany, cb) {
       labLocal.getBarcodes(howMany, cb);

@@ -76,6 +76,10 @@ module.exports = function() {
       app.remote.savePhysical(labelData, imageData, doPrint, cb);
     },
 
+    ligoSendScan(plateScan, cb) {
+      app.remote.ligoSendScan(plateScan, cb);
+    },
+    
     printLabel(paperMatch, imageData, copies, cb) {
       app.remote.printLabel(paperMatch, imageData, copies, cb);
     },

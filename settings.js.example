@@ -117,6 +117,13 @@ module.exports = {
   // Where to log failed attempts to sign up or log in
   attemptsLog: 'log/attempts.log',
 
+  // LigoLab rack scan submission endpoint
+  ligolab: {
+    host: "ligolab-hostname",
+    port: 443, // server port for https
+    basePath: "/LigoLabServer/WebHookServer" // URL path component
+  },
+
   // A Rimbaud REST API endpoint
   rimbaud: {
     host: 'example.com', // REST server

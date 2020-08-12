@@ -21,7 +21,7 @@ class Main extends Component {
         <li><Link href="/tube-intake">Sample intake (associate tubes with accession forms)</Link></li>
         <li><Link href="/tube-intake-with-print">Sample intake with print</Link></li>
         <li><Link href="/tube-intake-phi">Sample intake with PHI print</Link></li>
-        <li><Link href="/map-tubes-to-plate">Map samples to 96 well plate</Link></li>
+        <li><Link href="/map-tubes-to-plate">Map samples/tubes to plate/rack</Link></li>
         <li><Link href="/map-racks-to-plates">Map 48 tube racks to 96 well plates using OpenTrons</Link></li>
         <li><Link href="/map-96-to-384">Map 96 well plate(s) to 384 well plate using Liquidator</Link></li>
         <li><Link href="/analyze-qpcr">Analyze qPCR results</Link></li>
