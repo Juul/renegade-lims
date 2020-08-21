@@ -441,10 +441,15 @@ async function init() {
         process.exit(0);
       })
     } else {
-      console.error("Unknown data dump type");
-      process.exit(1);
+/*
+      console.log("Fetching sample by barcode:", argv.dump);
+      core.labCore.api.objectsByBarcode.get(argv.dump, (err, data) => {
+        if(err) return console.error(err);
+        console.log("GOT:", data);;
+        process.exit(0);
+      });
+*/
     }
-
     return;
   }
 

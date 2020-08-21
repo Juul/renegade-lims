@@ -28,6 +28,10 @@ class EditPlate extends Component {
   }
 
   tubeScanned(code) {
+    if(code.toLowerCase() === this.props.formBarcode.toLowerCase()) {
+      app.notify("Error: Tube barcode is the same as the accession form ID", 'error');
+      return;
+    }
     app.actions.getPhysicalByBarcode(code, (err, o) => {
       if(err && !err.notFound) {
         app.notify(err, 'error');
