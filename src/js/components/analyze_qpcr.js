@@ -515,7 +515,7 @@ class AnalyzeQPCR extends Component {
     var wellName, well;
     for(wellName in result.wells) {
       well = result.wells[wellName];
-      
+      console.log(wellName, well.result);
       if(well.result['FAM']) {
         well.result.reporter = well.result['FAM'];
         delete well.result['FAM'];
