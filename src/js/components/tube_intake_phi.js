@@ -200,7 +200,7 @@ class TubeIntakePHI extends Component {
       });
       
       
-      this.save(tubeBarcode, true, (err, tube) => {
+      this.save(tubeBarcode, false, (err, tube) => {
         if(err) {
           app.notify(err, 'error');
           return;
