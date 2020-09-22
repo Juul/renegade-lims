@@ -115,8 +115,10 @@ class TubeIntakePHI extends Component {
 
     this.labelMaker.drawLabel('labelPreview', o);
     var imageData = this.labelMaker.getDataURL();
+
+    var copies = parseInt(this.state.copies) || 1;
     
-    app.actions.printLabel('tube', imageData, 2, cb);
+    app.actions.printLabel('tube', imageData, copies, cb);
 
   }
 
@@ -325,6 +327,7 @@ class TubeIntakePHI extends Component {
     } else {
       saveBtn = (
           <p>
+          Copies: <input type="text" value="1" onChange={linkState(this, 'copies')} /><br/>
           <button onClick={this.saveAndPrintBtn.bind(this)}>Generate barcode and save</button>
           </p>
       )
