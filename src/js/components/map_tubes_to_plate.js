@@ -31,7 +31,8 @@ class EditPlate extends Component {
       plate: undefined,
       selectedWell: undefined,
       error: undefined,
-      doNotLower: false
+      doNotLower: false,
+      allowUnaccessioned: false
     });
   }
 
@@ -50,6 +51,19 @@ class EditPlate extends Component {
 
   tubeScanned(code) {
 
+    if(this.state.allowUnaccessioned) {
+      const tube = {
+        id: uuid(),
+        barcode: code,
+        formBarcode: undefined
+      };
+      app.actions.saveSwabTube(tube, (err) => {
+        this.gotTube(tube);
+      });
+
+      return;
+    }
+    
     app.actions.getPhysicalByBarcode(code, (err, tube) => {
       if(err) {
         console.log(err);
@@ -516,8 +530,11 @@ class EditPlate extends Component {
       )
     }
 
-    var doNotLowerHTML = (
-      <p>Do not lowercase? <input type="checkbox" onChange={linkState(this, 'doNotLower')} /></p>
+    var optionsHtml = (
+      <div>
+        <p>Allow un-accessioned? <input type="checkbox" onChange={linkState(this, 'allowUnaccessioned')} /></p>
+        <p>Do not lowercase? <input type="checkbox" onChange={linkState(this, 'doNotLower')} /></p>
+      </div>
     );
     
     var main;
@@ -556,7 +573,7 @@ class EditPlate extends Component {
           {selectedBarcode}
           {ctrlButtons}
         {sampleHtml}
-        {doNotLowerHTML}
+        {optionsHtml}
           <Scan onScan={this.tubeScanned.bind(this)} doNotLower={this.state.doNotLower} disableWebcam hideText />
         </Container>
       )
