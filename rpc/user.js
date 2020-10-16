@@ -13,11 +13,15 @@ const userUtils = require('../lib/user.js');
 const writer = require('../lib/writer.js');
 const csv = require('../lib/csv.js');
 const rimbaudAPI = require('../lib/rimbaud.js');
+const rackScanAPI = require('../lib/rack_scan.js');
 const ligolabAPI = require('../lib/ligolab.js');
 const qpcrPlateLayoutGenerator = require('../lib/qpcr_plate_layout_generator.js');
 
 
 module.exports = function(settings, labDeviceServer, dmScanner, labCore, adminCore, labLocal) {
+
+  const rackScan = rackScanAPI(settings);
+  
   return {
 
     ligoSendScan: function(userData, remoteIP, rackScan, cb) {
@@ -29,6 +33,13 @@ module.exports = function(settings, labDeviceServer, dmScanner, labCore, adminCo
       const ligolab = ligolabAPI(settings);
 
       ligolab.sendRackScan(rackScan, cb);
+    },
+
+    // scan datamatrix codes in uploaded rack scan image (from a flatbed scanner)
+    scanRackBarcodes: function(userData, remoteIP, imageFilename, numberOfRacks, cb) {
+
+      rackScan.scan(imageFilename, numberOfRacks, cb);
+
     },
     
     getBarcodes: function(userData, remoteIP, howMany, cb) {

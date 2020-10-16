@@ -21,6 +21,11 @@ module.exports = function() {
       app.notify(msg, level);
     },
     
+
+    scanRackBarcodes: function(imageFilename, numberOfRacks, cb) {
+      app.remote.scanRackBarcodes(imageFilename, numberOfRacks, cb);
+    },
+      
     // Get some guaranteed unique non-guid barcodes from the server
     getBarcodes: function(howMany, cb) {
       app.remote.getBarcodes(howMany, cb);

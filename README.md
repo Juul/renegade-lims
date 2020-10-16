@@ -52,6 +52,14 @@ Currently there's an issue with the `jsdom` package so you may have to manually:
 npm install jsdom
 ```
 
+## 48 tube rack barcode scanning
+
+If you will be using the 48 tube bottom barcode scanning capability then you will need to have `dmtxread` from the `dmtx-utils` package and the ImageMagick `convert` commands in your path:
+
+```
+sudo apt install dmtx-utils imagemagick
+```
+
 # Building
 
 The web app needs to be built:
@@ -198,6 +206,7 @@ This project builds upon the work of many talented hackers and would not be poss
 Thanks to [Asbjørn Sloth Tønnesen](http://asbjorn.it/) for [reverse-engineering the Brother QL label printer protocol](https://github.com/biobricks/ql-printer-driver).
 
 Also shout out to the [BioBricks Foundation](https://biobricks.org/) for funding previous development of open source LIMS software some of which has been re-used for this project. All of this code can be found [here](https://github.com/biobricks/).
+
 
 # Copyright and license
 

@@ -28,7 +28,7 @@ scan_plate() {
     RACK=$1
     LEFT_OFFSET=$2
     
-    echo "rack,row,column,barcode"
+#    echo "rack,row,column,barcode"
     #echo "Scanning rack A"
     for i in {0..7}; do
         for j in {0..5}; do

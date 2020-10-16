@@ -163,6 +163,42 @@ function initWebserver() {
     });
   });
 
+  // For HTTP POST file upload
+  router.addRoute('/upload', function(req, res, match) {
+    
+    userCookieAuth(req, function(err, tokenData) {
+      if(err) {
+        res.statusCode = 401;
+        res.end("Unauthorized: " + err);
+        return;
+      }
+      
+      if(req.method !== 'POST') {
+        res.statusCode = 405;
+        res.end("Only HTTP POST requests are allowd");
+        return;
+      }
+
+      const fileName = uuid()+'.jpg';
+      const filePath = path.join(settings.uploadFilepath, fileName);
+
+      const stream = fs.createWriteStream(filePath, {
+        mode: 0o640,
+        flags: 'w',
+        encoding: 'binary'
+      });
+
+      req.pipe(stream);
+
+      req.on('end', () => {
+        stream.destroy();
+        res.statusCode = 200;
+        res.end(fileName);
+      });
+    });
+  });
+
+  
   router.addRoute('/*', function(req, res, match) {
     var rs = fs.createReadStream(path.join(settings.staticPath, 'index.html'));
     rs.pipe(res);

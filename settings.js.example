@@ -93,6 +93,9 @@ module.exports = {
   // Comment out if you don't have such a device
   dataMatrixScanner: "/dev/video0",
 
+  // Where files posted to /upload are saved
+  uploadFilepath: path.join(__dirname, 'upload'),
+
   // Settings related to label printing
   labDevice: {
 

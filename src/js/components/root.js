@@ -32,6 +32,7 @@ const MapRacksToPlates = require('./map_racks_to_plates.js');
 const Map96To384 = require('./map_96_to_384.js');
 const CalculatePCRMasterMix = require('./calculate_pcr_master_mix.js');
 const Scan = require('./scan.js');
+const RackScan = require('./rack_scan.js');
 const PrintOldMultiLabel = require('./print_old_multilabel.js');
 const PrintPlateLabel = require('./print_plate_label.js');
 const PrintTubeLabel = require('./print_tube_label.js');
@@ -159,6 +160,7 @@ class Root extends Component {
           <Map96To384 path="/map-96-to-384" />
           <Plate path="/plate-test" />
           <Scan path="/scan" />
+          <RackScan path="/rack-scan" />
           <CalculatePCRMasterMix path="/calculate-pcr-master-mix" />
           <PrintOldMultiLabel path="/print-old-multilabel/:customCode?" />
           <PrintTubeLabel path="/print-tube-label/:customCode?" />
