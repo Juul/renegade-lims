@@ -25,6 +25,7 @@ class Main extends Component {
         <li><Link href="/map-racks-to-plates">Map 48 tube racks to 96 well plates using OpenTrons</Link></li>
         <li><Link href="/map-96-to-384">Map 96 well plate(s) to 384 well plate using Liquidator</Link></li>
         <li><Link href="/analyze-qpcr">Analyze qPCR results</Link></li>
+        <li><Link href="/rack-scan">Scan 48 tube rack</Link></li>
         <li><Link href="/calculate-pcr-master-mix">Calculate PCR Master Mix</Link></li>
         <li><Link href="/print-tube-label">Print tube barcode label</Link></li>
         <li><Link href="/print-plate-label">Print plate barcode label</Link></li>
