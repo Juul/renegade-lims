@@ -48,8 +48,10 @@ scan_plate() {
             CMD="$DMTXREAD -t 10 -q 10 -N 1 -x $OFFSET_X -X $OFFSET_X_MAX -y $OFFSET_Y_MAX -Y $OFFSET_Y $FULL"
             #        echo $CMD
             CODE=$($CMD)
-            
-            echo "$RACK,${j},${i},${CODE}"
+
+            ROW=$((5 - $j))
+            COL=$i
+            echo "$RACK,${ROW},${COL},${CODE}"
         done
     done
 }
