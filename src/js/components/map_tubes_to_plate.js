@@ -135,8 +135,6 @@ class EditPlate extends Component {
     } else {
       plate.type = 'plate';
     }
-
-    console.log("AAAAAAAAAAAA:", plate);
     
     const tube = Object.assign({}, this.state.tube);
     plate.wells[this.state.selectedWell] = tube;
@@ -319,6 +317,48 @@ class EditPlate extends Component {
     });
   }
 
+  downloadLigoCSV() {
+
+    const csv = ["Last Name,Middle Name,First Name,Date of Birth,Sex,Address - Street,Address - City,Address - State,Address - ZIP,Phone,Organization Division,Patient Type,Organization Ref Number,Email Address"];
+    
+    const plate = this.state.plate;
+    const plateWells = plate.wells;
+    var well, wellName;
+    for(wellName in plateWells) {
+      well = plateWells[wellName];
+      if(!well) continue;
+
+      if(well.barcode) {
+        csv.push(
+          'ptest-'+well.barcode+",Tmiddle,Tfirst,1/1/1970,F,123 Main St,Oakland,CA,94609,5101234567,D,D,,juul+ligo"+well.barcode+"@renegade.bio"
+        );
+      } else if(well.special) {
+        if(well.special === 'positiveControl' || well.special === 'negativeControl') {
+          continue;
+        }
+      } else {
+        continue;
+      }
+        
+    }
+    
+    const buf = Buffer.from(csv.join("\n"), {encoding: 'utf8'});
+    const dataURL = 'data:text/plain;base64,'+buf.toString('base64');
+
+    // Convert from base64 DataURL to blob
+    fetch(dataURL).then(res => res.blob()).then((blob) => {
+      
+      FileSaver.saveAs(blob, "ligo_orders.csv");
+      
+    }).catch((err) => {
+      console.error(err);
+      app.notify(err, 'error');
+      return;
+    });
+    
+  }
+
+  
   downloadTXT() {
     const model = 'qs6';
 
@@ -466,7 +506,7 @@ class EditPlate extends Component {
           this.newPlate(this.props.barcode);
           return
         }
-        console.log("PLATE:", plate);
+
         this.gotPlate(plate);
       })
     })    
@@ -519,6 +559,9 @@ class EditPlate extends Component {
           <div>
           To place a sample in a well, first scan a sample tube, or manually enter the barcode number with the keyboard and press enter.
           <p><button onClick={this.downloadEDS.bind(this)}>Download ABI 7500 .eds file</button> <button onClick={this.downloadTXT.bind(this)}>Download Qs6 .txt file</button> {ligoBtn}</p>
+          <p>
+          <button onClick={this.downloadLigoCSV.bind(this)}>Download LigoLab order import CSV file</button>
+          </p>
 
           </div>
       )
