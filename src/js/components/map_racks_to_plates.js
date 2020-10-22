@@ -52,6 +52,7 @@ class MapRacksToPlates extends Component {
   }
 
   gotRack(rack) {
+    
     if(this.state.racks.length) {
       for(let prevRack of this.state.racks) {
         if(prevRack.barcode === rack.barcode) {
@@ -103,6 +104,7 @@ class MapRacksToPlates extends Component {
   }
 
   codeScanned(barcode) {
+
     app.actions.getPhysicalByBarcode(barcode, (err, obj) => {
       if(err) {
         console.log(err);
@@ -164,13 +166,14 @@ class MapRacksToPlates extends Component {
     var rackNumber = 0;
     var rack, posName, wellName, tube;
     for(rack of racks) {
-      for(posName in rack.tubes) {
-        tube = rack.tubes[posName];
+      for(posName in rack.wells) {
+        tube = rack.wells[posName];
         wellName = this.mapTubePositionToWell(posName, rackNumber);
         
         wells[wellName] = {
           type: 'swabTube',
           id: tube.id,
+          special: tube.special || undefined,
           barcode: tube.barcode,
           formBarcode: tube.formBarcode || undefined,
           createdAt: tube.createdAt,
@@ -218,12 +221,37 @@ class MapRacksToPlates extends Component {
       
     });
   }
+
+  skipRack() {
+    this.state.racks.push({
+      barcode: "NONE",
+      createdAt: timestamp(),
+      createdBy: app.state.user.name,
+      wells: {},
+      isNew: true,
+      type: 'rack',
+      size: 48
+    });
+    
+    this.setState({
+      racks: this.state.racks
+    });
+  }
   
   getScanMarkup(what) {
+    var skip = ''
+    if(this.state.racks.length && this.state.racks.length < this.props.numPlates * 2) {
+      skip = (
+        <div>
+          <input type="button" value ="Skip rack" onClick={this.skipRack.bind(this)} />
+          </div>
+      );
+    }
     return (
       <div class="scan-area">
       <p>Scan the <span style="color:blue">{what}</span></p>
-      <Scan onScan={this.codeScanned.bind(this)} disableWebcam disableDataMatrixScanner />
+        <Scan onScan={this.codeScanned.bind(this)} disableWebcam disableDataMatrixScanner />
+        {skip}
         </div>
     )
   }

@@ -130,7 +130,14 @@ class EditPlate extends Component {
     }
     
     const plate = this.state.plate;
+    if(plate.size === 48) {
+      plate.type = 'rack';
+    } else {
+      plate.type = 'plate';
+    }
 
+    console.log("AAAAAAAAAAAA:", plate);
+    
     const tube = Object.assign({}, this.state.tube);
     plate.wells[this.state.selectedWell] = tube;
     app.actions.savePlate(plate, (err) => {

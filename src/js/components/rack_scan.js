@@ -231,6 +231,7 @@ class RackScan extends Component {
       createdBy: app.state.user.name,
       wells: this.generateWells(this.state.codes),
       isNew: true,
+      type: 'rack',
       size: 48
     };
 
@@ -346,10 +347,7 @@ class RackScan extends Component {
   rackScanned(barcode) {
 
     app.actions.getPhysicalByBarcode(barcode, (err, plate) => {
-      if(err) {
-        app.notify("Error looking up plate in LIMS: " + err, 'error');
-        return;
-      }
+
       this.setState({
         rackBarcode: barcode,
         plate: plate
