@@ -21,6 +21,12 @@ const Plate = require('./plate.js');
 
 const FILE_SIZE_MAX = 1024 * 1024 * 1024 * 200; // 200 MB
 
+const rowNames = ['F', 'E', 'D', 'C', 'B', 'A'];
+
+// TODO also used in map_tubes_to_plate.js so should be in a common file
+const POS_CTRL_ID = "11111111-1111-1111-1111-111111111111";
+const NEG_CTRL_ID = "22222222-2222-2222-2222-222222222222";
+
 class RackScan extends Component {
   
   constructor(props) {
@@ -29,7 +35,10 @@ class RackScan extends Component {
     this.setState({
       error: undefined,
       uploadProgress: undefined,
-      scanFilename: undefined
+      scanFilename: undefined,
+      missingLims: {},
+      missingLigo: {},
+      checkedLims: 0
     });
   }
 
@@ -112,7 +121,16 @@ class RackScan extends Component {
         this.error(err);
         return;
       }
-
+      if(this.state.scanned >= this.state.toScan) {
+        if(this.state.checkingMissingLigo === undefined) {
+          this.setState({
+            checkingMissingLigo: true
+          });
+          this.checkWithLigoLab();
+        }
+        return;
+      }
+      
       console.log(data);
 
       const codes = this.state.codes || [];
@@ -121,10 +139,35 @@ class RackScan extends Component {
       }
       codes[data.row][data.col] = data.barcode;
       
-      this.setState({
+      const scanned = this.state.scanned + 1;
+
+      var stateUpdate = {
         codes: codes,
-        scanned: this.state.scanned + 1
+        scanned: scanned
+      };
+
+      if(scanned >= this.state.toScan) {
+        stateUpdate.checkingMissingLigo = true;
+      }
+
+      this.setState(stateUpdate);
+
+      app.actions.getPhysicalByBarcode(data.barcode.toLowerCase(), (err, tube) => {
+        if(err || !tube) {
+          const wellName = this.wellNameFromIndex(data.row, data.col);
+          const missing = this.state.missingLims;
+          missing[wellName] = data.barcode;
+          this.setState({
+            missingLims: missing,
+            checkedLims: (this.state.checkedLims || 0) + 1
+          });
+        } else {
+          this.setState({
+            checkedLims: (this.state.checkedLims || 0) + 1
+          });
+        }
       });
+      
     });
   }
   
@@ -136,31 +179,82 @@ class RackScan extends Component {
     this.scanBarcodes(2);
   }
 
-  sendToLigolab() {
-    var codeList = {};
-    const rowNames = ['F', 'E', 'D', 'C', 'B', 'A'];
+  newTube(barcode) {
 
-    this.setState({
-      ligoSendingScan: true
-    });
-    
-    var codes = this.state.codes;
-    if(!codes) codes = [];
-    
-    for(let row=0; row < 6; row++) {
-      if(!codes[row]) codes[row] = [];
-      
-      for(let col=0; col < 8; col++) {
-        codeList[rowNames[row]+(col+1)] = this.state.codes[row][col];
-      }
-    }
-    
-    const o = {
-      rackID: this.state.rackBarcode,
-      codeList: codeList
+    const tube = {
+      id: uuid(),
+      barcode: barcode,
+      formBarcode: undefined,
+      createdAt: timestamp(),
+      createdBy: app.state.user.name
     };
 
-    app.actions.ligoSendScan(o, (err, resp) => {
+    if(barcode === 'POS') {
+      tube.id = POS_CTRL_ID;
+      tube.special = 'positiveControl';
+    } else if(barcode === 'NTC') {
+      tube.id = NEG_CTRL_ID;
+      tube.special = 'negativeControl';
+    }
+    
+    return tube;
+  }
+
+  generateWells(codes) {
+    var wells = {};
+    
+    var wellName;
+    var rowCodes, barcode;
+    for(let row=0; row < 6; row++) {
+      rowCodes = codes[row] || [];
+      for(let col=0; col < 8; col++) {
+        wellName = this.wellNameFromIndex(row, col);
+        barcode = rowCodes[col];
+        if(barcode) barcode = barcode.trim();
+        if(barcode) {
+          wells[wellName] = this.newTube(barcode);
+        }
+      }
+    }
+    return wells;
+  }
+  
+  saveToLIMS() {
+
+    this.setState({
+      renegadeSaving: true
+    });
+    
+    const plate = {
+      barcode: this.state.rackBarcode,
+      createdAt: timestamp(),
+      createdBy: app.state.user.name,
+      wells: this.generateWells(this.state.codes),
+      isNew: true,
+      size: 48
+    };
+
+    if(this.state.plate) {
+      plate.id = this.state.plate.id;
+    }
+
+    app.actions.savePlate(plate, (err) => {
+      if(err) {
+        app.notify(err, 'error')
+        return;
+      }
+
+      this.setState({
+        renegadeSaving: false
+      });
+
+      app.notify("Saved", 'success');
+
+    });
+  }
+  
+  saveToLigolab() {
+    this.sendToLigolab(true, (err, resp) => {
       if(err) {
         app.notify(err, 'error');
         return;
@@ -170,13 +264,96 @@ class RackScan extends Component {
         ligoSendingScan: false
       });
       app.notify("Scan sent to LigoLab!", 'success');
-    })
+    });
+  }
+  
+  // Check which tubes from the scan are recognized by ligolab
+  // and update the colors of the table cells to reflect this info
+  checkWithLigoLab() {
+    this.sendToLigolab(false, (err, resp) => {
+      if(err) {
+        app.notify("Checking if tubes exist in LigoLab failed", 'error');
+        this.setState({
+          renegadeSaving: false
+        });
+        return;
+      }
+
+      if(typeof resp === 'string') {
+        try {
+          resp = JSON.parse(resp);
+          if(!resp.codeList || typeof resp.codeList !== 'object') {
+            throw new Error("Ligolab response did not contain a .codeList property");
+          }
+        } catch(err) {
+          app.notify("Unable to parse Ligolab response", 'error');
+          return;
+        }
+      }
+      console.log("Ligo said:", resp);
+
+      var missing = {};
+      var val, m;
+      for(let wellName in resp.codeList) {
+        val = resp.codeList[wellName];
+        m = val.match(/^not\s+found\s+:\s+(.*)$/);
+        if(m) {
+          missing[wellName] = m[1];
+        }
+      }
+      
+      this.setState({
+        ligoSendingScan: false,
+        checkingMissingLigo: false,
+        missingLigo: missing
+      });
+    });
+  }
+  
+  sendToLigolab(doSave, cb) {
+    var codeList = {};
+
+    this.setState({
+      ligoSendingScan: true
+    });
+    
+    var codes = this.state.codes;
+    if(!codes) codes = [];
+
+    var c;
+    for(let row=0; row < 6; row++) {
+      if(!codes[row]) codes[row] = [];
+      
+      for(let col=0; col < 8; col++) {
+        c = this.state.codes[row][col];
+        if(c) c = c.trim();
+        if(c) {
+          codeList[rowNames[row]+(col+1)] = c;
+        }
+      }
+    }
+    
+    const o = {
+      rackID: (doSave) ? this.state.rackBarcode : 'fakerack',
+      codeList: codeList,
+      save: !!doSave
+    };
+
+    app.actions.ligoSendScan(o, cb)
     
   }
 
   rackScanned(barcode) {
-    this.setState({
-      rackBarcode: barcode
+
+    app.actions.getPhysicalByBarcode(barcode, (err, plate) => {
+      if(err) {
+        app.notify("Error looking up plate in LIMS: " + err, 'error');
+        return;
+      }
+      this.setState({
+        rackBarcode: barcode,
+        plate: plate
+      });
     });
   }
 
@@ -199,15 +376,33 @@ class RackScan extends Component {
       codes: codes
     });
   }
+
+  stopScan() {
+    this.setState({
+      toScan: this.state.scanned
+    });
+  }
   
-  buildRow(column, codes) {
+  wellNameFromIndex(row, column) {
+    return rowNames[parseInt(row)] + (parseInt(column) + 1);
+  }
+  
+  buildRow(column, codes, missingLims, missingLigo) {
+    missingLims = missingLims || {};
+    missingLigo = missingLigo || {};
     var html = [];
 
-    var rowCodes;
+    var baseStyle = "border-style:none;width:100%"
+    var rowCodes, style, wellName;
     for(let row=0; row < 6; row++) {
       rowCodes = codes[row] || [];
+      wellName = this.wellNameFromIndex(row, column);
+      style = baseStyle;
+      if(missingLims[wellName]) style += ';font-weight:bold';
+      if(missingLigo[wellName]) style += ';color:red';
+        
       html.push((
-          <td><input type="text" style="border-style:none;width:100%" class={'row'+row+'col'+column} value={rowCodes[column] || ''} onChange={this.barcodeChange.bind(this)} /></td>
+          <td><input type="text" style={style} class={'row'+row+'col'+column} value={rowCodes[column] || ''} onChange={this.barcodeChange.bind(this)} /></td>
       ));
     }
     
@@ -219,16 +414,16 @@ class RackScan extends Component {
     );
   }
 
-  buildBody(codes) {
+  buildBody(codes, missingLims, missingLigo) {
     var html = [];
     
     for(let col=0; col < 8; col++) {
-      html.push(this.buildRow(col, codes || []));
+      html.push(this.buildRow(col, codes || [], missingLims, missingLigo));
     }
     return (
-      <tbody>
-        {html}
-      </tbody>
+        <tbody>
+          {html}
+        </tbody>
     );        
   }
     
@@ -267,7 +462,7 @@ class RackScan extends Component {
         const percentage = Math.round((this.state.scanned * 100) / this.state.toScan);
         prog = (
             <div>
-            <span>Scanning {this.state.scanned+1} of {this.state.toScan} tube positions</span>
+            <span>Scanning {this.state.scanned+1} of {this.state.toScan} tube positions - <input type="button" onClick={this.stopScan.bind(this)} value="Stop scan" /></span>
             <LinearProgress variant="determinate" value={percentage} /> 
             </div>
         );
@@ -282,18 +477,38 @@ class RackScan extends Component {
           );
               
         } else {
-          prog = (
+          prog = [(
               <p>You can now edit the barcodes manually. Enter <b>POS</b> for positive control or <b>NTC</b> for negative control.</p>
-          );
+          )];
+          if(this.state.plate) {
+            prog.push((
+                <p style="color:red">Warning: This rack already exists in Renegade LIMS and will be overwritten if saved.</p>
+            ));
+          }
 
-          var sendBtn = '';
-          if(!this.state.ligoSendingScan) {
-            sendBtn = (
-                <input type="button" value="Send to LigoLab" onClick={this.sendToLigolab.bind(this)} />
+          var saveLimsBtn = '';
+          if(!this.state.renegadeSaving) {
+            saveLimsBtn = (
+              <Container>
+                <input type="button" value="Save to Renegade LIMS" onClick={this.saveToLIMS.bind(this)} />
+                </Container>
             );
           } else {
-            sendBtn = (
-              <div>Sending...</div>
+            saveLimsBtn = (
+              <div>Saving to LIMS...</div>
+            );
+          }
+          
+          var saveLigoBtn = '';
+          if(!this.state.ligoSendingScan) {
+            saveLigoBtn = (
+              <Container>
+                <input type="button" value="Save to LigoLab" onClick={this.saveToLigolab.bind(this)} />
+                </Container>
+            );
+          } else {
+            saveLigoBtn = (
+              <div>Saving to LigoLab...</div>
             );
           }
           post = (
@@ -302,14 +517,40 @@ class RackScan extends Component {
             <b>Rack barcode: </b>{this.state.rackBarcode}
             </p>
             <p>
-            </p>
-            {sendBtn}
+              </p>
+              {saveLimsBtn}
+              {saveLigoBtn}
           </div>
           );
           
         }
       }
 
+      var loadingLigoMsg = '';
+      if(this.state.checkingMissingLigo) {
+        loadingLigoMsg = (
+            <p><i>Asking LigoLab which sample tubes it knows about...</i></p>
+        )
+      } else if(this.state.checkingMissingLigo === false) {
+        loadingLigoMsg = (
+          <div>
+            <p><i>Any <span style="color:red">red</span> codes indicate tubes that haven't been accessioned in LigoLab.</i></p>
+          </div>
+        )
+      }
+
+      var loadingLimsMsg = '';
+      if(this.state.checkedLims < this.state.toScan) {
+        loadingLimsMsg = (
+            <p><i>Asking LigoLab which sample tubes it knows about...</i></p>
+        )
+      } else {
+        loadingLimsMsg = (
+          <div>
+            <p><i>Any <span style="font-weight:bold">bold</span> codes indicate tubes that haven't been accessioned in LIMS.</i></p>
+          </div>
+        );
+      }
       
       content = (
           <Container>
@@ -320,9 +561,10 @@ class RackScan extends Component {
           <th></th><th>F</th><th>E</th><th>D</th><th>C</th><th>B</th><th>A</th>
           </tr>
           </thead>
-          {this.buildBody(this.state.codes)}
+          {this.buildBody(this.state.codes, this.state.missingLims, this.state.missingLigo)}
         </table>
-          
+        {loadingLimsMsg}
+        {loadingLigoMsg}
         {post}
         </Container>
       );
