@@ -58,14 +58,36 @@ class MapRacksToPlates extends Component {
 
   gotRack(rack) {
     
-    if(this.state.racks.length) {
+    if(this.state.racks.length) { // second rack
       for(let prevRack of this.state.racks) {
         if(prevRack.barcode === rack.barcode) {
           app.notify("You scanned the same 48 tube rack twice", 'error');
           return;
         }
       }
+      if(rack.wells['A1'] && rack.wells['A1'].special !== 'negativeControl') {
+        app.notify("This rack has a tube in the position reserved for the negative control", 'error');
+        return;
+      }
+
+      rack.wells['A1'] = {
+        id: NEG_CTRL_ID,
+        special: 'negativeControl'
+      };
+      
+    } else { // first rack
+      if(rack.wells['F1'] && rack.wells['F1'].special !== 'positiveControl') {
+        app.notify("This rack has a tube in the position reserved for the positive control", 'error');
+        return;
+      }
+
+      rack.wells['F1'] = {
+        id: POS_CTRL_ID,
+        special: 'positiveControl'
+      };
     }
+
+
     
     var racks = this.state.racks;
     racks.push(rack);
