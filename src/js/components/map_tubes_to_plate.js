@@ -317,29 +317,41 @@ class EditPlate extends Component {
     });
   }
 
-  sendToLigo(orders, cb) {
-    if(!orders || !orders.length) return cb();
-    const order = orders.pop();
+  sendToLigo(wells, cb) {
+    if(!wells || !wells.length) return cb();
+    const well = wells.pop();
+    
+    app.actions.getPhysicalByBarcode(well.barcode.toLowerCase(), (err, tube) => {
+      if(err) return cb(err);
 
-    console.log("Sending:", order);
-    app.actions.ligoCreateOrder(order, (err, data) => {
-    //app.actions.ligoCreateOrderFake(order, (err, data) => {
-      if(err) {
-        console.error("Got error:", err);
-        return cb(err);
-      }
-//      console.log("Got:", data);
+      const order = {
+        "firstName": "LIMS-"+tube.formBarcode.toUpperCase(),
+        "lastName": tube.barcode.toUpperCase(),
+        "sampleCollectionTime": Math.round((new Date()).getTime() / 1000)
+        //        "sampleCollectionTime": Math.round(well.createdAt / 1000)
+      };
       
-      this.setState({
-        ligoOrders: orders.length
+      console.log("Sending:", order);
+      
+      app.actions.ligoCreateOrder(order, (err, data) => {
+      //app.actions.ligoCreateOrderFake(order, (err, data) => {
+        if(err) {
+          console.error("Got error:", err);
+          return cb(err);
+        }
+        //      console.log("Got:", data);
+        
+        this.setState({
+          ligoOrders: wells.length
+        });
+        
+        this.sendToLigo(wells, cb);
       });
-      
-      this.sendToLigo(orders, cb);
+
     });
   }
   
   sendOrdersToLigo() {
-
     const toSend = [];
     
     const plate = this.state.plate;
@@ -348,21 +360,13 @@ class EditPlate extends Component {
     for(wellName in plateWells) {
       well = plateWells[wellName];
       if(!well) continue;
-
-      if(!well.barcode || !well.formBarcode) {
+      if(!well.barcode) {
         continue
       }
       
       console.log("WELL:", well);
 
-      const o = {
-        "firstName": "LIMS-"+well.formBarcode,
-        "lastName": well.barcode,
-        "sampleCollectionTime": Math.round((new Date()).getTime() / 1000)
-//        "sampleCollectionTime": Math.round(well.createdAt / 1000)
-      };
-
-      toSend.push(o);
+      toSend.push(well);
     }
 
     this.setState({
