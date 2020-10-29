@@ -317,6 +317,68 @@ class EditPlate extends Component {
     });
   }
 
+  sendToLigo(orders, cb) {
+    if(!orders || !orders.length) return cb();
+    const order = orders.pop();
+
+    console.log("Sending:", order);
+    app.actions.ligoCreateOrder(order, (err, data) => {
+    //app.actions.ligoCreateOrderFake(order, (err, data) => {
+      if(err) {
+        console.error("Got error:", err);
+        return cb(err);
+      }
+//      console.log("Got:", data);
+      
+      this.setState({
+        ligoOrders: orders.length
+      });
+      
+      this.sendToLigo(orders, cb);
+    });
+  }
+  
+  sendOrdersToLigo() {
+
+    const toSend = [];
+    
+    const plate = this.state.plate;
+    const plateWells = plate.wells;
+    var well, wellName;
+    for(wellName in plateWells) {
+      well = plateWells[wellName];
+      if(!well) continue;
+
+      if(!well.barcode || !well.formBarcode) {
+        continue
+      }
+      
+      console.log("WELL:", well);
+
+      const o = {
+        "firstName": "LIMS-"+well.formBarcode,
+        "lastName": well.barcode,
+        "sampleCollectionTime": Math.round((new Date()).getTime() / 1000)
+//        "sampleCollectionTime": Math.round(well.createdAt / 1000)
+      };
+
+      toSend.push(o);
+    }
+
+    this.setState({
+      ligoOrders: toSend.length
+    });
+    
+    this.sendToLigo(toSend, (err) => {
+      if(err) {
+        app.notify(err, 'error');
+        return;
+      }
+      app.notify("Orders successfully sent to Ligolab", 'success');
+    });
+
+  }
+  
   downloadLigoCSV() {
 
     const csv = ["Last Name,Middle Name,First Name,Date of Birth,Sex,Address - Street,Address - City,Address - State,Address - ZIP,Phone,Organization Division,Patient Type,Organization Ref Number,Email Address"];
@@ -555,12 +617,29 @@ class EditPlate extends Component {
           );
         }
       }
+      var sendOrderHtml = '';
+      if(!this.state.ligoOrders) {
+        sendOrderHtml = (
+            <button onClick={this.sendOrdersToLigo.bind(this)}>Send orders to Ligolab</button>
+        );
+      } else {
+        if(this.state.ligoOrders > 0) {
+          sendOrderHtml = (
+              <span>Sending to Ligolab. Remaining to send: {this.state.ligoOrders}</span>
+          )
+        } else {
+          sendOrderHtml = (
+              <span>Sending to Ligolab complete</span>
+          )
+        }
+
+      }
       sampleHtml = (
           <div>
           To place a sample in a well, first scan a sample tube, or manually enter the barcode number with the keyboard and press enter.
           <p><button onClick={this.downloadEDS.bind(this)}>Download ABI 7500 .eds file</button> <button onClick={this.downloadTXT.bind(this)}>Download Qs6 .txt file</button> {ligoBtn}</p>
           <p>
-          <button onClick={this.downloadLigoCSV.bind(this)}>Download LigoLab order import CSV file</button>
+          {sendOrderHtml}
           </p>
 
           </div>

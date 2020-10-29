@@ -32,6 +32,7 @@ class Main extends Component {
         <li><Link href="/print-plate-label">Print plate barcode label</Link></li>
         <li><Link href="/accessioned">Show recently accessioned</Link></li>
         <li><Link href="/csv">Export to CSV</Link></li>
+        <li><Link href="/remap-qpcr-results">Convert qPCR results to Ligolab format</Link></li>
           <li><Link href="/scan">Scan (work in progress)</Link></li>
         <li><Link href="/print-test">Print (work in progress)</Link></li>
         <li><Link href="/print-old-multilabel">Print old multi label (no longer used)</Link></li>

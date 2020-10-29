@@ -124,7 +124,8 @@ module.exports = {
   ligolab: {
     host: "ligolab-hostname",
     port: 443, // server port for https
-    basePath: "/LigoLabServer/WebHookServer" // URL path component
+    basePath: "/LigoLabServer/WebHookServer", // URL path component
+    orderBasePath: "/LigoLabServer/WebHookServer" // URL path for creating test orders
   },
 
   // A Rimbaud REST API endpoint

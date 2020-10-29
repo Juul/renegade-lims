@@ -44,7 +44,9 @@ const PasswordReset = require('./password_reset.js');
 const AnalyzeQPCR = require('./analyze_qpcr.js');
 const CSV = require('./csv.js');
 const PlotTest = require('./plot_test.js');
+const RemapQPCRResults = require('./remap_qpcr_results.js');
 const TestLabContainer = require('./test_lab_container.js');
+const Test = require('./test.js');
 
 // admin
 const Users = require('./admin/users.js');
@@ -175,6 +177,8 @@ class Root extends Component {
           <Users path="/admin/users" />
           <EditUser path="/admin/users/:userID" />
           <EditUser path="/profile" />
+          <RemapQPCRResults path="/remap-qpcr-results" />
+          <Test path="/test" />
           <TestLabContainer path="/test/lab-container" />
           <NotFound default />
         </Router>

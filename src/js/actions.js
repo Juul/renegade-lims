@@ -81,6 +81,16 @@ module.exports = function() {
       app.remote.savePhysical(labelData, imageData, doPrint, cb);
     },
 
+    ligoCreateOrder(orderData, cb) {
+      app.remote.ligoCreateOrder(orderData, cb);
+    },
+    
+    ligoCreateOrderFake(orderData, cb) {
+      setTimeout(function() {
+        cb(null, orderData);
+      }, 200);
+    },
+    
     ligoSendScan(plateScan, cb) {
       app.remote.ligoSendScan(plateScan, cb);
     },

@@ -24,6 +24,17 @@ module.exports = function(settings, labDeviceServer, dmScanner, labCore, adminCo
   
   return {
 
+    ligoCreateOrder: function(userData, remoteIP, orderData, cb) {
+
+      if(!orderData) return cb(new Error("Attempted to create empty order"));
+      
+      console.log("Saving order to ligolab:", orderData);
+
+      const ligolab = ligolabAPI(settings);
+
+      ligolab.createOrder(orderData, cb);
+    },
+    
     ligoSendScan: function(userData, remoteIP, rackScan, cb) {
 
       if(!rackScan) return cb(new Error("Attempted to send empty rack scan"));
