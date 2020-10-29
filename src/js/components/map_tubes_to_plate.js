@@ -325,7 +325,7 @@ class EditPlate extends Component {
       if(err) return cb(err);
 
       const order = {
-        "firstName": "LIMS-"+tube.formBarcode.toUpperCase(),
+        "firstName": tube.formBarcode.toUpperCase(),
         "lastName": tube.barcode.toUpperCase(),
         "sampleCollectionTime": Math.round((new Date()).getTime() / 1000)
         //        "sampleCollectionTime": Math.round(well.createdAt / 1000)
