@@ -38,7 +38,8 @@ class RackScan extends Component {
       scanFilename: undefined,
       missingLims: {},
       missingLigo: {},
-      checkedLims: 0
+      checkedLims: 0,
+      checkingMissingLigo: undefined
     });
   }
 
@@ -121,8 +122,10 @@ class RackScan extends Component {
         this.error(err);
         return;
       }
+      console.log("comp:", this.state.scanned, this.state.toScan);
       if(this.state.scanned >= this.state.toScan) {
         if(this.state.checkingMissingLigo === undefined) {
+          console.log("SET CHECK MISSING 1");
           this.setState({
             checkingMissingLigo: true
           });
@@ -148,6 +151,7 @@ class RackScan extends Component {
 
       if(scanned >= this.state.toScan) {
         stateUpdate.checkingMissingLigo = true;
+        this.checkWithLigoLab();
       }
 
       this.setState(stateUpdate);
@@ -540,7 +544,7 @@ class RackScan extends Component {
       var loadingLimsMsg = '';
       if(this.state.checkedLims < this.state.toScan) {
         loadingLimsMsg = (
-            <p><i>Asking LigoLab which sample tubes it knows about...</i></p>
+            <p><i>Asking LIMS which sample tubes it knows about...</i></p>
         )
       } else {
         loadingLimsMsg = (
@@ -549,7 +553,7 @@ class RackScan extends Component {
           </div>
         );
       }
-      
+
       content = (
           <Container>
           {prog}
