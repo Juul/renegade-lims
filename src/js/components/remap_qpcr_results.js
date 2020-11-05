@@ -6,6 +6,7 @@ import { view } from 'z-preact-easy-state';
 const FileSaver = require('file-saver');
 
 import Container from '@material-ui/core/Container';
+const Scan = require('./scan.js');
 const LabContainer = require('./lab_container.js');
 
 const FILE_SIZE_MAX = 1 * 1024 * 1024; // 1 MB
@@ -68,8 +69,8 @@ class RemapQPCRResults extends Component {
 
     reader.readAsArrayBuffer(file)
   }
-
-    openMappingFile(e) {
+  
+  openMappingFile(e) {
     const files = e.target.files;
     if(!files.length) return;
 
@@ -97,10 +98,6 @@ class RemapQPCRResults extends Component {
         mappingFilename: file.name,
         mapping: strData
       });
-      
-//      
-//      console.log("Line:", lines[3]);
-
     };
 
     reader.readAsArrayBuffer(file)
@@ -122,7 +119,7 @@ class RemapQPCRResults extends Component {
     return a;
   }
   
-  remap(results, mapping) {
+  remap(plateBarcode, results, mapping) {
     const resultLines = results.split(/\r?\n/);
     const mappingLines = mapping.split(/\r?\n/);
 
@@ -140,7 +137,7 @@ class RemapQPCRResults extends Component {
       if(fields[1] === 'Empty' || fields[1] === 'null' || fields[2] === 'Empty' || fields[2] === 'null') {
         continue;
       }
-      
+
       // the key is the well name, e.g. A1
       mapping[fields[0]] = {
         orderID: fields[1],
@@ -155,7 +152,11 @@ class RemapQPCRResults extends Component {
     pastHeader = false;
     for(let line of resultLines) {
       if(!pastHeader) {
-        newLines.push(line);
+        if(line.match(/^\*\s+Experiment\s+Barcode\s+=/i)) {
+          newLines.push("* Experiment Barcode = " + plateBarcode);
+        } else {
+          newLines.push(line);
+        }
         if(line.match(/^Well/)) {
           pastHeader = true;
           header = line.split(/\t/);
@@ -177,7 +178,7 @@ class RemapQPCRResults extends Component {
         app.notify("No mapping for well: " + o['Well Position'], 'error');
         return;
       }
-      
+
       if(curMapping.tubeBarcode.toUpperCase() !== o['Sample Name'].toUpperCase()) {
         app.notify("Error for well: " + o['Well Position'], 'error');
         return;
@@ -195,7 +196,7 @@ class RemapQPCRResults extends Component {
   
   downloadRemapped() {
 
-    var strData = this.remap(this.state.results, this.state.mapping);
+    var strData = this.remap(this.state.plateBarcode, this.state.results, this.state.mapping);
 
     const m = this.state.resultsFilename.match(/(.*)\..+$/);
     if(!m) {
@@ -219,10 +220,25 @@ class RemapQPCRResults extends Component {
     });
 
   }
+
+  plateScanned(barcode) {
+    this.setState({
+      plateBarcode: barcode
+    })
+  }
   
   render() {
 
     var msg = '';
+
+    if(!this.state.plateBarcode) {
+      return (
+        <Container>
+        <p>Scan plate barcode to begin.</p>
+        <Scan onScan={this.plateScanned.bind(this)} disableWebcam disableDataMatrixScanner />
+          </Container>
+      );
+    }
     
     if(!this.state.results || !this.state.mapping) {
       return (
