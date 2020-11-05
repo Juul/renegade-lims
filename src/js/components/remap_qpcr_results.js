@@ -147,6 +147,8 @@ class RemapQPCRResults extends Component {
 
 //    console.log("Mapping:", mapping);    
 
+    var warnings = [];
+    
     var header, curMapping;
     var newLines = [];
     pastHeader = false;
@@ -175,8 +177,12 @@ class RemapQPCRResults extends Component {
       
       curMapping = mapping[o['Well Position']];
       if(!curMapping) {
-        app.notify("No mapping for well: " + o['Well Position'], 'error');
-        return;
+        console.log("WARN");
+        let warn = "No mapping for well: " + o['Well Position'];
+        if(warnings.indexOf(warn) < 0) {
+          warnings.push(warn);
+        }
+        continue;
       }
 
       if(curMapping.tubeBarcode.toUpperCase() !== o['Sample Name'].toUpperCase()) {
@@ -191,6 +197,10 @@ class RemapQPCRResults extends Component {
     
 //    console.log(newLines.join("\n"));
 
+    this.setState({
+      warnings: warnings
+    });
+    
     return newLines.join("\n");
   }
   
@@ -253,10 +263,23 @@ class RemapQPCRResults extends Component {
       
     } else {
 
+      var warnings = [];
+      if(this.state.warnings && this.state.warnings.length) {
+        warnings.push((
+            <h3>Warnings</h3>
+        ));
+        for(let warn of this.state.warnings) {
+          warnings.push((
+            <p>{warn}</p>
+          ))
+        }
+      }
+
       return (
           <Container>
           <p>Download remapped results file</p>
           <input type="button" onClick={this.downloadRemapped.bind(this)} value="Download" />
+          {warnings}
           </Container>
       );
       
