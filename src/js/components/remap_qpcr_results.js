@@ -232,8 +232,10 @@ class RemapQPCRResults extends Component {
   }
 
   plateScanned(barcode) {
+    if(!barcode) return;
+
     this.setState({
-      plateBarcode: barcode
+      plateBarcode: barcode.toUpperCase()
     })
   }
   
