@@ -244,7 +244,7 @@ class RemapQPCRResults extends Component {
     if(!this.state.plateBarcode) {
       return (
         <Container>
-        <p>Scan plate barcode to begin.</p>
+        <p>Scan <b><u>LigoLab</u></b> plate barcode to begin.</p>
         <Scan onScan={this.plateScanned.bind(this)} disableWebcam disableDataMatrixScanner />
           </Container>
       );
