@@ -304,7 +304,7 @@ class Map96to384 extends Component {
     
     return (
       <Container>
-        <h3>Map 96 well plate(s) to 384 well plate</h3>
+        <h3>Map 96 well plate(s) to 384 well plate - LIQUIDATOR</h3>
         {scanArea}
         <div class="plate384-area">
         <div><b>384 well plate</b></div>

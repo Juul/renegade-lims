@@ -23,13 +23,13 @@ const NEG_CTRL_ID = "22222222-2222-2222-2222-222222222222";
 const colors = ['orange', 'green', 'pink', 'purple'];
 const numberNames = ['zero', 'one', 'two', 'three', 'four'];
 
-const negativeControlWells = ['A1', 'A2', 'B1', 'B2'];
-const positiveControlWells = ['O23', 'O24', 'P23', 'P24'];
+const negativeControlWells = ['A1'];
+const positiveControlWells = ['A24'];
 const humanReadable384Positions = [
-  "bottom right",
-  "bottom left",
+  "top left",
   "top right",
-  "top left"
+  "bottom left",
+  "bottom right"
 ];
 
 class Map96to384 extends Component {
@@ -57,7 +57,7 @@ class Map96to384 extends Component {
 
     return (
         <div>
-        <div>Place 384 well plate in <b style="color:blue">{pos}</b></div>
+        <div>Map this 96 well plate to <b style="color:blue">{pos}</b> quadrant of 384 well plate</div>
         <div>Plate barcode: <u>{plate.barcode.toUpperCase()}</u></div>
         <div class={'plate384-container plate384-pos-' +  cur96Index}>
         <Plate rows="16" cols="24" occupied={wells} addClass="plate-medium-384" />
@@ -156,25 +156,29 @@ class Map96to384 extends Component {
     });
   }
 
-  // Follows liquidator schema
+  // Follows Integra schema
+  // first 96 well plate maps to top left quadramt
+  // second one to top right quadrant
+  // third one to bottom left quadrant
+  // fourth one to bottom right quadrant
   // Maps A1 on 96 well plate 0 to A1 on 384 well plate
-  // Maps A1 on 96 well plate 1 to A2 on 384 well plate
-  // Maps A1 on 96 well plate 2 to B1 on 384 well plate
-  // Maps A1 on 96 well plate 3 to B2 on 384 well plate
+  // Maps A1 on 96 well plate 1 to A13 on 384 well plate
+  // Maps A1 on 96 well plate 2 to I1 on 384 well plate
+  // Maps A1 on 96 well plate 3 to I13 on 384 well plate
   map96WellTo384Well(posName, plateNumber) {
-    var rowIndex = map.wellRowToNumber(posName, 8) * 2;
-    var colIndex = map.wellColumnIndex(posName, 12) * 2;
+    var rowIndex = map.wellRowToNumber(posName, 8);
+    var colIndex = map.wellColumnIndex(posName, 12);
     
     // plates 0 and 1 have no row offset
     // plates 2 and 3 are offset down one row
     if(plateNumber > 1) {
-      rowIndex++;
+      rowIndex += 8;
     }
 
     // plates 0 and 2 have no column offset
     // plates 1 and 3 are offset right one row
     if(plateNumber % 2) {
-      colIndex++;
+      colIndex += 12;
     }
 
     return map.wellRowToLetter(rowIndex, 16) + (colIndex+1);
@@ -262,12 +266,6 @@ class Map96to384 extends Component {
   }
   
   render() {
-
-    return (
-        <Container>
-        <p>Error: </p>
-        </Container>
-    );
     
     var plates96 = [];
     for(let i=0; i < this.state.plates96.length; i++) {
@@ -310,7 +308,7 @@ class Map96to384 extends Component {
     
     return (
       <Container>
-        <h3>Map 96 well plate(s) to 384 well plate</h3>
+        <h3>Map 96 well plate(s) to 384 well plate - INTEGRA</h3>
         {scanArea}
         <div class="plate384-area">
         <div><b>384 well plate</b></div>
