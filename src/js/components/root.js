@@ -31,6 +31,7 @@ const MapTubesToPlate = require('./map_tubes_to_plate.js');
 const MapRacksToPlates = require('./map_racks_to_plates.js');
 const MapRacksToPlatesChori = require('./map_racks_to_plates_chori.js');
 const Map96To384 = require('./map_96_to_384.js');
+const Map96To384Integra = require('./map_96_to_384_integra.js');
 const CalculatePCRMasterMix = require('./calculate_pcr_master_mix.js');
 const Scan = require('./scan.js');
 const RackScan = require('./rack_scan.js');
@@ -162,6 +163,7 @@ class Root extends Component {
           <MapRacksToPlates path="/map-racks-to-plates/:numPlates?" />
           <MapRacksToPlatesChori path="/map-racks-to-plates-chori/:numPlates?" />
           <Map96To384 path="/map-96-to-384" />
+          <Map96To384Integra path="/map-96-to-384-integra" />
           <Plate path="/plate-test" />
           <Scan path="/scan" />
           <RackScan path="/rack-scan" />
