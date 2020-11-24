@@ -3,6 +3,7 @@
 import { h, Component } from 'preact';
 import {route} from 'preact-router';
 import { view } from 'z-preact-easy-state';
+import linkState from 'linkstate';
 
 import Link from '@material-ui/core/Link';
 import Container from '@material-ui/core/Container';
@@ -16,31 +17,55 @@ class Accessioned extends Component {
     super(props);
 
     this.setState({
-      samples: []
+      samples: [],
+      autoUpdate: false
     });
   }
 
   componentDidMount() {
-    this.fetchSamples();
+    app.whenConnected(() => {
+      this.fetchSamples();
+    });
   }
 
   componentDidUpdaate(prevProps) {
     this.fetchSamples();
   }
   
-  fetchSamples() {
-    app.whenConnected(() => {
-      app.actions.getSwabTubesByTimestamp(500, (err, tubes) => {
-        console.log(err, tubes);
-        if(err) {
-          app.actions.notify(err, 'error');
-          return;
-        }
-        this.setState({
-          samples: tubes
-        })
+  fetchSamples(cb) {
+    app.actions.getSwabTubesByTimestamp(500, (err, tubes) => {
+      console.log(err, tubes);
+      if(err) {
+        app.actions.notify(err, 'error');
+        if(cb) return cb(err);
+      }
+      this.setState({
+        samples: tubes
       })
+      if(cb) cb();
     })
+    
+  }
+
+  autoUpdateClick(e) {
+    if(!this.state.autoUpdate && e.target.checked) {
+      this.autoUpdate(true);
+    }
+    this.setState({
+      autoUpdate: e.target.checked
+    });
+  }
+
+  autoUpdate(force) {
+    if(!force && !this.state.autoUpdate) return;
+
+    this.fetchSamples((err) => {
+      if(err) return;
+
+      setTimeout(() => {
+        this.autoUpdate();
+      }, 3000);
+    });
   }
   
   render() {
@@ -55,6 +80,9 @@ class Accessioned extends Component {
     return (
       <Container>
         <h3>Accessioned samples</h3>
+        <p>
+        Auto-update? <input type="checkbox" onInput={this.autoUpdateClick.bind(this)} />
+        </p>
         <p>Accession time - Tube barcode - Order barcode - Synced to Rimbaud?</p>
         <p>
         <ul>
