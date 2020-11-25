@@ -76,13 +76,15 @@ class Accessioned extends Component {
           <li>{utils.formatDateTime(sample.createdAt)} - {sample.barcode || '(NONE)'} - {sample.formBarcode || '(NONE)'} - {(sample.rimbaudSynced) ? 'yes' : 'no'}</li>
       ));
     }
+
+//            <p>
+///        Auto-update? <input type="checkbox" onInput={this.autoUpdateClick.bind(this)} />
+//        </p>
     
     return (
       <Container>
         <h3>Accessioned samples</h3>
-        <p>
-        Auto-update? <input type="checkbox" onInput={this.autoUpdateClick.bind(this)} />
-        </p>
+
         <p>Accession time - Tube barcode - Order barcode - Synced to Rimbaud?</p>
         <p>
         <ul>
