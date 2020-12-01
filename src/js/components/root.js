@@ -25,6 +25,7 @@ const Plate = require('./plate.js');
 const Accessioned = require('./accessioned.js');
 const TubeIntake = require('./tube_intake.js');
 const TubeIntakeWithPrint = require('./tube_intake_with_print.js');
+const TubeIntake1ID = require('./tube_intake_1id.js');
 const TubeIntakePHI = require('./tube_intake_phi.js');
 const CreatePlate = require('./create_plate.js');
 const MapTubesToPlate = require('./map_tubes_to_plate.js');
@@ -152,11 +153,12 @@ class Root extends Component {
         
         <Router>
           {unprivileged}
-        <Main path="/" />
-        <Dashboard path="/dashboard" />
+          <Main path="/" />
+          <Dashboard path="/dashboard" />
           <CreatePlate path="/plate-new" />
           <Accessioned path="/accessioned" />
           <TubeIntake path="/tube-intake/:formBarcode?" />
+          <TubeIntake1ID path="/tube-intake-1id" />
           <TubeIntakeWithPrint path="/tube-intake-with-print/:formBarcode?" />
           <TubeIntakePHI path="/tube-intake-phi/:formBarcode?" />
           <MapTubesToPlate path="/map-tubes-to-plate/:barcode?" />

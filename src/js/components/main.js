@@ -19,6 +19,7 @@ class Main extends Component {
         <h3>Main</h3>
         <ul>
         <li><Link href="/tube-intake">Sample intake (associate tubes with accession forms)</Link></li>
+        <li><Link href="/tube-intake-1id">Sample intake 1 ID accessioning</Link></li>
         <li><Link href="/tube-intake-with-print">Sample intake with print</Link></li>
         <li><Link href="/tube-intake-phi">Sample intake with PHI print</Link></li>
         <li><Link href="/map-tubes-to-plate">Map samples/tubes to plate/rack</Link></li>
@@ -34,7 +35,7 @@ class Main extends Component {
         <li><Link href="/accessioned">Show recently accessioned</Link></li>
         <li><Link href="/csv">Export to CSV</Link></li>
         <li><Link href="/remap-qpcr-results">Convert qPCR results to Ligolab format</Link></li>
-          <li><Link href="/scan">Scan (work in progress)</Link></li>
+        <li><Link href="/scan">Scan (work in progress)</Link></li>
         <li><Link href="/print-test">Print (work in progress)</Link></li>
         <li><Link href="/print-old-multilabel">Print old multi label (no longer used)</Link></li>
         </ul>
