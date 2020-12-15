@@ -17,7 +17,7 @@
     "backoff": "^2.5.0",
     "buffer-equal-constant-time": "^1.0.1",
     "date-and-time": "^0.13.1",
-    "ecstatic": "^4.1.2",
+    "ecstatic": "^4.1.4",
     "fs-extra": "^9.0.0",
     "hypercore": "^8.11.1",
     "jsdom": "^16.2.2",
