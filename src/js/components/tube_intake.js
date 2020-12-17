@@ -162,13 +162,22 @@ class EditPlate extends Component {
             </div>
         );
       } else {
+        if(this.state.existingTube.barcode === this.props.formBarcode) {
+          formWarning = (
+            <div>
+              <p><b><i>WARNING:</i> It appears that you have scanned a <i>tube</i> rather than an order form, and that this tube has <i>already</i> been accessioned using one ID accessioning.</b></p>
+            <p>If you are sure you know what you're doing then go ahead and scan a tube to overwrite.</p>
+            </div>
+          );
+        } else {
         formWarning = (
             <div>
-            <p><b><i>WARNING:</i>This accession form is <i>already</i> associated with a sample tube with barcode '{this.state.existingTube.barcode}'.</b></p>
+            <p><b><i>WARNING:</i> This accession form is <i>already</i> associated with a sample tube with barcode '{this.state.existingTube.barcode}'.</b></p>
             <p>Only one sample tube per accession form ID is allowed.</p>
             <p>If the sample tube lost its barcode you can <Link href={"/print-plate-label/" + this.state.existingTube.barcode}>re-print it here.</Link> Otherwise scan a new tube to overwrite.</p>
             </div>
         );
+        }
       }
     }
       var tube;

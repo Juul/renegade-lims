@@ -24,14 +24,10 @@ class TubeIntake1D extends Component {
 
   // Scanned the physical paper form with accession data 
   formScanned(barcode) {
-    route('/tube-intake/'+encodeURIComponent(barcode))
+    route('/tube-intake-1id/'+encodeURIComponent(barcode))
   }
 
   tubeScanned(code) {
-    if(code.toLowerCase() === this.props.formBarcode.toLowerCase()) {
-      app.notify("Error: Tube barcode is the same as the accession form ID", 'error');
-      return;
-    }
     app.actions.getPhysicalByBarcode(code, (err, o) => {
       if(err && !err.notFound) {
         app.notify(err, 'error');
@@ -45,39 +41,8 @@ class TubeIntake1D extends Component {
     });
   }
 
-  componentDidUpdate(prevProps) {
-    prevProps = prevProps || {}
-    if(prevProps.formBarcode !== this.props.formBarcode) {
-      // TODO don't change state based on props!
-      // see map_tubes_to_plate.js
-      
-      // If the form changes then reset state
-      this.setState({
-        checkedExistingTube: false,
-        existingTube: undefined,
-        tube: undefined,
-        tubeBarcode: undefined
-      });
-    }
-
-    if(!this.props.formBarcode || this.state.checkedExistingTube) return;
-    
-    app.whenConnected(() => {
-      app.actions.getSwabTubeByFormBarcode(this.props.formBarcode, (err, tube) => {
-        const state = {
-          checkedExistingTube: true
-        };
-
-        if(tube) {
-          state.existingTube = tube;
-        }
-        this.setState(state);
-      })
-    });
-  }
-
   keypress(e) {
-    if(!this.state.tubeBarcode || !this.props.formBarcode) {
+    if(!this.state.tubeBarcode) {
       return;
     }
 
@@ -95,19 +60,18 @@ class TubeIntake1D extends Component {
   componentDidMount() {
     this.initKeyboardCapture();
 
-    this.componentDidUpdate();
   }
   
   saveBtn() {
-    if(!this.state.tubeBarcode || !this.props.formBarcode) {
-      app.notify("You must scan both an accession form and a swab tube before attempting to save.", 'error');
+    if(!this.state.tubeBarcode) {
+      app.notify("You must scan a swab tube before attempting to save.", 'error');
       return 
     }
 
     const tube = {
       id: (this.state.tube && this.state.tube.id) ? this.state.tube.id : undefined,
       barcode: this.state.tubeBarcode,
-      formBarcode: this.props.formBarcode
+      formBarcode: this.state.tubeBarcode
     };
     console.log("Saving:", tube);
     
@@ -135,7 +99,8 @@ class TubeIntake1D extends Component {
   
   
   render() {
-    
+
+    /*
     if(!this.props.formBarcode) {
       return (
         <Container>
@@ -171,27 +136,34 @@ class TubeIntake1D extends Component {
         );
       }
     }
+    */
+    
       var tube;
       if(!this.state.tubeBarcode) {
         tube = (
           <div>
-            <p>Now scan a sample tube to begin. If the tube does not have a barcode then you can <Link href="/print-plate-label">print one here</Link></p>
+            <p>Scan a sample tube to accession.</p>
             <Scan onScan={this.tubeScanned.bind(this)} disableWebcam hideText />
           </div>
         );
       } else {
         var warning = '';
-        if(this.state.tube) {
-          console.log("Tube code:", this.state.tube.barcode, this.state.tube.formBarcode)
-        }
-        if(this.state.tube && this.state.tube.barcode && this.state.tube.formBarcode !== this.props.formBarcode) {
-          warning = (
-              <div>
-              <p><b><i>WARNING:</i>This tube is <i>already</i> associated with another accession form with barcode '{this.state.tube.formBarcode}'.</b></p>
-              <p>Saving will overwrite the existing association between accession form and swab tube.</p>
-              <p>Make <i><b>ABSOLUTELY SURE</b></i> you know what you are doing before clicking save!</p>
-              </div>
-          )
+        if(this.state.tube && this.state.tube.barcode) {
+          console.log("AAA", this.state.tube);
+          if(this.state.tube.barcode !== this.state.tube.formBarcode) {
+            warning = (
+                <div>
+                <p><b><i>WARNING:</i> This tube is <i>already</i> accessioned using two ID accessioning to order ID {this.state.tube.formBarcode}.</b></p>
+                <p>If you proceed then the previous accessioning will be overwritten.</p>
+                </div>
+            )
+          } else {
+            warning = (
+                <div>
+                <p><b><i>NOTICE:</i> This tube is <i>already</i> accessioned.</b></p>
+                </div>
+            )
+          }
         }
         tube = (
           <div>
@@ -205,8 +177,6 @@ class TubeIntake1D extends Component {
       }
       return (
         <Container>
-          <h3>Accession form: {this.props.formBarcode}</h3>
-          {formWarning}
           {tube}
           </Container>
       );
